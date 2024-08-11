@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}мероприятия{% endblock %}
+{% block content %}
+    <div class="container mt-4">
+    <h1>{{ object.name }}</h1>
+    <p>Начало: {{ object.begin_date }}</p>
+    <p>Окончание: {{ object.end_date }}</p>
+
+    <h2>Время</h2>
+    <div id="event-times-list">
+        {% include 'references/partials/event_times_list.html' with event=object %}
+    </div>
+
+    <button class="btn btn-primary mt-2" hx-get="{% url 'references:event-times-create' object.id %}" hx-target="#event-times-list" hx-swap="beforeend">Добавить время</button>
+</div>
+{% endblock %}

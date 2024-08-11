@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Event{% endblock %}
+{% block content %}
+    <div class="container mt-4">
+        <h1>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+
+            {% if object %}
+                <h2>Время</h2>
+                <div id="event-times-list">
+                    {% include 'references/partials/event_times_list.html' with event=object %}
+                </div>
+
+                <button class="btn btn-primary mt-2" hx-get="{% url 'references:event-times-create' object.id %}"
+                        hx-target="#event-times-list" hx-swap="beforeend">Добавить время
+                </button>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

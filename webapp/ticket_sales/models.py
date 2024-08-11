@@ -1,0 +1,74 @@
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+from references.models import Service, Event, Inventory
+
+
+class TicketSale(models.Model):
+    date = models.DateField(verbose_name="Дата")
+    amount = models.IntegerField(verbose_name="Сумма итого")
+    status = models.CharField(max_length=2, verbose_name='Статус', null=True, blank=True)
+
+    def __str__(self):
+        return f'№{self.pk} от {self.date}'
+
+    class Meta:
+        verbose_name = 'Продажа билета'
+        verbose_name_plural = 'Продажа билетов'
+        ordering = ['-date']
+
+
+class TicketSalesService(models.Model):
+    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.PROTECT, verbose_name="Продажа билета")
+    service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
+    event_date = models.DateField(verbose_name="Дата мероприятия")
+    event_time = models.DateField(verbose_name="Время мероприятия")
+    inventory = models.ForeignKey(Inventory, on_delete=models.PROTECT, verbose_name="Инвентарь")
+    inventories_count = models.PositiveSmallIntegerField(verbose_name="Количество нвентаря")
+    tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
+    tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
+    discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
+    total_amount = models.IntegerField(verbose_name="Сумма итого")
+
+    def __str__(self):
+        return f'{self.ticket_sale.pk}-{self.pk}'
+
+    class Meta:
+        verbose_name = 'Услуга'
+        verbose_name_plural = 'Услуги'
+        ordering = ['id']
+
+
+class TicketSalesPayments(models.Model):
+    PaymentMethods = (
+        ("QR", "Оплата по QR"),
+        ("CD", "Оплата картой"),
+        ("CH", "Наличка"),
+    )
+
+    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.PROTECT, verbose_name="Продажа билета")
+    payment_date = models.DateTimeField(verbose_name="Дата оплаты")
+    payment_method = models.CharField(
+        max_length=2,
+        choices=PaymentMethods,
+        default="QR",
+    )
+    accepted_from_the_buyer = models.IntegerField(verbose_name="Принято от покупателя")
+    amount_of_change = models.IntegerField(verbose_name="Сумма сдачи", blank=True, default=0)
+    accepted_amount = models.IntegerField(verbose_name="Принятая сумма", blank=True, default=0)
+    process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
+    last_status = models.CharField(max_length=15, verbose_name='Последний статус', null=True, blank=True)
+    error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
+    transaction_id = models.CharField(max_length=20, verbose_name='Идентификатор успешной транзакции', null=True,
+                                      blank=True)
+    response_data = models.TextField(max_length=400, verbose_name='Полученные данные', null=True,
+                                     blank=True)
+
+    def __str__(self):
+        return f'{self.ticket_sale.pk}-{self.pk}'
+
+    class Meta:
+        verbose_name = 'Платеж'
+        verbose_name_plural = 'Платежи'
+        ordering = ['id']

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}мероприятия{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Events</h1>
+        <a href="{% url 'references:event-create' %}" class="btn btn-primary mb-3">Create New Event</a>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Event Template</th>
+                <th>Begin Date</th>
+                <th>End Date</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for event in object_list %}
+                <tr>
+                    <td>{{ event.event_template.name }}</td>
+                    <td>{{ event.begin_date }}</td>
+                    <td>{{ event.end_date }}</td>
+                    <td>
+                        <a href="{% url 'references:event-detail' event.pk %}" class="btn btn-info btn-sm">View</a>
+                        <a href="{% url 'references:event-update' event.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{% url 'references:event-delete' event.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

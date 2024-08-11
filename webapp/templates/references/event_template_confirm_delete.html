@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Шаблон мероприятия{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Вы уверены что хотите уадлить шаблон мероприятия "{{ event_template.name }}"?</h1>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+{% endblock %}

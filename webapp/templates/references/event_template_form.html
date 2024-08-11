@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий{% endblock %}
+{% block content %}
+    <h1>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

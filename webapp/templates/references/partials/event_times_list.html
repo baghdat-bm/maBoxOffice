@@ -1,0 +1,9 @@
+<ul class="list-group">
+    {% for time in event.eventtimes_set.all %}
+    <li class="list-group-item">
+        {{ time.begin_date }} - {{ time.end_date }}
+        <button class="btn btn-sm btn-warning" hx-get="{% url 'references:event-times-update' event.id time.id %}" hx-target="#event-times-list" hx-swap="outerHTML">Изменить</button>
+        <button class="btn btn-sm btn-danger" hx-get="{% url 'references:event-times-delete' event.id time.id %}" hx-target="#event-times-list" hx-swap="outerHTML">Удалить</button>
+    </li>
+    {% endfor %}
+</ul>

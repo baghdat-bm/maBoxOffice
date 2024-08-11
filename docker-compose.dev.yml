@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.dev.env
+
+  web:
+    build: ./webapp
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./webapp:/code
+      - static_volume:/code/static
+      - media_volume:/code/media
+      - locale_volume:/code/locale
+      - logs_volume:/code/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.dev.env
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+  locale_volume:
+  logs_volume:

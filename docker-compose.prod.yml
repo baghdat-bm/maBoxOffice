@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.dev.env
+
+  web:
+    build: ./webapp
+    command: gunicorn webapp.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./webapp:/code
+      - static_volume:/code/static
+      - media_volume:/code/media
+      - locale_volume:/code/locale
+      - logs_volume:/code/logs
+    depends_on:
+      - db
+    env_file:
+      - ./.dev.env
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - static_volume:/code/static
+      - media_volume:/code/media
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - certs:/etc/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+  locale_volume:
+  logs_volume:
+  certs:

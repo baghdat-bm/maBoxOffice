@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Шаблон мероприятия{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>{{ event_template.name }}</h1>
+        {% if event_template.logo %}
+        <img src="{{ event_template.logo.url }}" alt="Logo" class="img-fluid mb-3">
+        {% endif %}
+        <p>{{ event_template.description }}</p>
+        <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Назад к списку</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,34 @@
+# Make sure the script renew.sh is executable.
+chmod +x certbot/renew.sh
+
+### local dev
+python manage.py runserver 127.0.0.1:8000 --settings=webapp.dev-loc-settings
+python manage.py makemigrations --settings=webapp.dev-loc-settings
+python manage.py migrate --settings=webapp.dev-loc-settings
+python manage.py startapp appName --settings=webapp.dev-loc-settings
+python -Xutf8 manage.py dumpdata --indent=2 --exclude auth.permission --exclude contenttypes -o db.json --settings=webapp.dev-loc-settings
+python manage.py loaddata db.json --settings=webapp.dev-loc-settings
+python manage.py createsuperuser --settings=webapp.dev-loc-settings
+
+
+### Run the development environment.
+docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml exec web python manage.py makemigrations
+docker compose -f docker-compose.dev.yml exec web python manage.py migrate --noinput
+docker compose -f docker-compose.dev.yml exec web python manage.py createsuperuser
+docker exec -it sportzal-web-1 /bin/bash
+# apt-get update
+# apt-get install gettext
+# ONLY ONE TIME: django-admin makemessages -l ru
+docker compose -f docker-compose.dev.yml exec web django-admin makemessages --all --ignore=env
+docker compose -f docker-compose.dev.yml exec web django-admin compilemessages
+docker compose -f docker-compose.dev.yml exec web python manage.py createsuperuser
+docker compose -f docker-compose.dev.yml logs -f
+
+
+### For production
+# first set up the certificates.
+docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/etc/letsencrypt --email baghdat.bm@gmail.com --agree-tos --no-eff-email -d bakeminmen.com
+docker compose -f docker-compose.prod.yml logs -f
+# Then, start the production environment.
+docker compose -f docker-compose.prod.yml up --build

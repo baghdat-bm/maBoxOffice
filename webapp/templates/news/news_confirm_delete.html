@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}Delete News{% endblock %}
+{% block content %}
+  <h1>Delete News</h1>
+  <p>Are you sure you want to delete
+    {% if LANGUAGE_CODE == 'ru' %}
+        {{ news.title_ru }}
+        {% elif LANGUAGE_CODE == 'kz' %}
+        {{ news.title_kz }}
+        {% else %}
+        {{ news.title_en }}
+        {% endif %}
+    ?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, delete</button>
+  </form>
+  <a href="{% url 'news:news_detail' news.slug %}" class="btn btn-secondary">Cancel</a>
+{% endblock %}
