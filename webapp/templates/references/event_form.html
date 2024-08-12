@@ -4,26 +4,65 @@
 
 {% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Event{% endblock %}
 
+{% block header %}
+    <style>
+        .form-check-inline {
+            display: inline-block;
+            margin-right: 10px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
     <div class="container mt-4">
-    <h1>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h1>
-    <form method="post" hx-post="{% if object %}{{ object.get_update_url }}{% else %}{% url 'references:event-create' %}{% endif %}" hx-target="body" hx-swap="outerHTML">
-        {% csrf_token %}
-        {{ form|crispy }}
+        <h1>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h1>
+        <form method="post" hx-post="
+                {% if object %}{{ object.get_update_url }}{% else %}{% url 'references:event-create' %}{% endif %}"
+              hx-target="body" hx-swap="outerHTML">
+            {% csrf_token %}
+            {{ form.event_template|as_crispy_field }}
+            {{ form.begin_date|as_crispy_field }}
+            {{ form.end_date|as_crispy_field }}
 
-        <h2>Время</h2>
-        <div id="event-times-list">
-            {% if object %}
-                {% include 'references/partials/event_times_list.html' with event=object %}
-            {% endif %}
-        </div>
+            <div class="mb-3">
+                <div class="form-check form-check-inline">
+                    {{ form.on_monday.label_tag }} {{ form.on_monday }}
+                </div>
+                <div class="form-check form-check-inline">
+                    {{ form.on_tuesday.label_tag }} {{ form.on_tuesday }}
+                </div>
+                <div class="form-check form-check-inline">
+                    {{ form.on_wednesday.label_tag }} {{ form.on_wednesday }}
+                </div>
+                <div class="form-check form-check-inline">
+                    {{ form.on_thursday.label_tag }} {{ form.on_thursday }}
+                </div>
+                <div class="form-check form-check-inline">
+                    {{ form.on_friday.label_tag }} {{ form.on_friday }}
+                </div>
+                <div class="form-check form-check-inline">
+                    {{ form.on_saturday.label_tag }} {{ form.on_saturday }}
+                </div>
+                <div class="form-check form-check-inline">
+                    {{ form.on_sunday.label_tag }} {{ form.on_sunday }}
+                </div>
+            </div>
 
-        <button type="button" class="btn btn-secondary" hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}" hx-target="#event-times-list" hx-swap="beforeend">
-            Добавить время
-        </button>
+            <h2>Время</h2>
+            <div id="event-times-list">
+                {% if object %}
+                    {% include 'references/partials/event_times_list.html' with event=object %}
+                {% endif %}
+            </div>
 
-        <button type="submit" class="btn btn-primary">Сохранить</button>
-        <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
-    </form>
-</div>
+            <button type="button" class="btn btn-secondary"
+                    hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}"
+                    hx-target="#event-times-list" hx-swap="beforeend">
+                Добавить время
+            </button>
+
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
 {% endblock %}

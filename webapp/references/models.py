@@ -17,7 +17,6 @@ class EventTemplate(models.Model):
 
 class Event(models.Model):
     event_template = models.ForeignKey(EventTemplate, on_delete=models.CASCADE, verbose_name="Шаблон мероприятий")
-    # name = models.CharField(max_length=300, verbose_name='Наименование')
     begin_date = models.DateTimeField(verbose_name="Дата начала")
     end_date = models.DateTimeField(verbose_name="Дата окончания")
     on_monday = models.BooleanField(verbose_name='Понедельник')
