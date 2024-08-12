@@ -51,7 +51,6 @@ def event_template_delete_view(request, pk):
 
 # Event CRUD
 
-
 class EventListView(ListView):
     model = Event
     # form_class = EventForm
@@ -86,20 +85,18 @@ class EventDetailView(DetailView):
 # EventTimes CRUD via HTMX
 
 def event_times_create(request, event_id):
-    try:
-        event = get_object_or_404(Event, id=event_id)
-        if request.method == "POST":
-            form = EventTimesForm(request.POST)
-            if form.is_valid():
-                event_time = form.save(commit=False)
-                event_time.event = event
-                event_time.save()
-                return render(request, 'references/partials/event_times_list.html', {'event': event})
-        else:
-            form = EventTimesForm()
-        return render(request, 'references/partials/event_times_form.html', {'form': form})
-    except Exception as e:
-        return HttpResponseServerError(f'Ошибка сервера: {str(e)}')
+    event = get_object_or_404(Event, id=event_id)
+    if request.method == "POST":
+        form = EventTimesForm(request.POST)
+        if form.is_valid():
+            event_time = form.save(commit=False)
+            event_time.event = event
+            event_time.save()
+            # Возвращаем только список EventTimes, чтобы обновить нужный элемент
+            return render(request, 'references/partials/event_times_list.html', {'event': event})
+    else:
+        form = EventTimesForm()
+    return render(request, 'references/partials/event_times_form.html', {'form': form, 'event': event})
 
 
 def event_times_update(request, event_id, pk):
@@ -111,7 +108,7 @@ def event_times_update(request, event_id, pk):
             return render(request, 'references/partials/event_times_list.html', {'event': event_time.event})
     else:
         form = EventTimesForm(instance=event_time)
-    return render(request, 'references/partials/event_times_form.html', {'form': form})
+    return render(request, 'references/partials/event_times_form.html', {'form': form, 'event': event_time.event})
 
 
 def event_times_delete(request, event_id, pk):

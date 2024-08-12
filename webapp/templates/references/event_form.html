@@ -3,24 +3,26 @@
 {% load static %}
 
 {% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Event{% endblock %}
+
 {% block content %}
     <div class="container mt-4">
-        <h1>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form|crispy }}
-            <button type="submit" class="btn btn-primary">Сохранить</button>
+    <h1>Редактирование мероприятия</h1>
+    <form method="post" hx-post="{% url 'references:event-update' object.id %}" hx-target="body" hx-swap="outerHTML">
+        {% csrf_token %}
+        {{ form|crispy }}
 
-            {% if object %}
-                <h2>Время</h2>
-                <div id="event-times-list">
-                    {% include 'references/partials/event_times_list.html' with event=object %}
-                </div>
+        <h2>Время</h2>
+        <div id="event-times-list">
+            {% include 'references/partials/event_times_list.html' with event=object %}
+        </div>
+        
+        <button type="button" class="btn btn-secondary mt-2" hx-get="{% url 'references:event-times-create' object.id %}" hx-target="#event-times-form-container" hx-swap="innerHTML">
+            Добавить время
+        </button>
 
-                <button class="btn btn-primary mt-2" hx-get="{% url 'references:event-times-create' object.id %}"
-                        hx-target="#event-times-list" hx-swap="beforeend">Добавить время
-                </button>
-            {% endif %}
-        </form>
-    </div>
+        <div id="event-times-form-container"></div>
+
+        <button type="submit" class="btn btn-primary mt-4">Сохранить</button>
+    </form>
+</div>
 {% endblock %}
