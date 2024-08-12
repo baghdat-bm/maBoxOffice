@@ -10,6 +10,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("news/", include("news.urls")),
     path("references/", include("references.urls")),
+    path("ticket-sales/", include("ticket_sales.urls")),
     path('', HomePageView.as_view(), name='home'),
 ]
 

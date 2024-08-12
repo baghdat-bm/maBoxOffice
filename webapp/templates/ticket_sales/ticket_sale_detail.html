@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Детали продажи билета{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Продажа Билета №{{ object.id }}</h1>
+    <p>Дата: {{ object.date }}</p>
+    <p>Сумма итого: {{ object.amount }} ₽</p>
+    <p>Статус: {{ object.status }}</p>
+
+    <h2>Услуги</h2>
+    {% include 'ticket_sales/partials/ticket_sales_service_list.html' with ticket_sale=object %}
+
+    <h2>Платежи</h2>
+    {% include 'ticket_sales/partials/ticket_sales_payments_list.html' with ticket_sale=object %}
+
+    <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-warning mt-3">Изменить</a>
+    <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary mt-3">Назад к списку</a>
+</div>
+{% endblock %}

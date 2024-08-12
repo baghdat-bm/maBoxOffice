@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Редактировать{% else %}Создать{% endif %} продажу билета{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h1>{% if object %}Редактировать{% else %}Создать{% endif %} продажу билета</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <h2>Услуги</h2>
+            <div id="ticket-sales-service-list">
+                {% if object %}
+                    {% include 'ticket_sales/partials/ticket_sales_service_list.html' with ticket_sale=object %}
+                {% endif %}
+            </div>
+            {% if object %}
+                <button type="button" class="btn btn-secondary mt-2"
+                        hx-get="
+                                {% if object %}{% url 'ticket_sales:ticket-sales-service-create' object.id %}{% endif %}"
+                        hx-target="#ticket-sales-service-list" hx-swap="beforeend">
+                    Добавить услугу
+                </button>
+            {% else %}
+                Перед добавлением услуги необходимо записать продажу
+            {% endif %}
+
+            <h2>Платежи</h2>
+            <div id="ticket-sales-payments-list">
+                {% if object %}
+                    {% include 'ticket_sales/partials/ticket_sales_payments_list.html' with ticket_sale=object %}
+                {% endif %}
+            </div>
+            {% if object %}
+                <button type="button" class="btn btn-secondary mt-2"
+                        hx-get="{% if object %}{% url 'ticket_sales:ticket-sales-payments-create' object.id %}{% endif %}"
+                        hx-target="#ticket-sales-payments-list" hx-swap="beforeend">
+                    Добавить платеж
+                </button>
+            {% else %}
+                Перед добавлением оплаты необходимо записать продажу
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary mt-4">Сохранить</button>
+        </form>
+    </div>
+{% endblock %}
