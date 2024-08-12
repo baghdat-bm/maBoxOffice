@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Изменить{% else %}Добавить{% endif %} инвентарь{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{% if object %}Изменить{% else %}Добавить{% endif %} инвентарь</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">{% if object %}Сохранить{% else %}Добавить{% endif %}</button>
+    </form>
+</div>
+{% endblock %}

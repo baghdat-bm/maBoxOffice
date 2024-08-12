@@ -9,9 +9,9 @@
 
     <h2>Время</h2>
     <div id="event-times-list">
-        {% include 'references/partials/event_times_list.html' with event=object %}
+        {% include 'references/partials/event_times_list_view.html' with event=object %}
     </div>
 
-    <button class="btn btn-primary mt-2" hx-get="{% url 'references:event-times-create' object.id %}" hx-target="#event-times-list" hx-swap="beforeend">Добавить время</button>
+    <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Назад к списку</a>
 </div>
 {% endblock %}

@@ -1,4 +1,4 @@
-<form method="post">
+<form method="post" hx-post="{% url 'references:event-times-delete' event_time.event.id event_time.id %}" hx-target="#event-times-list" hx-swap="innerHTML">
     {% csrf_token %}
     <p>Вы уверены, что хотите удалить время {{ event_time.begin_date }} - {{ event_time.end_date }}?</p>
     <button type="submit" class="btn btn-danger">Удалить</button>

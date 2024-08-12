@@ -1,6 +1,8 @@
 {% load crispy_forms_tags %}
 
-<form method="post" hx-post="{% if event %}{% url 'references:event-times-create' event.id %}{% endif %}" hx-target="#event-times-list" hx-swap="outerHTML">
+<form method="post"
+      hx-post="{% if form.instance.id %}{% url 'references:event-times-update' form.instance.event.id form.instance.id %}{% else %}{% url 'references:event-times-create' event.id %}{% endif %}"
+      hx-target="#event-times-list" hx-swap="innerHTML">
     {% csrf_token %}
     {{ form|crispy }}
     <button type="submit" class="btn btn-primary">Сохранить</button>

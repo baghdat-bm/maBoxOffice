@@ -6,23 +6,24 @@
 
 {% block content %}
     <div class="container mt-4">
-    <h1>Редактирование мероприятия</h1>
-    <form method="post" hx-post="{% url 'references:event-update' object.id %}" hx-target="body" hx-swap="outerHTML">
+    <h1>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h1>
+    <form method="post" hx-post="{% if object %}{{ object.get_update_url }}{% else %}{% url 'references:event-create' %}{% endif %}" hx-target="body" hx-swap="outerHTML">
         {% csrf_token %}
         {{ form|crispy }}
 
         <h2>Время</h2>
         <div id="event-times-list">
-            {% include 'references/partials/event_times_list.html' with event=object %}
+            {% if object %}
+                {% include 'references/partials/event_times_list.html' with event=object %}
+            {% endif %}
         </div>
-        
-        <button type="button" class="btn btn-secondary mt-2" hx-get="{% url 'references:event-times-create' object.id %}" hx-target="#event-times-form-container" hx-swap="innerHTML">
+
+        <button type="button" class="btn btn-secondary" hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}" hx-target="#event-times-list" hx-swap="beforeend">
             Добавить время
         </button>
 
-        <div id="event-times-form-container"></div>
-
-        <button type="submit" class="btn btn-primary mt-4">Сохранить</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
     </form>
 </div>
 {% endblock %}

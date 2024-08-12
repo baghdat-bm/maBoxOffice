@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Информация об услуге{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ object.name }}</h1>
+    <p>Мероприятие: {{ object.event.name }}</p>
+    <p>Размер: {{ object.size }}</p>
+    <p>Количество: {{ object.quantity }}</p>
+    <p>Стоимость: {{ object.cost }}</p>
+    <a href="{% url 'references:service-update' object.id %}" class="btn btn-warning">Изменить</a>
+    <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Назад к списку</a>
+</div>
+{% endblock %}

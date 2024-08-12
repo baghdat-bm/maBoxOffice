@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseServerError
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 
-from .forms import EventTemplateForm, EventForm, EventTimesForm
-from .models import Event, EventTemplate, EventTimes
+from .forms import EventTemplateForm, EventForm, EventTimesForm, InventoryForm, ServiceForm
+from .models import Event, EventTemplate, EventTimes, Service, Inventory
 
 
 def event_template_create_view(request):
@@ -117,3 +117,65 @@ def event_times_delete(request, event_id, pk):
         event_time.delete()
         return render(request, 'references/partials/event_times_list.html', {'event': event_time.event})
     return render(request, 'references/partials/event_times_confirm_delete.html', {'event_time': event_time})
+
+
+# Inventory Views
+class InventoryListView(ListView):
+    model = Inventory
+    template_name = 'references/inventory_list.html'
+
+
+class InventoryCreateView(CreateView):
+    model = Inventory
+    form_class = InventoryForm
+    template_name = 'references/inventory_form.html'
+    success_url = reverse_lazy('references:inventory-list')
+
+
+class InventoryUpdateView(UpdateView):
+    model = Inventory
+    form_class = InventoryForm
+    template_name = 'references/inventory_form.html'
+    success_url = reverse_lazy('references:inventory-list')
+
+
+class InventoryDeleteView(DeleteView):
+    model = Inventory
+    template_name = 'references/inventory_confirm_delete.html'
+    success_url = reverse_lazy('references:inventory-list')
+
+
+class InventoryDetailView(DetailView):
+    model = Inventory
+    template_name = 'references/inventory_detail.html'
+
+
+# Service Views
+class ServiceListView(ListView):
+    model = Service
+    template_name = 'references/service_list.html'
+
+
+class ServiceCreateView(CreateView):
+    model = Service
+    form_class = ServiceForm
+    template_name = 'references/service_form.html'
+    success_url = reverse_lazy('references:service-list')
+
+
+class ServiceUpdateView(UpdateView):
+    model = Service
+    form_class = ServiceForm
+    template_name = 'references/service_form.html'
+    success_url = reverse_lazy('references:service-list')
+
+
+class ServiceDeleteView(DeleteView):
+    model = Service
+    template_name = 'references/service_confirm_delete.html'
+    success_url = reverse_lazy('references:service-list')
+
+
+class ServiceDetailView(DetailView):
+    model = Service
+    template_name = 'references/service_detail.html'

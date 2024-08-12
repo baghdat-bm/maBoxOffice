@@ -3,11 +3,11 @@
 {% block title %}Шаблон мероприятия{% endblock %}
 {% block content %}
     <div class="container">
-        <h1>Are you sure you want to delete "{{ event.event_template.name }}"?</h1>
+        <h1>Вы уверены что хотите удалить "{{ event.event_template.name }}"?</h1>
         <form method="post">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Yes, delete</button>
-            <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
         </form>
     </div>
 {% endblock %}
