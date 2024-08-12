@@ -34,6 +34,17 @@ class EventForm(forms.ModelForm):
 
 
 class EventTimesForm(forms.ModelForm):
+    begin_date = forms.TimeField(
+        widget=forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
+        input_formats=['%H:%M'],
+        label='Время начала'
+    )
+    end_date = forms.TimeField(
+        widget=forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
+        input_formats=['%H:%M'],
+        label='Время окончания'
+    )
+
     class Meta:
         model = EventTimes
         fields = ['begin_date', 'end_date', 'is_active']
