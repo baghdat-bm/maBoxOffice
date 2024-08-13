@@ -19,13 +19,13 @@ class TicketSale(models.Model):
 
 
 class TicketSalesService(models.Model):
-    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.PROTECT, verbose_name="Продажа билета")
+    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Продажа билета")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
     event_date = models.DateField(verbose_name="Дата мероприятия")
-    event_time = models.DateField(verbose_name="Время мероприятия")
+    event_time = models.TimeField(verbose_name="Время мероприятия")
     inventory = models.ForeignKey(Inventory, on_delete=models.PROTECT, verbose_name="Инвентарь")
-    inventories_count = models.PositiveSmallIntegerField(verbose_name="Количество нвентаря")
+    inventories_count = models.PositiveSmallIntegerField(verbose_name="Количество инвентаря")
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
     discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
@@ -47,7 +47,7 @@ class TicketSalesPayments(models.Model):
         ("CH", "Наличка"),
     )
 
-    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.PROTECT, verbose_name="Продажа билета")
+    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Продажа билета")
     payment_date = models.DateTimeField(verbose_name="Дата оплаты")
     payment_method = models.CharField(
         max_length=2,

@@ -9,6 +9,17 @@ class TicketSaleForm(forms.ModelForm):
 
 
 class TicketSalesServiceForm(forms.ModelForm):
+    event_date = forms.DateField(
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+        input_formats=['%Y-%m-%d'],
+        label='Дата мероприятия'
+    )
+    event_time = forms.TimeField(
+        widget=forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
+        input_formats=['%H:%M'],
+        label='Время мероприятия'
+    )
+
     class Meta:
         model = TicketSalesService
         fields = ['service', 'event', 'event_date', 'event_time', 'inventory', 'inventories_count', 'tickets_count',
