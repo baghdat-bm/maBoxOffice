@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django_htmx.middleware.HtmxMiddleware",
+    'webapp.middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'webapp.urls'
@@ -206,6 +207,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"  # +
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'ticket_sales:ticket-sale-list'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
