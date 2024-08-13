@@ -5,10 +5,10 @@
             <span>
             <button class="btn btn-sm btn-warning"
                     hx-get="{% url 'ticket_sales:ticket-sales-service-update' ticket_sale.id service.id %}"
-                    hx-target="#ticket-sales-service-list" hx-swap="outerHTML">Изменить</button>
+                    hx-target="#ticket-sales-service-list" hx-swap="innerHTML">Изменить</button>
             <button class="btn btn-sm btn-danger"
                     hx-get="{% url 'ticket_sales:ticket-sales-service-delete' ticket_sale.id service.id %}"
-                    hx-target="#ticket-sales-service-list" hx-swap="outerHTML">Удалить</button>
+                    hx-target="#ticket-sales-service-list" hx-swap="innerHTML">Удалить</button>
         </span>
         </li>
     {% endfor %}

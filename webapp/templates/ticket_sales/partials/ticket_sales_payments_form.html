@@ -2,7 +2,7 @@
 
 <form method="post" hx-post="
         {% if form.instance.id %}{% url 'ticket_sales:ticket-sales-payments-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-payments-create' ticket_sale.id %}{% endif %}"
-      hx-target="#ticket-sales-payments-list" hx-swap="outerHTML">
+      hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">
     {% csrf_token %}
     {{ form|crispy }}
     <button type="submit" class="btn btn-primary">Сохранить</button>

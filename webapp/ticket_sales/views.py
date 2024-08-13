@@ -90,7 +90,7 @@ def ticket_sales_payments_create(request, ticket_sale_id):
                           {'ticket_sale': ticket_sale})
     else:
         form = TicketSalesPaymentsForm()
-    return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'form': form})
+    return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'form': form, 'ticket_sale': ticket_sale})
 
 
 def ticket_sales_payments_update(request, ticket_sale_id, pk):
