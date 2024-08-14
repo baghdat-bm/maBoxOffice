@@ -1,6 +1,8 @@
+import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.http import JsonResponse
+
 from .models import TicketSale, TicketSalesService, TicketSalesPayments
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
@@ -113,3 +115,32 @@ def ticket_sales_payments_delete(request, ticket_sale_id, pk):
         return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                       {'ticket_sale': payment.ticket_sale})
     return render(request, 'ticket_sales/partials/ticket_sales_payments_confirm_delete.html', {'payment': payment})
+
+
+def payment_process(request, ticket_sale_id, payment_id):
+    payment = TicketSalesPayments.objects.get(ticket_sale_id=ticket_sale_id, id=payment_id)
+    payload = {
+        'amount': payment.accepted_amount,
+        'method': payment.payment_method,
+        # добавьте другие необходимые данные
+    }
+
+    try:
+        response = requests.post('http://localhost:8080/payment', json=payload)
+        response_data = response.json()
+        if response.status_code == 200 and response_data.get('status') == 'success':
+            payment.process_id = response_data.get('process_id')
+            payment.save()
+            return JsonResponse({'status': 'success', 'process_id': payment.process_id})
+        else:
+            return JsonResponse({'status': 'fail'})
+    except requests.RequestException:
+        return JsonResponse({'status': 'fail'})
+
+
+def check_payment_status(request, process_id=None):
+    try:
+        response = requests.get(f'http://localhost:8080/status/{process_id}')
+        return JsonResponse(response.json())
+    except requests.RequestException:
+        return JsonResponse({'status': 'fail'})

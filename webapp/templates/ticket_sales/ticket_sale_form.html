@@ -6,6 +6,15 @@
 {% block content %}
     <div class="container mt-4">
         <h1>{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} продажи билета</h1>
+
+        <div id="payment-progress-bar" class="progress d-none mt-3">
+            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                 role="progressbar"
+                 style="width: 100%">
+                <span id="payment-progress-text">Соединение с терминалом...</span>
+            </div>
+        </div>
+
         <form method="post">
             {% csrf_token %}
             {{ form|crispy }}
@@ -37,6 +46,13 @@
                         hx-target="#ticket-sales-payments-list" hx-swap="beforeend">
                     Добавить платеж
                 </button>
+
+                <button type="button" class="btn btn-success mt-2" id="start-payment"
+                        data-ticket-sale-id="{{ ticket_sale.id }}"
+                        data-payment-id="{{ form.instance.id }}">
+                    Выполнить оплату
+                </button>
+
             {% else %}
                 Перед добавлением оплаты необходимо сохранить продажу
             {% endif %}
@@ -47,4 +63,70 @@
             </div>
         </form>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.getElementById('start-payment').addEventListener('click', function () {
+            const progressBar = document.getElementById('payment-progress-bar');
+            const progressText = document.getElementById('payment-progress-text');
+
+            // Отобразить прогресс-бар
+            progressBar.classList.remove('d-none');
+
+            // Отправка данных на терминал
+            progressText.textContent = 'Соединение с терминалом...';
+
+            const paymentFormData = new FormData(document.querySelector('form'));
+
+            // Получаем значения из атрибутов данных
+            const ticketSaleId = this.getAttribute('data-ticket-sale-id');
+            const paymentId = this.getAttribute('data-payment-id');
+
+            fetch(`/ticket-sales/payment-process/${ticketSaleId}/${paymentId}/`, {
+                method: 'POST',
+                body: paymentFormData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        progressText.textContent = 'Проводим оплату...';
+                        checkPaymentStatus(data.process_id);
+                    } else {
+                        progressText.textContent = 'Ошибка соединения';
+                        setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                    }
+                })
+                .catch(() => {
+                    progressText.textContent = 'Ошибка соединения';
+                    setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                });
+        });
+
+
+        function checkPaymentStatus(processId) {
+            const progressBar = document.getElementById('payment-progress-bar');
+            const progressText = document.getElementById('payment-progress-text');
+
+            fetch(`{% url 'ticket_sales:check-payment-status' process_id=0 %}`.replace('0', processId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'wait') {
+                        setTimeout(() => checkPaymentStatus(processId), 1000);
+                    } else if (data.status === 'success') {
+                        progressText.textContent = 'Заказ оплачен';
+                        setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                    } else {
+                        progressText.textContent = `Ошибка: ${data.error_text || 'Неизвестная ошибка'}`;
+                        setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                    }
+                })
+                .catch(() => {
+                    progressText.textContent = 'Ошибка проверки статуса';
+                    setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                });
+        }
+
+    </script>
+
 {% endblock %}

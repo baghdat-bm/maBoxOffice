@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, TicketSaleDetailView
+from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
+    TicketSaleDetailView, payment_process, check_payment_status
 from .views import ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete
 from .views import ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete
 
@@ -27,4 +28,8 @@ urlpatterns = [
          name='ticket-sales-payments-update'),
     path('<int:ticket_sale_id>/payments/<int:pk>/delete/', ticket_sales_payments_delete,
          name='ticket-sales-payments-delete'),
+
+    # Payment process
+    path('payment-process/<int:ticket_sale_id>/<int:payment_id>/', payment_process, name='payment-process'),
+    path('check-payment-status/<int:process_id>/', check_payment_status, name='check-payment-status'),
 ]
