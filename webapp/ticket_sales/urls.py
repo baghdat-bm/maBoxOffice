@@ -30,6 +30,6 @@ urlpatterns = [
          name='ticket-sales-payments-delete'),
 
     # Payment process
-    path('payment-process/<int:ticket_sale_id>/<int:payment_id>/', payment_process, name='payment-process'),
+    path('payment-process/<int:ticket_sale_id>/', payment_process, name='payment-process'),
     path('check-payment-status/<int:process_id>/', check_payment_status, name='check-payment-status'),
 ]

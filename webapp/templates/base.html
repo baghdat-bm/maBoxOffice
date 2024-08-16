@@ -46,6 +46,40 @@
             background-color: #e7f3ff; /* светло-голубой цвет */
             box-shadow: none;
         }
+
+        /* Убираем обводку и фон для заголовков аккордеона */
+        .accordion-button {
+            border: none;
+            box-shadow: none;
+        }
+
+        /* Убираем обводку при активации и фокусе */
+        .accordion-button:focus, .accordion-button:not(.collapsed) {
+            box-shadow: none;
+            border: none;
+        }
+
+        /* Убираем границу вокруг самого аккордеона */
+        .accordion-item {
+            border: none;
+        }
+
+        /* Стили для текста ссылок внутри аккордеона */
+        .accordion-body .nav-link {
+            color: inherit; /* Наследовать цвет от родителя */
+            text-decoration: none; /* Убираем подчеркивание */
+        }
+
+        /* Цвет текста при наведении */
+        .accordion-body .nav-link:hover {
+            color: #0d6efd; /* Стандартный цвет ссылки при наведении */
+        }
+
+        /* Убираем постоянное выделение */
+        .accordion-body .nav-link:focus, .accordion-body .nav-link:active {
+            color: #0d6efd;
+            text-decoration: none;
+        }
     </style>
 
     {% block header %}

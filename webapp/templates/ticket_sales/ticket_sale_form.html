@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load form_filters %}
 
 {% block title %}{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} продажи билета{% endblock %}
 
@@ -17,7 +18,44 @@
 
         <form method="post">
             {% csrf_token %}
-            {{ form|crispy }}
+            <!-- Сетка для первой строки с полями date, amount и status -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.date.label_tag }}
+                        {{ form.date|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.amount.label_tag }}
+                        {{ form.amount|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.status.label_tag }}
+                        {{ form.status|add_class:"form-control" }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Сетка для новой строки с полями paid_amount и refund_amount -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.paid_amount.label_tag }}
+                        {{ form.paid_amount|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.refund_amount.label_tag }}
+                        {{ form.refund_amount|add_class:"form-control" }}
+                    </div>
+                </div>
+            </div>
+
             <h2>Услуги</h2>
             <div id="ticket-sales-service-list">
                 {% if form.instance.id %}
@@ -41,20 +79,13 @@
                 {% endif %}
             </div>
             {% if form.instance.id %}
-                <button type="button" class="btn btn-secondary mt-2"
-                        hx-get="{% url 'ticket_sales:ticket-sales-payments-create' form.instance.id %}"
-                        hx-target="#ticket-sales-payments-list" hx-swap="beforeend">
-                    Добавить платеж
-                </button>
-
                 <button type="button" class="btn btn-success mt-2" id="start-payment"
-                        data-ticket-sale-id="{{ ticket_sale.id }}"
-                        data-payment-id="{{ form.instance.id }}">
+                        data-ticket-sale-id="{{ form.instance.id }}">
                     Выполнить оплату
                 </button>
 
             {% else %}
-                Перед добавлением оплаты необходимо сохранить продажу
+                Для оплаты необходимо сохранить продажу
             {% endif %}
 
             <div class="mt-2">
@@ -64,6 +95,7 @@
         </form>
     </div>
 {% endblock %}
+
 
 {% block scripts %}
     <script>
@@ -81,9 +113,8 @@
 
             // Получаем значения из атрибутов данных
             const ticketSaleId = this.getAttribute('data-ticket-sale-id');
-            const paymentId = this.getAttribute('data-payment-id');
 
-            fetch(`/ticket-sales/payment-process/${ticketSaleId}/${paymentId}/`, {
+            fetch(`/ticket-sales/payment-process/${ticketSaleId}/`, {
                 method: 'POST',
                 body: paymentFormData
             })
@@ -108,7 +139,7 @@
             const progressBar = document.getElementById('payment-progress-bar');
             const progressText = document.getElementById('payment-progress-text');
 
-            fetch(`{% url 'ticket_sales:check-payment-status' process_id=0 %}`.replace('0', processId))
+            fetch(`{% url 'ticket_sales:check-payment-status' process_id=0 %}`.replace(0, processId))
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'wait') {

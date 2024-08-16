@@ -1,6 +1,6 @@
-<div class="accordion" id="navbarAccordion" style="position: fixed; top: 0; left: 0; height: 100%; width: 250px; padding-top: 60px;">
+<div class="accordion bg-light" id="navbarAccordion" style="position: fixed; top: 0; left: 0; height: 100%; width: 250px; padding-top: 60px;">
     <!-- Элемент Продажа билетов как часть аккордеона, без постоянного выделения -->
-    <div class="accordion-item">
+    <div class="accordion-item bg-light">
         <h2 class="accordion-header" id="headingTicketSales">
             <a class="accordion-button no-arrow d-flex align-items-center" href="{% url 'ticket_sales:ticket-sale-list' %}" style="text-decoration: none;">
                 <i class="bi bi-ticket-perforated-fill me-2"></i> Продажа билетов
@@ -9,7 +9,7 @@
     </div>
 
     <!-- Элемент Справочники как раскрывающийся компонент -->
-    <div class="accordion-item">
+    <div class="accordion-item bg-light">
         <h2 class="accordion-header" id="headingReferences">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReferences" aria-expanded="false" aria-controls="collapseReferences">
                 <i class="bi bi-folder-fill me-2"></i> Справочники

@@ -7,6 +7,8 @@ from references.models import Service, Event, Inventory
 class TicketSale(models.Model):
     date = models.DateField(verbose_name="Дата")
     amount = models.IntegerField(verbose_name="Сумма итого")
+    paid_amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
+    refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
     status = models.CharField(max_length=2, verbose_name='Статус', null=True, blank=True)
 
     def __str__(self):
@@ -54,10 +56,8 @@ class TicketSalesPayments(models.Model):
         choices=PaymentMethods,
         default="QR",
     )
-    accepted_from_the_buyer = models.IntegerField(verbose_name="Принято от покупателя")
-    amount_of_change = models.IntegerField(verbose_name="Сумма сдачи", blank=True, default=0)
-    accepted_amount = models.IntegerField(verbose_name="Принятая сумма", blank=True, default=0)
-    process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
+    amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
+    process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', unique=True)
     last_status = models.CharField(max_length=15, verbose_name='Последний статус', null=True, blank=True)
     error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
     transaction_id = models.CharField(max_length=20, verbose_name='Идентификатор успешной транзакции', null=True,

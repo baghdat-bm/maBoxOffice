@@ -1,7 +1,7 @@
 <ul class="list-group">
     {% for payment in ticket_sale.ticketsalespayments_set.all %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ payment.payment_method }} - {{ payment.accepted_amount }} тг.
+            {{ payment.payment_method }} - {{ payment.accepted_amount }} ₸
             <span>
             <button class="btn btn-sm btn-warning"
                     hx-get="{% url 'ticket_sales:ticket-sales-payments-update' ticket_sale.id payment.id %}"

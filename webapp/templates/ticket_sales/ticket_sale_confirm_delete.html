@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-4">
     <h1>Удалить продажу билета №{{ object.id }}?</h1>
-    <p>Вы уверены, что хотите удалить продажу билета от {{ object.date }} на сумму {{ object.amount }} тг?</p>
+    <p>Вы уверены, что хотите удалить продажу билета от {{ object.date }} на сумму {{ object.amount }} ₸?</p>
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Удалить</button>
