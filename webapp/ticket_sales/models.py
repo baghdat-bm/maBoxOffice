@@ -1,15 +1,15 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from references.models import Service, Event, Inventory
 
 
 class TicketSale(models.Model):
-    date = models.DateField(verbose_name="Дата")
-    amount = models.IntegerField(verbose_name="Сумма итого")
+    date = models.DateField(default=timezone.now, verbose_name="Дата")
+    amount = models.IntegerField(verbose_name="Сумма итого", blank=True, default=0)
     paid_amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
     refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
-    status = models.CharField(max_length=2, verbose_name='Статус', null=True, blank=True)
+    status = models.CharField(max_length=15, verbose_name='Статус', null=True, blank=True, default='Сформирован')
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'
@@ -26,8 +26,8 @@ class TicketSalesService(models.Model):
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
     event_date = models.DateField(verbose_name="Дата мероприятия")
     event_time = models.TimeField(verbose_name="Время мероприятия")
-    inventory = models.ForeignKey(Inventory, on_delete=models.PROTECT, verbose_name="Инвентарь")
-    inventories_count = models.PositiveSmallIntegerField(verbose_name="Количество инвентаря")
+    inventory = models.ForeignKey(Inventory, on_delete=models.PROTECT, verbose_name="Инвентарь", blank=True, null=True)
+    inventories_count = models.PositiveSmallIntegerField(verbose_name="Количество инвентаря", blank=True, default=0)
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
     discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)

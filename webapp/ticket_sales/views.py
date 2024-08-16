@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import requests
@@ -8,6 +9,8 @@ from django.http import JsonResponse
 from .models import TicketSale, TicketSalesService, TicketSalesPayments
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
+
+from .utils import update_ticket_sale_total
 
 
 # TicketSale Views
@@ -52,6 +55,8 @@ def ticket_sales_service_create(request, ticket_sale_id):
             service = form.save(commit=False)
             service.ticket_sale = ticket_sale
             service.save()
+            update_ticket_sale_total(ticket_sale)
+
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html', {'ticket_sale': ticket_sale})
     else:
         form = TicketSalesServiceForm()
@@ -64,6 +69,8 @@ def ticket_sales_service_update(request, ticket_sale_id, pk):
         form = TicketSalesServiceForm(request.POST, instance=service)
         if form.is_valid():
             form.save()
+            update_ticket_sale_total(service.ticket_sale)
+
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html',
                           {'ticket_sale': service.ticket_sale})
     else:
@@ -74,7 +81,10 @@ def ticket_sales_service_update(request, ticket_sale_id, pk):
 def ticket_sales_service_delete(request, ticket_sale_id, pk):
     service = get_object_or_404(TicketSalesService, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
+        ticket_sale = service.ticket_sale
         service.delete()
+        update_ticket_sale_total(ticket_sale)
+
         return render(request, 'ticket_sales/partials/ticket_sales_service_list.html',
                       {'ticket_sale': service.ticket_sale})
     return render(request, 'ticket_sales/partials/ticket_sales_service_confirm_delete.html', {'service': service})
@@ -121,40 +131,56 @@ def ticket_sales_payments_delete(request, ticket_sale_id, pk):
 
 def payment_process(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
-    payload = {
-        'amount': ticket_sale.amount,
-        # добавьте другие необходимые данные
-    }
-
     try:
         response = requests.get(f'http://localhost:8080/payment?amount={ticket_sale.amount}')
-        response_data = response.json()
-        if response.status_code == 200 and response_data.get('status') == 'success':
-            new_payment = TicketSalesPayments.objects.create()
-            new_payment.ticket_sale = ticket_sale
-            new_payment.process_id = response_data.get('processId')
-            new_payment.payment_date = datetime.now()
-            new_payment.amount = ticket_sale.amount
-            new_payment.save()
-            return JsonResponse({'status': 'success', 'process_id': new_payment.process_id})
+        json_data = response.json()
+        if json_data:
+            response_data = json_data.get('data')
+            if response.status_code == 200 and response_data.get('status') == 'wait':
+                process_id = response_data.get('processId')
+                return JsonResponse({'status': 'wait', 'process_id': process_id})
         else:
             return JsonResponse({'status': 'fail'})
     except requests.RequestException:
         return JsonResponse({'status': 'fail'})
 
 
-def check_payment_status(request, process_id):
+def check_payment_status(request, process_id, ticket_sale_id):
     try:
-        response = requests.get(f'http://localhost:8080/status/{process_id}')
+        response = requests.get(f'http://localhost:8080/status?processId={process_id}')
         response_data = response.json()
-        chequeInfo = response_data.get("chequeInfo")
-        if response.status_code == 200 and response_data.get('status') == 'success':
-            payment = TicketSalesPayments.objects.get(process_id=process_id)
-            payment.amount = chequeInfo['amount']
-            payment.payment_date = chequeInfo['date']
-            payment.payment_method = chequeInfo['method']
-            payment.response_data = response_data
-            payment.save()
+        if response.status_code == 200:
+            response_data = response_data.get('data')
+            if response_data.get('status') == 'success':
+                chequeInfo = response_data.get("chequeInfo")
+                ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
+                new_payment = TicketSalesPayments()
+                new_payment.ticket_sale = ticket_sale
+                new_payment.process_id = process_id
+                new_payment.amount = chequeInfo['amount']
+                if chequeInfo['date']:
+                    new_payment.payment_date = datetime.strptime(chequeInfo['date'], "%d.%m.%y %H:%M:%S")
+                else:
+                    new_payment.payment_date = datetime.now()
+                if chequeInfo['method'] == 'qr':
+                    new_payment.payment_method = "QR"
+                elif chequeInfo['method'] == 'card':
+                    new_payment.payment_method = "CD"
+                else:
+                    new_payment.payment_method = "CH"
+                new_payment.transaction_id = response_data['transactionId']
+                new_payment.response_data = response_data
+                new_payment.save()
+
+                ticket_sale.paid_amount = ticket_sale.paid_amount + new_payment.amount
+                ticket_sale.status = 'Оплачен' if ticket_sale.paid_amount == ticket_sale.amount else 'Частично оплачен'
+                ticket_sale.save()
+                return JsonResponse({'status': 'success'})
+            else:
+                return JsonResponse({'status': 'wait'})
         return JsonResponse(response.json())
     except requests.RequestException:
         return JsonResponse({'status': 'fail'})
+    except Exception as e:
+        print(e.__str__())
+        return JsonResponse({'status': 'wait', 'error': e.__str__()})

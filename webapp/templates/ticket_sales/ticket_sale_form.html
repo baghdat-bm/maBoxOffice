@@ -65,7 +65,8 @@
             {% if form.instance.id %}
                 <button type="button" class="btn btn-secondary mt-2"
                         hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
-                        hx-target="#ticket-sales-service-list" hx-swap="beforeend">
+                        hx-target="#ticket-sales-service-list" 
+                        hx-swap="beforeend">
                     Добавить услугу
                 </button>
             {% else %}
@@ -89,7 +90,16 @@
             {% endif %}
 
             <div class="mt-2">
-                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
+                <button type="submit" class="btn btn-secondary"
+                        {% if form.instance.id %}
+                        hx-post="{% url 'ticket_sales:ticket-sale-update' form.instance.id %}"
+                        {% else %}
+                        hx-post="{% url 'ticket_sales:ticket-sale-create' %}"
+                        {% endif %}
+                        hx-swap="none">
+                    Сохранить
+                </button>
                 <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Назад к списку</a>
             </div>
         </form>
@@ -98,55 +108,63 @@
 
 
 {% block scripts %}
-    <script>
-        document.getElementById('start-payment').addEventListener('click', function () {
-            const progressBar = document.getElementById('payment-progress-bar');
-            const progressText = document.getElementById('payment-progress-text');
+    <script>        
+        if (document.getElementById('start-payment')) {
+            document.getElementById('start-payment').addEventListener('click', function () {
+                const progressBar = document.getElementById('payment-progress-bar');
+                const progressText = document.getElementById('payment-progress-text');
 
-            // Отобразить прогресс-бар
-            progressBar.classList.remove('d-none');
+                // Отобразить прогресс-бар
+                progressBar.classList.remove('d-none');
 
-            // Отправка данных на терминал
-            progressText.textContent = 'Соединение с терминалом...';
+                // Отправка данных на терминал
+                progressText.textContent = 'Соединение с терминалом...';
 
-            const paymentFormData = new FormData(document.querySelector('form'));
+                const paymentFormData = new FormData(document.querySelector('form'));
 
-            // Получаем значения из атрибутов данных
-            const ticketSaleId = this.getAttribute('data-ticket-sale-id');
+                // Получаем значения из атрибутов данных
+                const ticketSaleId = this.getAttribute('data-ticket-sale-id');
 
-            fetch(`/ticket-sales/payment-process/${ticketSaleId}/`, {
-                method: 'POST',
-                body: paymentFormData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        progressText.textContent = 'Проводим оплату...';
-                        checkPaymentStatus(data.process_id);
-                    } else {
+                fetch(`/ticket-sales/payment-process/${ticketSaleId}/`, {
+                    method: 'POST',
+                    body: paymentFormData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'wait') {
+                            progressText.textContent = 'Проводим оплату...';
+                            checkPaymentStatus(data.process_id, ticketSaleId);
+                        } else {
+                            progressText.textContent = 'Ошибка соединения';
+                            setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                        }
+                    })
+                    .catch(() => {
                         progressText.textContent = 'Ошибка соединения';
                         setTimeout(() => progressBar.classList.add('d-none'), 5000);
-                    }
-                })
-                .catch(() => {
-                    progressText.textContent = 'Ошибка соединения';
-                    setTimeout(() => progressBar.classList.add('d-none'), 5000);
-                });
-        });
+                    });
+            })
+        }
+        ;
 
 
-        function checkPaymentStatus(processId) {
+        function checkPaymentStatus(processId, ticketSaleId) {
             const progressBar = document.getElementById('payment-progress-bar');
             const progressText = document.getElementById('payment-progress-text');
 
-            fetch(`{% url 'ticket_sales:check-payment-status' process_id=0 %}`.replace(0, processId))
+            fetch(`{% url 'ticket_sales:check-payment-status' process_id='$1' ticket_sale_id='$2' %}`
+                .replace('$1', processId)
+                .replace('$2', ticketSaleId))
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'wait') {
-                        setTimeout(() => checkPaymentStatus(processId), 1000);
+                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId), 1000);
                     } else if (data.status === 'success') {
                         progressText.textContent = 'Заказ оплачен';
-                        setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                        setTimeout(() => {
+                            progressBar.classList.add('d-none');
+                            window.location.reload(); // Полное обновление страницы
+                        }, 3000);
                     } else {
                         progressText.textContent = `Ошибка: ${data.error_text || 'Неизвестная ошибка'}`;
                         setTimeout(() => progressBar.classList.add('d-none'), 5000);
