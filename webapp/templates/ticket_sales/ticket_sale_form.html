@@ -5,6 +5,41 @@
 {% block title %}{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} продажи билета{% endblock %}
 
 {% block content %}
+    <!-- Modals -->
+    <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editServiceModalLabel">Услуга</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                    onclick="hideServiceModal();"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Сюда будет загружена форма с помощью HTMX -->
+                    <div id="modal-body-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPaymentModalLabel">Оплата</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                    onclick="hideServiceModal();"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Сюда будет загружена форма с помощью HTMX -->
+                    <div id="modal-payment-body-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container mt-4">
         <h1>{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} продажи билета</h1>
 
@@ -65,8 +100,10 @@
             {% if form.instance.id %}
                 <button type="button" class="btn btn-secondary mt-2"
                         hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
-                        hx-target="#ticket-sales-service-list" 
-                        hx-swap="beforeend">
+                        {# hx-target="#ticket-sales-service-list" hx-swap="beforeend"#}
+                        hx-target="#modal-body-content"
+                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"                        
+                >
                     Добавить услугу
                 </button>
             {% else %}
@@ -108,7 +145,12 @@
 
 
 {% block scripts %}
-    <script>        
+    <script>
+
+        function hideServiceModal() {
+            window.location.reload();
+        }
+
         if (document.getElementById('start-payment')) {
             document.getElementById('start-payment').addEventListener('click', function () {
                 const progressBar = document.getElementById('payment-progress-bar');

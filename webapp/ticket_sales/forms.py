@@ -11,11 +11,11 @@ class TicketSaleForm(forms.ModelForm):
         model = TicketSale
         fields = ['date', 'amount', 'status', 'paid_amount', 'refund_amount']
         widgets = {
-            'date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'disabled': 'disabled'}),
-            'amount': forms.NumberInput(attrs={'disabled': 'disabled'}),
-            'status': forms.TextInput(attrs={'disabled': 'disabled'}),
-            'paid_amount': forms.NumberInput(attrs={'disabled': 'disabled'}),
-            'refund_amount': forms.NumberInput(attrs={'disabled': 'disabled'}),
+            'date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            # 'amount': forms.NumberInput(attrs={'disabled': 'disabled'}),
+            # 'status': forms.TextInput(attrs={'disabled': 'disabled'}),
+            # 'paid_amount': forms.NumberInput(attrs={'disabled': 'disabled'}),
+            # 'refund_amount': forms.NumberInput(attrs={'disabled': 'disabled'}),
         }
 
 

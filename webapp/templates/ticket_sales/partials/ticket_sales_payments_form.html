@@ -1,11 +1,11 @@
 {% load crispy_forms_tags %}
 
 <form method="post"
-      {% if form.instance.id %}
-          hx-post="{% url 'ticket_sales:ticket-sales-payments-update' form.instance.ticket_sale.id form.instance.id %}"
-      {% else %}
-          hx-post="{% url 'ticket_sales:ticket-sales-payments-create' ticket_sale.id %}"
-      {% endif %}
+        {% if form.instance.id %}
+      hx-post="{% url 'ticket_sales:ticket-sales-payments-update' form.instance.ticket_sale.id form.instance.id %}"
+        {% else %}
+      hx-post="{% url 'ticket_sales:ticket-sales-payments-create' ticket_sale.id %}"
+        {% endif %}
       hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">
     {% csrf_token %}
     {{ form|crispy }}
@@ -19,12 +19,19 @@
 </form>
 
 {% block scripts %}
-<script>
-    document.body.addEventListener('htmx:afterRequest', function (event) {
-        // Если это была успешная отправка формы, обновляем страницу
-        window.setTimeout(function () {
-            window.location.reload();
-        }, 500); // Можете настроить задержку, если нужно
-    });
-</script>
+    <script>
+        document.body.addEventListener('htmx:afterRequest', function (event) {
+            // Если это была успешная отправка формы, обновляем страницу
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 500); // Можете настроить задержку, если нужно
+        });
+
+        // Закрываем модальное окно после успешного сохранения формы
+        function closeModal() {
+            var modalElement = document.getElementById('editPaymnentModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+        }
+    </script>
 {% endblock %}
