@@ -1,15 +1,89 @@
 {% load crispy_forms_tags %}
+{% load form_filters %}
 
 <form method="post"
-      {% if form.instance.id %}
-          hx-post="{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}"
-      {% else %}
-          hx-post="{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}"
-      {% endif %}
+        {% if form.instance.id %}
+      hx-post="{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}"
+        {% else %}
+      hx-post="{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}"
+        {% endif %}
       hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
     {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-primary">
+    {#    {{ form|crispy }}#}
+
+    <!-- Первая строка с полями service, event, event_date, event_time -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.service.label_tag }}
+                {{ form.service|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.event.label_tag }}
+                {{ form.event|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.event_date.label_tag }}
+                {{ form.event_date|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.event_time.label_tag }}
+                {{ form.event_time|add_class:"form-control" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Вторая строка с полями inventory, inventories_count -->
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="form-group">
+                {{ form.inventory.label_tag }}
+                {{ form.inventory|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                {{ form.inventories_count.label_tag }}
+                {{ form.inventories_count|add_class:"form-control" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Третья строка с полями tickets_count, tickets_amount, discount, total_amount -->
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.tickets_count.label_tag }}
+                {{ form.tickets_count|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.tickets_amount.label_tag }}
+                {{ form.tickets_amount|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.discount.label_tag }}
+                {{ form.discount|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ form.total_amount.label_tag }}
+                {{ form.total_amount|add_class:"form-control" }}
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-1">
         {% if form.instance.id %}
             Записать
         {% else %}
@@ -19,12 +93,12 @@
 </form>
 
 {% block scripts %}
-<script>
-    document.body.addEventListener('htmx:afterRequest', function (event) {
-        // Если это была успешная отправка формы, обновляем страницу
-        window.setTimeout(function () {
-            window.location.reload();
-        }, 500); // Можете настроить задержку, если нужно
-    });
-</script>
+    <script>
+        document.body.addEventListener('htmx:afterRequest', function (event) {
+            // Если это была успешная отправка формы, обновляем страницу
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 500); // Можете настроить задержку, если нужно
+        });
+    </script>
 {% endblock %}

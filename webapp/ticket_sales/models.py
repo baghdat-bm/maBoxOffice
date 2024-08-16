@@ -62,7 +62,7 @@ class TicketSalesPayments(models.Model):
     error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
     transaction_id = models.CharField(max_length=20, verbose_name='Идентификатор успешной транзакции', null=True,
                                       blank=True)
-    response_data = models.TextField(max_length=400, verbose_name='Полученные данные', null=True,
+    response_data = models.TextField(max_length=600, verbose_name='Полученные данные', null=True,
                                      blank=True)
 
     def __str__(self):

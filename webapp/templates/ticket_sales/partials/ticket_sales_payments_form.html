@@ -17,3 +17,14 @@
         {% endif %}
     </button>
 </form>
+
+{% block scripts %}
+<script>
+    document.body.addEventListener('htmx:afterRequest', function (event) {
+        // Если это была успешная отправка формы, обновляем страницу
+        window.setTimeout(function () {
+            window.location.reload();
+        }, 500); // Можете настроить задержку, если нужно
+    });
+</script>
+{% endblock %}

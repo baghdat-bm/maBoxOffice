@@ -10,7 +10,7 @@ from .models import TicketSale, TicketSalesService, TicketSalesPayments
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
-from .utils import update_ticket_sale_total
+from .utils import update_ticket_amount, update_ticket_paid_amount
 
 
 # TicketSale Views
@@ -55,7 +55,7 @@ def ticket_sales_service_create(request, ticket_sale_id):
             service = form.save(commit=False)
             service.ticket_sale = ticket_sale
             service.save()
-            update_ticket_sale_total(ticket_sale)
+            update_ticket_amount(ticket_sale)
 
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html', {'ticket_sale': ticket_sale})
     else:
@@ -69,7 +69,7 @@ def ticket_sales_service_update(request, ticket_sale_id, pk):
         form = TicketSalesServiceForm(request.POST, instance=service)
         if form.is_valid():
             form.save()
-            update_ticket_sale_total(service.ticket_sale)
+            update_ticket_amount(service.ticket_sale)
 
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html',
                           {'ticket_sale': service.ticket_sale})
@@ -83,7 +83,7 @@ def ticket_sales_service_delete(request, ticket_sale_id, pk):
     if request.method == "POST":
         ticket_sale = service.ticket_sale
         service.delete()
-        update_ticket_sale_total(ticket_sale)
+        update_ticket_amount(ticket_sale)
 
         return render(request, 'ticket_sales/partials/ticket_sales_service_list.html',
                       {'ticket_sale': service.ticket_sale})
@@ -100,6 +100,7 @@ def ticket_sales_payments_create(request, ticket_sale_id):
             payment = form.save(commit=False)
             payment.ticket_sale = ticket_sale
             payment.save()
+            update_ticket_paid_amount(ticket_sale)
             return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                           {'ticket_sale': ticket_sale})
     else:
@@ -113,6 +114,7 @@ def ticket_sales_payments_update(request, ticket_sale_id, pk):
         form = TicketSalesPaymentsForm(request.POST, instance=payment)
         if form.is_valid():
             form.save()
+            update_ticket_paid_amount(payment.ticket_sale)
             return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                           {'ticket_sale': payment.ticket_sale})
     else:
@@ -124,6 +126,7 @@ def ticket_sales_payments_delete(request, ticket_sale_id, pk):
     payment = get_object_or_404(TicketSalesPayments, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
         payment.delete()
+        update_ticket_paid_amount(payment.ticket_sale)
         return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                       {'ticket_sale': payment.ticket_sale})
     return render(request, 'ticket_sales/partials/ticket_sales_payments_confirm_delete.html', {'payment': payment})

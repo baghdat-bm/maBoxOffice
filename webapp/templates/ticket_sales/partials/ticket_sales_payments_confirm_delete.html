@@ -1,8 +1,21 @@
 {% load crispy_forms_tags %}
 
-<form method="post" hx-post="{% url 'ticket_sales:ticket-sales-payments-delete' payment.ticket_sale.id payment.id %}" hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">
+<form method="post" hx-post="{% url 'ticket_sales:ticket-sales-payments-delete' payment.ticket_sale.id payment.id %}"
+      hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">
     {% csrf_token %}
     <p>Вы уверены, что хотите удалить платеж?</p>
     <button type="submit" class="btn btn-danger">Удалить</button>
-    <button type="button" class="btn btn-secondary" hx-get="{% url 'ticket_sales:ticket-sale-detail' payment.ticket_sale.id %}" hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">Отменить</button>
+    <button type="button" class="btn btn-secondary"
+            hx-get="{% url 'ticket_sales:ticket-sale-detail' payment.ticket_sale.id %}"
+            hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">Отменить
+    </button>
 </form>
+
+{% block scripts %}
+    <script>
+        document.body.addEventListener('htmx:afterRequest', function (event) {
+            // Если это была успешная отправка формы, обновляем страницу
+            window.location.reload();
+        });
+    </script>
+{% endblock %}
