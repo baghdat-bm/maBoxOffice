@@ -90,6 +90,28 @@
                     </div>
                 </div>
             </div>
+        
+            <!-- Сетка для новой строки с полями paid_cash, refund_amount и paid_qr -->
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_cash.label_tag }}
+                        {{ form.paid_cash|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_card.label_tag }}
+                        {{ form.paid_card|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_qr.label_tag }}
+                        {{ form.paid_qr|add_class:"form-control" }}
+                    </div>
+                </div>
+            </div>            
 
             <h2>Услуги</h2>
             <div id="ticket-sales-service-list">
