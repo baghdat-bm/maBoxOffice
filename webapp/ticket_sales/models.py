@@ -9,6 +9,9 @@ class TicketSale(models.Model):
     amount = models.IntegerField(verbose_name="Сумма итого", blank=True, default=0)
     paid_amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
     refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
+    paid_cash = models.IntegerField(verbose_name="Оплачено наличкой", blank=True, default=0)
+    paid_card = models.IntegerField(verbose_name="Оплачено картой", blank=True, default=0)
+    paid_qr = models.IntegerField(verbose_name="Оплачено QR", blank=True, default=0)
     status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Сформирован')
 
     def __str__(self):
