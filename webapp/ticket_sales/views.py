@@ -132,6 +132,14 @@ def ticket_sales_payments_delete(request, ticket_sale_id, pk):
     return render(request, 'ticket_sales/partials/ticket_sales_payments_confirm_delete.html', {'payment': payment})
 
 
+def payment_detail_view(request, ticket_sale_id, pk):
+    # Получаем объект оплаты по ticket_sale_id и pk
+    payment = get_object_or_404(TicketSalesPayments, ticket_sale_id=ticket_sale_id, pk=pk)
+
+    # Рендерим шаблон с передачей объекта оплаты
+    return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'object': payment})
+
+
 def payment_process(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
     try:

@@ -9,7 +9,9 @@
     <ul class="list-group">
         {% for service in object_list %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
-            <a href="{% url 'references:service-detail' service.id %}">{{ service.name }} ({{ service.event.name }})</a>
+            <a href="{% url 'references:service-detail' service.id %}">
+                {{ service.name }} ({{ service.event.name }} {{ service.inventory }})
+            </a>
             <span>
                 <a href="{% url 'references:service-update' service.id %}" class="btn btn-sm btn-warning">Изменить</a>
                 <a href="{% url 'references:service-delete' service.id %}" class="btn btn-sm btn-danger">Удалить</a>

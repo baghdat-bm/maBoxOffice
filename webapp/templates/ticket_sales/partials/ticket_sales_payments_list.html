@@ -4,13 +4,13 @@
             Транзакция {{ payment.transaction_id }} от {{ payment.payment_date }} на сумму {{ payment.amount }} ₸
             <span>
             <button class="btn btn-sm btn-warning"
-                    hx-get="{% url 'ticket_sales:ticket-sales-payments-update' ticket_sale.id payment.id %}"
+                    hx-get="{% url 'ticket_sales:payment-detail' ticket_sale.id payment.id %}"
 {#                    hx-target="#ticket-sales-payments-list" hx-swap="innerHTML"#}
                     hx-target="#modal-payment-body-content"
                     hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal"
-            >Изменить</button>
+            >Просмотр</button>
             <button class="btn btn-sm btn-danger"
-                    hx-get="{% url 'ticket_sales:ticket-sales-payments-delete' ticket_sale.id payment.id %}"
+                    hx-get="{% url 'ticket_sales:payment-delete' ticket_sale.id payment.id %}"
 {#                    hx-target="#ticket-sales-payments-list" hx-swap="innerHTML"#}
                     hx-target="#modal-payment-body-content"
                     hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal"

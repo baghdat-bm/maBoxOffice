@@ -9,6 +9,7 @@
     <p>Размер: {{ object.size }}</p>
     <p>Количество: {{ object.quantity }}</p>
     <p>Стоимость: {{ object.cost }}</p>
+    <p>Инвентарь: {{ object.inventory }}</p>
     <a href="{% url 'references:service-update' object.id %}" class="btn btn-warning">Изменить</a>
     <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Назад к списку</a>
 </div>

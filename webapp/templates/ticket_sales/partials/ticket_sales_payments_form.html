@@ -1,22 +1,55 @@
-{% load crispy_forms_tags %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Продажа билета:</label>
+            <p>{{ object.ticket_sale }}</p>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Дата оплаты:</label>
+            <p>{{ object.payment_date|date:"d.m.Y H:i" }}</p>
+        </div>
+    </div>
 
-<form method="post"
-        {% if form.instance.id %}
-      hx-post="{% url 'ticket_sales:ticket-sales-payments-update' form.instance.ticket_sale.id form.instance.id %}"
-        {% else %}
-      hx-post="{% url 'ticket_sales:ticket-sales-payments-create' ticket_sale.id %}"
-        {% endif %}
-      hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-primary">
-        {% if form.instance.id %}
-            Записать
-        {% else %}
-            Добавить
-        {% endif %}
-    </button>
-</form>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Метод оплаты:</label>
+            <p>{{ object.get_payment_method_display }}</p>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Сумма оплаты:</label>
+            <p>{{ object.amount }} ₸</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Идентификатор процесса:</label>
+            <p>{{ object.process_id }}</p>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Идентификатор транзакции:</label>
+            <p>{{ object.transaction_id }}</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Последний статус:</label>
+            <p>{{ object.last_status }}</p>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Текст ошибки:</label>
+            <p>{{ object.error_text }}</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <label class="form-label fw-bold">Полученные данные:</label>
+            <p>{{ object.response_data }}</p>
+        </div>
+    </div>
+</div>
 
 {% block scripts %}
     <script>

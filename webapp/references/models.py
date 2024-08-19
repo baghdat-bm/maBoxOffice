@@ -77,6 +77,7 @@ class Service(models.Model):
     size = models.CharField(max_length=15, verbose_name="Размер")
     quantity = models.PositiveSmallIntegerField(verbose_name="Количество")
     cost = models.IntegerField(verbose_name="Стоимость")
+    inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, verbose_name="Мероприятие", null=True, blank=True)
 
     def __str__(self):
         return f'{self.event.id}: {self.name}'

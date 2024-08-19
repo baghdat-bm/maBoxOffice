@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
-    TicketSaleDetailView, payment_process, check_payment_status
+    TicketSaleDetailView, payment_process, check_payment_status, payment_detail_view
 from .views import ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete
 from .views import ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete
 
@@ -22,14 +22,15 @@ urlpatterns = [
          name='ticket-sales-service-delete'),
 
     # TicketSalesPayments URLs
-    path('<int:ticket_sale_id>/payments/create/', ticket_sales_payments_create,
-         name='ticket-sales-payments-create'),
+    path('<int:ticket_sale_id>/payments/<int:pk>/detail', payment_detail_view, name='payment-detail'),
+    path('<int:ticket_sale_id>/payments/create/', ticket_sales_payments_create, name='payment-create'),
     path('<int:ticket_sale_id>/payments/<int:pk>/update/', ticket_sales_payments_update,
-         name='ticket-sales-payments-update'),
+         name='payment-update'),
     path('<int:ticket_sale_id>/payments/<int:pk>/delete/', ticket_sales_payments_delete,
-         name='ticket-sales-payments-delete'),
+         name='payment-delete'),
 
     # Payment process
     path('payment-process/<int:ticket_sale_id>/', payment_process, name='payment-process'),
-    path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status, name='check-payment-status'),
+    path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status,
+         name='check-payment-status'),
 ]

@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Детали продажи билета{% endblock %}
+{% block title %}Детали заказа{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Продажа Билета №{{ object.id }}</h1>
+    <h1>Заказ №{{ object.id }}</h1>
     <p>Дата: {{ object.date }}</p>
     <p>Сумма итого: {{ object.amount }} ₸</p>
     <p>Статус: {{ object.status }}</p>
