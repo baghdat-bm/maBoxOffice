@@ -8,12 +8,12 @@
     <!-- Modals -->
     <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-xl"> <!-- Изменено на modal-xl для более широкого окна -->
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editServiceModalLabel">Услуга</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    onclick="hideServiceModal();"></button>
+                            onclick="hideServiceModal();"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Сюда будет загружена форма с помощью HTMX -->
@@ -22,7 +22,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel"
          aria-hidden="true">
         <div class="modal-dialog">
@@ -30,7 +30,7 @@
                 <div class="modal-header">
                     <h5 class="modal-title" id="editPaymentModalLabel">Оплата</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    onclick="hideServiceModal();"></button>
+                            onclick="hideServiceModal();"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Сюда будет загружена форма с помощью HTMX -->
@@ -90,7 +90,7 @@
                     </div>
                 </div>
             </div>
-        
+
             <!-- Сетка для новой строки с полями paid_cash, refund_amount и paid_qr -->
             <div class="row mt-3">
                 <div class="col-md-4">
@@ -111,7 +111,7 @@
                         {{ form.paid_qr|add_class:"form-control" }}
                     </div>
                 </div>
-            </div>            
+            </div>
 
             <h2>Услуги</h2>
             <div id="ticket-sales-service-list">
@@ -124,7 +124,7 @@
                         hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
                         {# hx-target="#ticket-sales-service-list" hx-swap="beforeend"#}
                         hx-target="#modal-body-content"
-                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"                        
+                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
                 >
                     Добавить услугу
                 </button>
