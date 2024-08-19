@@ -5,17 +5,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
-
-from news.views import HomePageView
+from ticket_sales.views import TicketSaleListView
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('admin/', admin.site.urls),
-    path("news/", include("news.urls")),
     path("references/", include("references.urls")),
     path("ticket-sales/", include("ticket_sales.urls")),
-    path('', HomePageView.as_view(), name='home'),
+    path('', TicketSaleListView.as_view(), name='home'),
 ]
 
 # # Add this to include language prefixes

@@ -1,8 +1,10 @@
-<div class="accordion bg-light" id="navbarAccordion" style="position: fixed; top: 0; left: 0; height: 100%; width: 250px; padding-top: 60px;">
+<div class="accordion bg-light" id="navbarAccordion"
+     style="position: fixed; top: 0; left: 0; height: 100%; width: 250px; padding-top: 60px;">
     <!-- Элемент Продажа билетов как часть аккордеона, без постоянного выделения -->
     <div class="accordion-item bg-light">
         <h2 class="accordion-header" id="headingTicketSales">
-            <a class="accordion-button no-arrow d-flex align-items-center" href="{% url 'ticket_sales:ticket-sale-list' %}" style="text-decoration: none;">
+            <a class="accordion-button no-arrow d-flex align-items-center"
+               href="{% url 'ticket_sales:ticket-sale-list' %}" style="text-decoration: none;">
                 <i class="bi bi-ticket-perforated-fill me-2"></i> Продажа билетов
             </a>
         </h2>
@@ -11,24 +13,31 @@
     <!-- Элемент Справочники как раскрывающийся компонент -->
     <div class="accordion-item bg-light">
         <h2 class="accordion-header" id="headingReferences">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReferences" aria-expanded="false" aria-controls="collapseReferences">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseReferences" aria-expanded="false" aria-controls="collapseReferences">
                 <i class="bi bi-folder-fill me-2"></i> Справочники
             </button>
         </h2>
-        <div id="collapseReferences" class="accordion-collapse collapse" aria-labelledby="headingReferences" data-bs-parent="#navbarAccordion">
+        <div id="collapseReferences" class="accordion-collapse collapse" aria-labelledby="headingReferences"
+             data-bs-parent="#navbarAccordion">
             <div class="accordion-body">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" href="{% url 'references:event-list' %}"><i class="bi bi-calendar-event me-2"></i> Мероприятия</a>
+                        <a class="nav-link d-flex align-items-center" href="{% url 'references:event_template_list' %}">
+                            <i class="bi bi-file-earmark-text-fill me-2"></i> Шаблоны мероприятий
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" href="{% url 'references:event_template_list' %}"><i class="bi bi-file-earmark-text-fill me-2"></i> Шаблоны мероприятий</a>
+                        <a class="nav-link d-flex align-items-center" href="{% url 'references:event-list' %}"><i
+                                class="bi bi-calendar-event me-2"></i> Мероприятия</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" href="{% url 'references:inventory-list' %}"><i class="bi bi-box-seam-fill me-2"></i> Инвентарь</a>
+                        <a class="nav-link d-flex align-items-center" href="{% url 'references:inventory-list' %}"><i
+                                class="bi bi-box-seam-fill me-2"></i> Инвентарь</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" href="{% url 'references:service-list' %}"><i class="bi bi-wrench me-2"></i> Услуги</a>
+                        <a class="nav-link d-flex align-items-center" href="{% url 'references:service-list' %}"><i
+                                class="bi bi-wrench me-2"></i> Услуги</a>
                     </li>
                 </ul>
             </div>

@@ -83,10 +83,10 @@ class EventTimesForm(forms.ModelForm):
 class InventoryForm(forms.ModelForm):
     class Meta:
         model = Inventory
-        fields = ['event', 'name', 'size', 'quantity', 'cost']
+        fields = ['name', 'size', 'quantity', 'cost']
 
 
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['event', 'name', 'size', 'quantity', 'cost', 'inventory']
+        fields = ['name', 'cost', 'inventory']

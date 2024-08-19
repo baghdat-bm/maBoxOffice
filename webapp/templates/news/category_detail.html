@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}Category Detail{% endblock %}
-{% block content %}
-<h1>{{ name }}</h1>
-<p><strong>URL:</strong> {{ category.slug }}</p>
-<a href="{% url 'news:category_update' category.slug %}" class="btn btn-warning">Edit</a>
-<a href="{% url 'news:category_delete' category.slug %}" class="btn btn-danger">Delete</a>
-{% endblock %}

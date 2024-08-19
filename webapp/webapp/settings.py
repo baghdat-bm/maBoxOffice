@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "django_htmx",
     # Local
-    "news.apps.NewsConfig",
     "references.apps.ReferencesConfig",
     "ticket_sales.apps.TicketSalesConfig",
 ]

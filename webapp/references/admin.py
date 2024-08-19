@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import EventTemplate, Event, EventTimes, Inventory, Service
+from .models import EventTemplate, Event, EventTimes, Inventory, Service, EventTemplateServices
+
+
+class EventTemplateServicesInline(admin.StackedInline):
+    model = EventTemplateServices
+    extra = 0
 
 
 class EventTemplateAdmin(admin.ModelAdmin):
@@ -8,6 +13,7 @@ class EventTemplateAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     list_display_links = ('id', 'name')
     search_fields = ('name',)
+    inlines = (EventTemplateServicesInline,)
 
 
 class EventTimesInline(admin.StackedInline):
@@ -15,21 +21,14 @@ class EventTimesInline(admin.StackedInline):
     extra = 0
 
 
-class InventoryInline(admin.StackedInline):
-    model = Inventory
-    extra = 0
-
-
-class ServiceInline(admin.StackedInline):
-    model = Service
-    extra = 0
-
-
 class EventAdmin(admin.ModelAdmin):
     model = Event
     list_display = ('id', 'begin_date', 'end_date')
-    inlines = (EventTimesInline, InventoryInline, ServiceInline)
+    list_display_links = ('id', 'begin_date', 'end_date')
+    inlines = (EventTimesInline,)
 
 
 admin.site.register(EventTemplate, EventTemplateAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(Inventory)
+admin.site.register(Service)

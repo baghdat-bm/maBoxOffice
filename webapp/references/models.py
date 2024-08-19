@@ -56,14 +56,13 @@ class EventTimes(models.Model):
 
 
 class Inventory(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, verbose_name="Мероприятие")
     name = models.CharField(max_length=300, verbose_name='Наименование')
     size = models.CharField(max_length=15, verbose_name="Размер")
     quantity = models.PositiveSmallIntegerField(verbose_name="Количество")
     cost = models.IntegerField(verbose_name="Стоимость")
 
     def __str__(self):
-        return f'{self.event.id}: {self.name}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = 'Инвентарь'
@@ -72,17 +71,26 @@ class Inventory(models.Model):
 
 
 class Service(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, verbose_name="Мероприятие")
     name = models.CharField(max_length=300, verbose_name='Наименование')
-    size = models.CharField(max_length=15, verbose_name="Размер")
-    quantity = models.PositiveSmallIntegerField(verbose_name="Количество")
     cost = models.IntegerField(verbose_name="Стоимость")
-    inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, verbose_name="Мероприятие", null=True, blank=True)
+    inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, verbose_name="Инвентарь", null=True, blank=True)
 
     def __str__(self):
-        return f'{self.event.id}: {self.name}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = 'Услуга'
         verbose_name_plural = 'Услуги'
         ordering = ['name']
+
+
+class EventTemplateServices(models.Model):
+    event_template = models.ForeignKey(EventTemplate, on_delete=models.CASCADE, verbose_name="Шаблон мероприятий")
+    service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
+
+    def __str__(self):
+        return f'{self.event_template.name} / {self.service.name} ({self.id})'
+
+    class Meta:
+        verbose_name = 'Услуга'
+        verbose_name_plural = 'Услуга'
