@@ -3,7 +3,7 @@ from datetime import datetime
 
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 
 from .models import TicketSale, TicketSalesService, TicketSalesPayments
@@ -43,6 +43,34 @@ class TicketSaleDeleteView(DeleteView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_confirm_delete.html'
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+
+
+def ticket_sale_create_view(request):
+    if request.method == 'POST':
+        form = TicketSaleForm(request.POST)
+        if form.is_valid():
+            # Сохраняем форму
+            ticket_sale = form.save()
+            # Возвращаем JSON с информацией об ID для перенаправления в режим редактирования
+            return JsonResponse({'redirect_url': reverse('ticket_sales:ticket-sale-update', args=[ticket_sale.id])})
+    else:
+        form = TicketSaleForm()
+
+    return render(request, 'ticket_sales/ticket_sale_form.html', {'form': form})
+
+
+def ticket_sale_update_view(request, pk):
+    ticket_sale = get_object_or_404(TicketSale, pk=pk)
+
+    if request.method == 'POST':
+        form = TicketSaleForm(request.POST, instance=ticket_sale)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})  # Возвращаем успешный ответ
+    else:
+        form = TicketSaleForm(instance=ticket_sale)
+
+    return render(request, 'ticket_sales/ticket_sale_form.html', {'form': form})
 
 
 # TicketSalesService HTMX Views

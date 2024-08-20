@@ -51,7 +51,7 @@
             </div>
         </div>
 
-        <form method="post">
+        <form id="ticket-sale-form" method="post">
             {% csrf_token %}
             <!-- Сетка для первой строки с полями date, amount и status -->
             <div class="row">
@@ -150,13 +150,7 @@
 
             <div class="mt-2">
                 <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
-                <button type="submit" class="btn btn-secondary"
-                        {% if form.instance.id %}
-                        hx-post="{% url 'ticket_sales:ticket-sale-update' form.instance.id %}"
-                        {% else %}
-                        hx-post="{% url 'ticket_sales:ticket-sale-create' %}"
-                        {% endif %}
-                        hx-swap="none">
+                <button type="submit" class="btn btn-secondary" id="save-button">
                     Сохранить
                 </button>
                 <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Назад к списку</a>
@@ -169,6 +163,29 @@
 {% block scripts %}
     <script>
 
+        document.getElementById('save-button').addEventListener('click', function (event) {
+            event.preventDefault();
+
+            const form = document.getElementById('ticket-sale-form');
+            const formData = new FormData(form);
+
+            fetch("{% if form.instance.id %} {% url 'ticket_sales:ticket-sale-update-x' form.instance.id %} {% else %} {% url 'ticket_sales:ticket-sale-create-x' %} {% endif %}",
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    },
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    }
+                })
+                .catch(error => console.error('Ошибка:', error));
+        });
+        
         function hideServiceModal() {
             window.location.reload();
         }
