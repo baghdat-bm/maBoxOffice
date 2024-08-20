@@ -10,7 +10,7 @@
         {% for service in object_list %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
             <a href="{% url 'references:service-detail' service.id %}">
-                {{ service.name }} ({{ service.event.name }} {{ service.inventory }})
+                {{ service.name }} ({{ service.id }})
             </a>
             <span>
                 <a href="{% url 'references:service-update' service.id %}" class="btn btn-sm btn-warning">Изменить</a>

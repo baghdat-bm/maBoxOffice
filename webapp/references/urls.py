@@ -4,7 +4,8 @@ from .views import (event_template_create_view, event_template_update_view, even
                     EventCreateView, EventUpdateView, EventDeleteView, EventDetailView, event_times_create,
                     event_times_update, event_times_delete, EventListView,
                     InventoryListView, InventoryCreateView, InventoryUpdateView, InventoryDeleteView, InventoryDetailView,
-                    ServiceListView, ServiceCreateView, ServiceUpdateView, ServiceDeleteView, ServiceDetailView
+                    ServiceListView, ServiceCreateView, ServiceUpdateView, ServiceDeleteView, ServiceDetailView,
+                    event_template_service_create, event_template_service_update, event_template_service_delete
                     )
 
 app_name = 'references'
@@ -42,4 +43,12 @@ urlpatterns = [
     path('service/<int:pk>/update/', ServiceUpdateView.as_view(), name='service-update'),
     path('service/<int:pk>/delete/', ServiceDeleteView.as_view(), name='service-delete'),
     path('service/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
+
+    # EventTemplateServices
+    path('event-templates/<int:event_template_id>/service/create/',
+         event_template_service_create, name='event-template-service-create'),
+    path('<int:event_template_id>/event-templates/service/<int:pk>/update/',
+         event_template_service_update, name='event-template-service-update'),
+    path('<int:event_template_id>/event-templates/service/<int:pk>/delete/',
+         event_template_service_delete, name='event-template-service-delete'),
 ]

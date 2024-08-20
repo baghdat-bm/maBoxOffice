@@ -5,9 +5,7 @@
 {% block content %}
 <div class="container mt-4">
     <h1>{{ object.name }}</h1>
-    <p>Мероприятие: {{ object.event.name }}</p>
-    <p>Размер: {{ object.size }}</p>
-    <p>Количество: {{ object.quantity }}</p>
+    <p>Наименование: {{ object.name }}</p>    
     <p>Стоимость: {{ object.cost }}</p>
     <p>Инвентарь: {{ object.inventory }}</p>
     <a href="{% url 'references:service-update' object.id %}" class="btn btn-warning">Изменить</a>

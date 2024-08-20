@@ -1,0 +1,53 @@
+{% load crispy_forms_tags %}
+{% load form_filters %}
+
+<form method="post" hx-target="#event-template-services-list" hx-swap="innerHTML" hx-on="htmx:afterRequest: closeModal"
+      {% if form.instance.id %}
+      hx-post="{% url 'references:event-template-service-update' form.instance.event_template.id form.instance.id %}"
+      {% else %}
+      hx-post="{% url 'references:event-template-service-create' event_template_id=event_template.id %}"
+      {% endif %}>
+    {% csrf_token %}
+    
+    <!-- Поля формы -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                {{ form.service.label_tag }}
+                {{ form.service|add_class:"form-control" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка для сохранения -->
+    <button type="submit" class="btn btn-primary mt-3">
+        {% if form.instance.id %}
+            Сохранить
+        {% else %}
+            Добавить
+        {% endif %}
+    </button>
+</form>
+
+{% block scripts %}
+    <script>
+        // Перезагрузка страницы после успешного запроса
+        document.body.addEventListener('htmx:afterRequest', function (event) {
+            window.location.reload();
+        });
+
+        // Открытие модального окна после загрузки формы
+        document.body.addEventListener('htmx:afterOnLoad', function (event) {
+            var modalElement = document.getElementById('editServiceModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+            modalInstance.show();
+        });
+
+        // Закрытие модального окна после успешного сохранения формы
+        function closeModal() {
+            var modalElement = document.getElementById('editServiceModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+        }
+    </script>
+{% endblock %}

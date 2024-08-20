@@ -1,13 +1,10 @@
 {% load crispy_forms_tags %}
 
-<form method="post" hx-post="{% url 'ticket_sales:ticket-sales-service-delete' service.ticket_sale.id service.id %}"
-      hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
+<form method="post" hx-post="{% url 'references:event-template-service-delete' service.event_template.id  service.id %}" 
+      hx-target="#event-template-services-list" hx-swap="innerHTML">
     {% csrf_token %}
     <p>Вы уверены, что хотите удалить услугу {{ service.name }}?</p>
     <button type="submit" class="btn btn-danger">Удалить</button>
-    {#    <button type="button" class="btn btn-secondary" #}
-    {#            hx-get="{% url 'ticket_sales:ticket-sale-detail' service.ticket_sale.id %}" #}
-    {#            hx-target="#ticket-sales-service-list" hx-swap="innerHTML">Отменить</button>#}
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
 </form>
 

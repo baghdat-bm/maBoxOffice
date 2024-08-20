@@ -4,12 +4,51 @@
 
 {% block title %}{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий{% endblock %}
 {% block content %}
-    <h1>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий</h1>
+    <div class="container">
+        <h1>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий</h1>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Сохранить</button>
-        <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Отмена</a>
-    </form>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+
+        <!-- Раздел для работы с EventTemplateServices -->
+        <h2 class="mt-4">Услуги шаблона</h2>
+        <div id="event-template-services-list">
+            {% if form.instance.pk %}
+                {% include 'references/partials/event_template_services_list.html' with event_template=form.instance %}
+            {% endif %}
+        </div>
+
+        {% if form.instance.pk %}
+            <!-- Кнопка для добавления услуги -->
+            <button type="button" class="btn btn-secondary mt-2"
+                    hx-get="{% url 'references:event-template-service-create' form.instance.pk %}"
+                    hx-target="#modal-body-content"
+                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal">
+                Добавить услугу
+            </button>
+        {% else %}
+            Для добавления услуги необходимо сохранить шаблон мероприятий
+        {% endif %}
+
+        <!-- Модальное окно для форм (создание/редактирование/удаление) -->
+        <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg"> <!-- Размер окна изменен на modal-lg -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editServiceModalLabel">Услуга</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Сюда будет загружена форма с помощью HTMX -->
+                        <div id="modal-body-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

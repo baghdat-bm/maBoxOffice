@@ -4,7 +4,7 @@ from crispy_forms.bootstrap import InlineField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Fieldset, ButtonHolder, Field, Div
 
-from .models import EventTemplate, Event, EventTimes, Inventory, Service
+from .models import EventTemplate, Event, EventTimes, Inventory, Service, EventTemplateServices
 
 
 class EventTemplateForm(forms.ModelForm):
@@ -90,3 +90,10 @@ class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
         fields = ['name', 'cost', 'inventory']
+
+
+class EventTemplateServicesForm(forms.ModelForm):
+    class Meta:
+        model = EventTemplateServices
+        fields = ['service',]
+

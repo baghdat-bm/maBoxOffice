@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseServerError
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 
-from .forms import EventTemplateForm, EventForm, EventTimesForm, InventoryForm, ServiceForm
-from .models import Event, EventTemplate, EventTimes, Service, Inventory
+from .forms import EventTemplateForm, EventForm, EventTimesForm, InventoryForm, ServiceForm, EventTemplateServicesForm
+from .models import Event, EventTemplate, EventTimes, Service, Inventory, EventTemplateServices
 
 
 def event_template_create_view(request):
@@ -179,3 +179,51 @@ class ServiceDeleteView(DeleteView):
 class ServiceDetailView(DetailView):
     model = Service
     template_name = 'references/service_detail.html'
+
+
+def event_template_service_create(request, event_template_id):
+    event_template = get_object_or_404(EventTemplate, pk=event_template_id)
+
+    if request.method == 'POST':
+        form = EventTemplateServicesForm(request.POST)
+        if form.is_valid():
+            service = form.save(commit=False)
+            service.event_template = event_template
+            service.save()
+            # return redirect('references:event_template_update', pk=event_template.pk)
+            return render(request, 'references/partials/event_template_service_form.html',
+                          {'event_template': event_template})
+    else:
+        form = EventTemplateServicesForm()
+
+    return render(request, 'references/partials/event_template_service_form.html',
+                  {'form': form, 'event_template': event_template})
+
+
+def event_template_service_update(request, event_template_id, pk):
+    service = get_object_or_404(EventTemplateServices, id=pk, event_template_id=event_template_id)
+    if request.method == 'POST':
+        form = EventTemplateServicesForm(request.POST, instance=service)
+        if form.is_valid():
+            form.save()
+            # return redirect('references:event_template_update', pk=service.event_template.pk)
+            return render(request, 'references/partials/event_template_service_form.html',
+                          {'event_template': service.event_template})
+    else:
+        form = EventTemplateServicesForm(instance=service)
+
+    return render(request, 'references/partials/event_template_service_form.html',
+                  {'form': form})
+
+
+def event_template_service_delete(request, event_template_id, pk):
+    service = get_object_or_404(EventTemplateServices, id=pk, event_template_id=event_template_id)
+
+    if request.method == 'POST':
+        service.delete()
+        # return redirect('references:event_template_update', pk=event_template_id)
+        return render(request, 'references/partials/event_template_services_list.html',
+                      {'event_template': service.event_template})
+
+    return render(request, 'references/partials/event_template_service_confirm_delete.html',
+                  {'service': service})
