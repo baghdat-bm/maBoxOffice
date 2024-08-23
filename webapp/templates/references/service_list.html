@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Услуги</h1>
+    <h3>Услуги</h3>
     <a href="{% url 'references:service-create' %}" class="btn btn-primary mb-2">Добавить услугу</a>
     <ul class="list-group">
         {% for service in object_list %}

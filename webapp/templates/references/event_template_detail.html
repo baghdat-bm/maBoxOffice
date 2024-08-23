@@ -3,7 +3,7 @@
 {% block title %}Шаблон мероприятия{% endblock %}
 {% block content %}
     <div class="container">
-        <h1>{{ event_template.name }}</h1>
+        <h3>{{ event_template.name }}</h3>
         {% if event_template.logo %}
         <img src="{{ event_template.logo.url }}" alt="Logo" class="img-fluid mb-3">
         {% endif %}

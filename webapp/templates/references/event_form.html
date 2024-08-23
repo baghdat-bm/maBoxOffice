@@ -15,7 +15,7 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h1>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h1>
+        <h3>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h3>
         <form method="post" hx-post="
                 {% if object %}{{ object.get_update_url }}{% else %}{% url 'references:event-create' %}{% endif %}"
               hx-target="body" hx-swap="outerHTML">
@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <h2>Время</h2>
+            <h4>Время</h4>
             <div id="event-times-list">
                 {% if object %}
                     {% include 'references/partials/event_times_list.html' with event=object %}

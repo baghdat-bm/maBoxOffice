@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Инвентарь</h1>
+    <h3>Инвентарь</h3>
     <a href="{% url 'references:inventory-create' %}" class="btn btn-primary mb-2">Добавить инвентарь</a>
     <ul class="list-group">
         {% for inventory in object_list %}

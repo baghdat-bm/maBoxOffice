@@ -5,7 +5,7 @@
 {% block title %}{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий{% endblock %}
 {% block content %}
     <div class="container">
-        <h1>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий</h1>
+        <h3>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий</h3>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -15,7 +15,7 @@
         </form>
 
         <!-- Раздел для работы с EventTemplateServices -->
-        <h2 class="mt-4">Услуги шаблона</h2>
+        <h4 class="mt-4">Услуги шаблона</h4>
         <div id="event-template-services-list">
             {% if form.instance.pk %}
                 {% include 'references/partials/event_template_services_list.html' with event_template=form.instance %}

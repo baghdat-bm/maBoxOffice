@@ -4,15 +4,15 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Заказ №{{ object.id }}</h1>
+    <h3>Заказ №{{ object.id }}</h3>
     <p>Дата: {{ object.date }}</p>
     <p>Сумма итого: {{ object.amount }} ₸</p>
     <p>Статус: {{ object.status }}</p>
 
-    <h2>Услуги</h2>
+    <h4>Услуги</h4>
     {% include 'ticket_sales/partials/ticket_sales_service_list_view.html' with ticket_sale=object %}
 
-    <h2>Платежи</h2>
+    <h4>Платежи</h4>
     {% include 'ticket_sales/partials/ticket_sales_payments_list_view.html' with ticket_sale=object %}
 
     <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-warning mt-3">Изменить</a>

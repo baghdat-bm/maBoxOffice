@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>{% if object %}Изменить{% else %}Добавить{% endif %} услугу</h1>
+    <h3>{% if object %}Изменить{% else %}Добавить{% endif %} услугу</h3>
     <form method="post">
         {% csrf_token %}
         {{ form|crispy }}

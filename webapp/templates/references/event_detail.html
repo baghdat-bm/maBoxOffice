@@ -3,11 +3,11 @@
 {% block title %}мероприятия{% endblock %}
 {% block content %}
     <div class="container mt-4">
-    <h1>{{ object.name }}</h1>
+    <h3>{{ object.name }}</h3>
     <p>Начало: {{ object.begin_date }}</p>
     <p>Окончание: {{ object.end_date }}</p>
 
-    <h2>Время</h2>
+    <h4>Время</h4>
     <div id="event-times-list">
         {% include 'references/partials/event_times_list_view.html' with event=object %}
     </div>
