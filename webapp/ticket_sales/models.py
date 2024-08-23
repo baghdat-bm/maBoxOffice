@@ -12,7 +12,7 @@ class TicketSale(models.Model):
     paid_cash = models.IntegerField(verbose_name="Оплачено наличкой", blank=True, default=0)
     paid_card = models.IntegerField(verbose_name="Оплачено картой", blank=True, default=0)
     paid_qr = models.IntegerField(verbose_name="Оплачено QR", blank=True, default=0)
-    status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Сформирован')
+    status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Новый заказ')
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'
@@ -21,6 +21,25 @@ class TicketSale(models.Model):
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
         ordering = ['-date']
+
+    def save(self, *args, **kwargs):
+
+        self.paid_amount = self.paid_cash + self.paid_card + self.paid_qr
+
+        if self.paid_amount == 0:
+            self.status = 'Не оплачен'
+        elif self.paid_amount >= self.amount:
+            if self.refund_amount > 0:
+                if self.paid_amount > self.refund_amount:
+                    self.status = 'Частичный возврат'
+                else:
+                    self.status = 'Оплата возвращена'
+            else:
+                self.status = 'Оплачен'
+        elif self.paid_amount < self.amount:
+            self.status = 'Частично оплачен'
+
+        super(TicketSale, self).save(*args, **kwargs)
 
 
 class TicketSalesService(models.Model):

@@ -201,18 +201,21 @@ def check_payment_status(request, process_id, ticket_sale_id):
                     new_payment.payment_date = datetime.strptime(chequeInfo['date'], "%d.%m.%y %H:%M:%S")
                 else:
                     new_payment.payment_date = datetime.now()
+
                 if chequeInfo['method'] == 'qr':
                     new_payment.payment_method = "QR"
+                    ticket_sale.paid_qr += new_payment.amount
                 elif chequeInfo['method'] == 'card':
                     new_payment.payment_method = "CD"
+                    ticket_sale.paid_card += new_payment.amount
                 else:
                     new_payment.payment_method = "CH"
+                    ticket_sale.paid_cash += new_payment.amount
+
                 new_payment.transaction_id = response_data['transactionId']
                 new_payment.response_data = response_data
                 new_payment.save()
 
-                ticket_sale.paid_amount = ticket_sale.paid_amount + new_payment.amount
-                ticket_sale.status = 'Оплачен' if ticket_sale.paid_amount == ticket_sale.amount else 'Частично оплачен'
                 ticket_sale.save()
                 return JsonResponse({'status': 'success'})
             else:

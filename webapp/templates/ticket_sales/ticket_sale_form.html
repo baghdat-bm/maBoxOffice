@@ -41,7 +41,7 @@
     </div>
 
     <div class="container mt-4">
-        <h1>{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} заказа</h1>
+        <h3>{% if form.instance.id %}Редактирование заказа № {{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
 
         <div id="payment-progress-bar" class="progress d-none mt-3">
             <div class="progress-bar progress-bar-striped progress-bar-animated"
@@ -64,13 +64,15 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ form.amount.label_tag }}
-                        {{ form.amount|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.amount.name }}"
+                               id="id_{{ form.amount.name }}" value="{{ form.amount.value }}" disabled>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ form.status.label_tag }}
-                        {{ form.status|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.status.name }}"
+                               id="id_{{ form.status.name }}" value="{{ form.status.value }}" disabled>
                     </div>
                 </div>
             </div>
@@ -80,13 +82,15 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         {{ form.paid_amount.label_tag }}
-                        {{ form.paid_amount|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.paid_amount.name }}"
+                               id="id_{{ form.paid_amount.name }}" value="{{ form.paid_amount.value }}" disabled>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
                         {{ form.refund_amount.label_tag }}
-                        {{ form.refund_amount|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.refund_amount.name }}"
+                               id="id_{{ form.refund_amount.name }}" value="{{ form.refund_amount.value }}" disabled>
                     </div>
                 </div>
             </div>
@@ -96,24 +100,27 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_cash.label_tag }}
-                        {{ form.paid_cash|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.paid_cash.name }}"
+                               id="id_{{ form.paid_cash.name }}" value="{{ form.paid_cash.value }}" disabled>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_card.label_tag }}
-                        {{ form.paid_card|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.paid_card.name }}"
+                               id="id_{{ form.paid_card.name }}" value="{{ form.paid_card.value }}" disabled>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_qr.label_tag }}
-                        {{ form.paid_qr|add_class:"form-control" }}
+                        <input type="text" class="form-control" name="{{ form.paid_qr.name }}"
+                               id="id_{{ form.paid_qr.name }}" value="{{ form.paid_qr.value }}" disabled>
                     </div>
                 </div>
             </div>
 
-            <h2>Услуги</h2>
+            <h4 class="mt-2">Услуги</h4>
             <div id="ticket-sales-service-list">
                 {% if form.instance.id %}
                     {% include 'ticket_sales/partials/ticket_sales_service_list.html' with ticket_sale=form.instance %}
@@ -132,7 +139,7 @@
                 Перед добавлением услуги необходимо сохранить заказ
             {% endif %}
 
-            <h2>Платежи</h2>
+            <h4 class="mt-2">Платежи</h4>
             <div id="ticket-sales-payments-list">
                 {% if form.instance.id %}
                     {% include 'ticket_sales/partials/ticket_sales_payments_list.html' with ticket_sale=form.instance %}
@@ -150,9 +157,10 @@
 
             <div class="mt-2">
                 <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
-                <button type="submit" class="btn btn-secondary" id="save-button">
+                <button type="button" class="btn btn-secondary" id="save-not-close">
                     Сохранить
                 </button>
+
                 <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Назад к списку</a>
             </div>
         </form>
@@ -163,29 +171,37 @@
 {% block scripts %}
     <script>
 
-        document.getElementById('save-button').addEventListener('click', function (event) {
+        document.getElementById('save-not-close').addEventListener('click', function (event) {
             event.preventDefault();
 
             const form = document.getElementById('ticket-sale-form');
             const formData = new FormData(form);
 
-            fetch("{% if form.instance.id %} {% url 'ticket_sales:ticket-sale-update-x' form.instance.id %} {% else %} {% url 'ticket_sales:ticket-sale-create-x' %} {% endif %}",
+            fetch("{% if form.instance.id %} {% url 'ticket_sales:ticket-sale-update-x' form.instance.id %} {% else %} 
+                {% url 'ticket_sales:ticket-sale-create-x' %} {% endif %}",
+            {
+                method: 'POST',
+                    headers
+            :
                 {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                    },
-                    body: formData,
-                })
-                .then(response => response.json())
+                    'X-CSRFToken'
+                :
+                    formData.get('csrfmiddlewaretoken'),
+                }
+            ,
+                body: formData,
+            }
+        )
+        .
+            then(response => response.json())
                 .then(data => {
                     if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
+                        {#window.location.href = data.redirect_url;#}
                     }
                 })
                 .catch(error => console.error('Ошибка:', error));
         });
-        
+
         function hideServiceModal() {
             window.location.reload();
         }

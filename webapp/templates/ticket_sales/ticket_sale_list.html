@@ -4,12 +4,12 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h1>Заказы</h1>
+        <h3>Заказы</h3>
         <a href="{% url 'ticket_sales:ticket-sale-create' %}" class="btn btn-primary mb-2">Новый заказ</a>
         <ul class="list-group">
             {% for sale in object_list %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">Заказ №{{ sale.id }} от 
+                    <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">Заказ № {{ sale.id }} от 
                         {{ sale.date }} на сумму {{ sale.amount }} ₸</a>
                     <span>
                 <a href="{% url 'ticket_sales:ticket-sale-update' sale.id %}"
