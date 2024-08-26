@@ -2,21 +2,27 @@
 {% load form_filters %}
 
 <form method="post" hx-target="#event-template-services-list" hx-swap="innerHTML" hx-on="htmx:afterRequest: closeModal"
-      {% if form.instance.id %}
+        {% if form.instance.id %}
       hx-post="{% url 'references:event-template-service-update' form.instance.event_template.id form.instance.id %}"
-      {% else %}
+        {% else %}
       hx-post="{% url 'references:event-template-service-create' event_template_id=event_template.id %}"
-      {% endif %}>
+        {% endif %}>
     {% csrf_token %}
-    
+
     <!-- Поля формы -->
     <div class="row">
         <div class="col-md-12">
             <div class="form-group">
-                {{ form.service.label_tag }}
-                {{ form.service|add_class:"form-control" }}
+                <label for="{{ form.service.id_for_label }}" class="form-label">{{ form.service.label }}</label>    
+                {{ form.service }}
             </div>
         </div>
+    
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                {{ form.errors }}
+            </div>
+        {% endif %}
     </div>
 
     <!-- Кнопка для сохранения -->

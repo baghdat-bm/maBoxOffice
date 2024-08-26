@@ -97,3 +97,6 @@ class EventTemplateServicesForm(forms.ModelForm):
         model = EventTemplateServices
         fields = ['service',]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['service'].widget.attrs.update({'class': 'form-control'})

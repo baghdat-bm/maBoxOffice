@@ -21,8 +21,14 @@
               hx-target="body" hx-swap="outerHTML">
             {% csrf_token %}
             {{ form.event_template|as_crispy_field }}
-            {{ form.begin_date|as_crispy_field }}
-            {{ form.end_date|as_crispy_field }}
+            <div class="mb-3">
+                <div class="form-check-inline">
+                    {{ form.begin_date|as_crispy_field }}
+                </div>
+                <div class="form-check-inline">
+                    {{ form.end_date|as_crispy_field }}
+                </div>
+            </div>
 
             <div class="mb-3">
                 <div class="form-check form-check-inline">
@@ -55,14 +61,32 @@
                 {% endif %}
             </div>
 
-            <button type="button" class="btn btn-secondary"
-                    hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}"
-                    hx-target="#event-times-list" hx-swap="beforeend">
-                Добавить время
-            </button>
-
-            <button type="submit" class="btn btn-primary">Сохранить</button>
-            <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
+            <div class="mt-2">
+                <button type="button" class="btn btn-outline-primary"
+                        hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}"
+                        hx-target="#event-times-list" hx-swap="beforeend">
+                    Добавить время
+                </button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
+            </div>
         </form>
+    
+        <!-- Модальное окно для форм (создание/редактирование/удаление) -->
+        <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg"> <!-- Размер окна изменен на modal-lg -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editServiceModalLabel">Услуга</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Сюда будет загружена форма с помощью HTMX -->
+                        <div id="modal-body-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
