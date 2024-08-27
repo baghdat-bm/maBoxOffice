@@ -177,26 +177,19 @@
             const form = document.getElementById('ticket-sale-form');
             const formData = new FormData(form);
 
-            fetch("{% if form.instance.id %} {% url 'ticket_sales:ticket-sale-update-x' form.instance.id %} {% else %} 
-                {% url 'ticket_sales:ticket-sale-create-x' %} {% endif %}",
-            {
-                method: 'POST',
-                    headers
-            :
+            fetch("{% if form.instance.id %} {% url 'ticket_sales:ticket-sale-update-x' form.instance.id %} {% else %} {% url 'ticket_sales:ticket-sale-create-x' %} {% endif %}",
                 {
-                    'X-CSRFToken'
-                :
-                    formData.get('csrfmiddlewaretoken'),
+                    method: 'POST',
+                    headers:
+                        {
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        },
+                    body: formData,
                 }
-            ,
-                body: formData,
-            }
-        )
-        .
-            then(response => response.json())
+            ).then(response => response.json())
                 .then(data => {
                     if (data.redirect_url) {
-                        {#window.location.href = data.redirect_url;#}
+                        window.location.href = data.redirect_url;
                     }
                 })
                 .catch(error => console.error('Ошибка:', error));
