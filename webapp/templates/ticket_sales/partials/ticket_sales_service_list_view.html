@@ -1,7 +1,30 @@
-<ul class="list-group">
-    {% for service in ticket_sale.ticketsalesservice_set.all %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ service.name }} ({{ service.event.name }}) - {{ service.total_amount }} ₸
-        </li>
-    {% endfor %}
-</ul>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Услуга</th>
+            <th>Кол-во билетов</th>
+            <th>Дата сеанса</th>
+            <th>Время сеанса</th>
+            <th>Сумма билетов</th>
+            <th>Скидка</th>
+            <th>Итого</th>            
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in ticket_sale.ticketsalesservice_set.all %}
+        <tr>
+            <td>{{ service.service.name }}</td>
+            <td>{{ service.tickets_count }}</td>
+            <td>{{ service.event_date }}</td>
+            <td>{{ service.event_time }}</td>
+            <td>{{ service.tickets_amount }} ₸</td>
+            <td>{{ service.discount }} ₸</td>
+            <td>{{ service.total_amount }} ₸</td>            
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="text-center">Нет данных для отображения.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

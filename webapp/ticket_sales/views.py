@@ -226,3 +226,25 @@ def check_payment_status(request, process_id, ticket_sale_id):
     except Exception as e:
         print(e.__str__())
         return JsonResponse({'status': 'wait', 'error': e.__str__()})
+
+
+# обработка наличной оплаты
+def cash_payment_process(request, ticket_sale_id):
+    if request.method == 'POST':
+        ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
+        paid_cash = int(request.POST.get('paid_cash'))
+
+        # Обновляем значение поля paid_cash
+        ticket_sale.paid_cash += paid_cash
+        ticket_sale.save()
+
+        new_payment = TicketSalesPayments()
+        new_payment.ticket_sale = ticket_sale
+        new_payment.amount = paid_cash
+        new_payment.payment_date = datetime.now()
+        new_payment.payment_method = "CH"
+        new_payment.save()
+
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'error'})

@@ -9,13 +9,14 @@
     <p>Сумма итого: {{ object.amount }} ₸</p>
     <p>Статус: {{ object.status }}</p>
 
-    <h4>Услуги</h4>
+    <hr class="my-3"> 
     {% include 'ticket_sales/partials/ticket_sales_service_list_view.html' with ticket_sale=object %}
 
-    <h4>Платежи</h4>
+    <hr class="my-3"> 
     {% include 'ticket_sales/partials/ticket_sales_payments_list_view.html' with ticket_sale=object %}
-
-    <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-warning mt-3">Изменить</a>
-    <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary mt-3">Назад к списку</a>
+    
+    <hr class="my-3"> 
+    <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-warning mt-1">Изменить</a>
+    <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary mt-1">Назад к списку</a>
 </div>
 {% endblock %}

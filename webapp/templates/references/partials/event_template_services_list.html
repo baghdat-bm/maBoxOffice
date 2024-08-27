@@ -2,7 +2,7 @@
     <thead>
         <tr>
             <th>Услуга</th>
-            <th>Действия</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -10,17 +10,17 @@
         <tr>
             <td>{{ service.service }}</td>
             <td>
-                <button class="btn btn-warning"
+                <button class="btn btn-primary"
                         hx-get="{% url 'references:event-template-service-update' event_template.id service.pk %}"
                         hx-target="#modal-body-content"
                         data-bs-toggle="modal" data-bs-target="#editServiceModal">
-                    Редактировать
+                    <i class="bi bi-pencil-square"></i>
                 </button>
                 <button class="btn btn-danger"
                         hx-get="{% url 'references:event-template-service-delete' event_template.id service.id %}"
                         hx-target="#modal-body-content"
                         data-bs-toggle="modal" data-bs-target="#editServiceModal">
-                    Удалить
+                    <i class="bi bi-x-circle"></i>
                 </button>
             </td>
         </tr>

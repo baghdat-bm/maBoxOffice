@@ -1,21 +1,45 @@
-<ul class="list-group">
-    {% for service in ticket_sale.ticketsalesservice_set.all %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ service.name }} ({{ service.event.name }}) - {{ service.total_amount }} ₸
-            <span>
-            <button class="btn btn-sm btn-warning"
-                    hx-get="{% url 'ticket_sales:ticket-sales-service-update' ticket_sale.id service.id %}"
-{#                    hx-target="#ticket-sales-service-list" hx-swap="innerHTML"#}
-                    hx-target="#modal-body-content"
-                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
-            >Изменить</button>
-            <button class="btn btn-sm btn-danger"
-                    hx-get="{% url 'ticket_sales:ticket-sales-service-delete' ticket_sale.id service.id %}"
-{#                    hx-target="#ticket-sales-service-list" hx-swap="innerHTML"#}
-                    hx-target="#modal-body-content"
-                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
-            >Удалить</button>
-        </span>
-        </li>
-    {% endfor %}
-</ul>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Услуга</th>
+            <th>Кол-во билетов</th>
+            <th>Дата сеанса</th>
+            <th>Время сеанса</th>
+            <th>Сумма билетов</th>
+            <th>Скидка</th>
+            <th>Итого</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in ticket_sale.ticketsalesservice_set.all %}
+        <tr>
+            <td>{{ service.service.name }}</td>
+            <td>{{ service.tickets_count }}</td>
+            <td>{{ service.event_date }}</td>
+            <td>{{ service.event_time }}</td>
+            <td>{{ service.tickets_amount }} ₸</td>
+            <td>{{ service.discount }} ₸</td>
+            <td>{{ service.total_amount }} ₸</td>
+            <td>
+{#                <button class="btn btn-sm btn-warning"#}
+{#                        hx-get="{% url 'ticket_sales:ticket-sales-service-update' ticket_sale.id service.id %}"#}
+{#                        hx-target="#modal-body-content"#}
+{#                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal">#}
+{#                    Изменить#}
+{#                </button>#}
+                <button class="btn btn-sm btn-danger"
+                        hx-get="{% url 'ticket_sales:ticket-sales-service-delete' ticket_sale.id service.id %}"
+                        hx-target="#modal-body-content"
+                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="text-center">Нет данных для отображения.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

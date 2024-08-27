@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-{% block title %}{% if form.instance.id %}Редактирование{% else %}Создание{% endif %} заказа{% endblock %}
+{% block title %}{% if form.instance.id %}Изменение{% else %}Создание{% endif %} заказа{% endblock %}
 
 {% block content %}
     <!-- Modals -->
@@ -39,9 +39,39 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Модальное окно для оплаты наличными -->
+<div class="modal fade" id="cashPaymentModal" tabindex="-1" aria-labelledby="cashPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cashPaymentModalLabel">Оплата наличными</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="cancel-cash-payment"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="cash-amount" class="form-label">Сумма к оплате</label>
+                    <input type="text" id="cash-amount" class="form-control" value="{{ form.amount.value }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="cash-received" class="form-label">Сумма наличкой</label>
+                    <input type="number" id="cash-received" class="form-control" min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label for="change-amount" class="form-label">Сдача</label>
+                    <input type="text" id="change-amount" class="form-control" disabled>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit-cash-payment">Принять к оплате</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancel-cash-payment">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
     <div class="container mt-4">
-        <h3>{% if form.instance.id %}Редактирование заказа № {{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
+        <h3>{% if form.instance.id %}Заказ №{{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
 
         <div id="payment-progress-bar" class="progress d-none mt-3">
             <div class="progress-bar progress-bar-striped progress-bar-animated"
@@ -120,7 +150,7 @@
                 </div>
             </div>
 
-            <h4 class="mt-2">Услуги</h4>
+            <hr class="my-3">
             <div id="ticket-sales-service-list">
                 {% if form.instance.id %}
                     {% include 'ticket_sales/partials/ticket_sales_service_list.html' with ticket_sale=form.instance %}
@@ -138,23 +168,30 @@
             {% else %}
                 Перед добавлением услуги необходимо сохранить заказ
             {% endif %}
-
-            <h4 class="mt-2">Платежи</h4>
+            
+            <hr class="my-3">            
             <div id="ticket-sales-payments-list">
                 {% if form.instance.id %}
                     {% include 'ticket_sales/partials/ticket_sales_payments_list.html' with ticket_sale=form.instance %}
                 {% endif %}
             </div>
+        
+            <!-- Кнопки для оплаты -->
             {% if form.instance.id %}
                 <button type="button" class="btn btn-success mt-2" id="start-payment"
                         data-ticket-sale-id="{{ form.instance.id }}">
-                    Выполнить оплату
+                    Оплата картой
                 </button>
-
+                
+                <button type="button" class="btn btn-info mt-2" id="cash-payment-button"
+                    data-ticket-sale-id="{{ form.instance.id }}">
+                    Оплата наличными
+                </button>
             {% else %}
                 Для оплаты необходимо сохранить заказ
             {% endif %}
-
+            
+            <hr class="my-3">
             <div class="mt-2">
                 <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
                 <button type="button" class="btn btn-secondary" id="save-not-close">
@@ -169,8 +206,67 @@
 
 
 {% block scripts %}
+    
+{#    Скрипт для обработки наличной оплаты:#}
     <script>
-
+        document.getElementById('cash-payment-button').addEventListener('click', function () {
+            const cashPaymentModal = new bootstrap.Modal(document.getElementById('cashPaymentModal'));
+            cashPaymentModal.show();
+        });
+    
+        document.getElementById('cash-received').addEventListener('input', function () {
+            const cashAmount = parseFloat(document.getElementById('cash-amount').value);
+            const cashReceived = parseFloat(this.value);
+    
+            if (cashReceived > cashAmount) {
+                const change = cashReceived - cashAmount;
+                document.getElementById('change-amount').value = change.toFixed(2);
+            } else {
+                document.getElementById('change-amount').value = '';
+            }
+        });
+    
+        document.getElementById('submit-cash-payment').addEventListener('click', function () {
+            const cashAmount = parseFloat(document.getElementById('cash-amount').value);
+            const cashReceived = parseFloat(document.getElementById('cash-received').value);
+    
+            if (isNaN(cashReceived) || cashReceived < cashAmount) {
+                alert('Сумма налички не достаточно к оплате!');
+                return;
+            }
+    
+            const formData = new FormData();
+            formData.append('paid_cash', cashAmount);
+                            
+            fetch("{% if form.instance.id %}{% url 'ticket_sales:cash-payment-process' form.instance.id %}{% endif %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
+                      cashPaymentModal.hide();
+                      window.location.reload();
+                  } else {
+                      alert('Ошибка при оплате');
+                  }
+              }).catch(error => {
+                console.error('Ошибка:', error);
+                alert('Ошибка при оплате');
+            });
+        });
+    
+        document.getElementById('cancel-cash-payment').addEventListener('click', function () {
+            const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
+            cashPaymentModal.hide();
+        });
+    
+    </script>
+    
+    <script>
         document.getElementById('save-not-close').addEventListener('click', function (event) {
             event.preventDefault();
 

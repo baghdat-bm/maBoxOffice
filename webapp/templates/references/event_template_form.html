@@ -17,15 +17,16 @@
             <div>
                 {{ form.description|as_crispy_field }}
             </div>
-
+            
+            <hr class="my-3">
             <!-- Раздел для работы с EventTemplateServices -->
-            <h4 class="mt-4">Услуги шаблона</h4>
+            <h4 class="mt-4">Доступные услуги</h4>
             <div id="event-template-services-list">
                 {% if form.instance.pk %}
                     {% include 'references/partials/event_template_services_list.html' with event_template=form.instance %}
                 {% endif %}
             </div>
-
+            
             {% if form.instance.pk %}
                 <!-- Кнопка для добавления услуги -->
                 <button type="button" class="btn btn-outline-primary"
@@ -37,7 +38,8 @@
             {% else %}
                 Для добавления услуги необходимо сохранить шаблон мероприятий
             {% endif %}
-
+            
+            <hr class="my-3">
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Сохранить</button>
                 <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Отмена</a>

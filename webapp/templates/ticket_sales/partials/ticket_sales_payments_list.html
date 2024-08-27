@@ -3,18 +3,12 @@
         <li class="list-group-item d-flex justify-content-between align-items-center">
             Транзакция {{ payment.transaction_id }} от {{ payment.payment_date }} на сумму {{ payment.amount }} ₸
             <span>
-            <button class="btn btn-sm btn-warning"
-                    hx-get="{% url 'ticket_sales:payment-detail' ticket_sale.id payment.id %}"
-{#                    hx-target="#ticket-sales-payments-list" hx-swap="innerHTML"#}
-                    hx-target="#modal-payment-body-content"
-                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal"
-            >Просмотр</button>
             <button class="btn btn-sm btn-danger"
                     hx-get="{% url 'ticket_sales:payment-delete' ticket_sale.id payment.id %}"
-{#                    hx-target="#ticket-sales-payments-list" hx-swap="innerHTML"#}
                     hx-target="#modal-payment-body-content"
-                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal"
-            >Удалить</button>
+                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal">
+                <i class="bi bi-x-circle"></i>
+            </button>
         </span>
         </li>
     {% endfor %}

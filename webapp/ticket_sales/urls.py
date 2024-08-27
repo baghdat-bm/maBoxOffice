@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
     TicketSaleDetailView, payment_process, check_payment_status, payment_detail_view, ticket_sale_create_view, \
-    ticket_sale_update_view, \
+    ticket_sale_update_view, cash_payment_process, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete
 
@@ -36,4 +36,5 @@ urlpatterns = [
     path('payment-process/<int:ticket_sale_id>/', payment_process, name='payment-process'),
     path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status,
          name='check-payment-status'),
+    path('cash-payment-process/<int:ticket_sale_id>/', cash_payment_process, name='cash-payment-process'),
 ]
