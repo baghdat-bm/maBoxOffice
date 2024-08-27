@@ -1,7 +1,34 @@
-<ul class="list-group">
-    {% for payment in ticket_sale.ticketsalespayments_set.all %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ payment.payment_method }} - {{ payment.accepted_amount }} ₸
-        </li>
-    {% endfor %}
-</ul>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Дата платежа</th>
+            <th>Метод оплаты</th>
+            <th>Сумма</th>
+            <th>ID процесса</th>
+            <th>ID транзакции</th>            
+        </tr>
+    </thead>
+    <tbody>
+        {% for payment in ticket_sale.ticketsalespayments_set.all %}
+        <tr>
+            <td>{{ payment.payment_date }}</td>
+            <td>
+                {% if payment.payment_method == "QR" %}
+                    Оплата по QR
+                {% elif payment.payment_method == "CD" %}
+                    Оплата картой
+                {% elif payment.payment_method == "CH" %}
+                    Наличка
+                {% endif %}
+            </td>
+            <td>{{ payment.amount }} ₸</td>
+            <td>{{ payment.process_id|default:"---" }}</td>
+            <td>{{ payment.transaction_id|default:"---" }}</td>            
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">Нет данных для отображения.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
