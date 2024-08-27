@@ -127,7 +127,7 @@
                 {% endif %}
             </div>
             {% if form.instance.id %}
-                <button type="button" class="btn btn-secondary mt-2"
+                <button type="button" class="btn btn-outline-primary mt-2"
                         hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
                         {# hx-target="#ticket-sales-service-list" hx-swap="beforeend"#}
                         hx-target="#modal-body-content"

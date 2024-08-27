@@ -24,7 +24,7 @@
 
         {% if form.instance.pk %}
             <!-- Кнопка для добавления услуги -->
-            <button type="button" class="btn btn-secondary mt-2"
+            <button type="button" class="btn btn-outline-primary"
                     hx-get="{% url 'references:event-template-service-create' form.instance.pk %}"
                     hx-target="#modal-body-content"
                     hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal">
