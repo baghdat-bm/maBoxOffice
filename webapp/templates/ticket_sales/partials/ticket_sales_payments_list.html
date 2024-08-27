@@ -2,11 +2,11 @@
     <thead>
         <tr>
             <th>Дата платежа</th>
-            <th>Метод оплаты</th>
-            <th>Сумма</th>
+            <th>Метод оплаты</th>            
             <th>ID процесса</th>
             <th>ID транзакции</th>
-            <th></th>
+            <th>Сумма</th>
+{#            <th></th>#}
         </tr>
     </thead>
     <tbody>
@@ -21,18 +21,18 @@
                 {% elif payment.payment_method == "CH" %}
                     Наличка
                 {% endif %}
-            </td>
-            <td>{{ payment.amount }} ₸</td>
+            </td>            
             <td>{{ payment.process_id|default:"---" }}</td>
             <td>{{ payment.transaction_id|default:"---" }}</td>
-            <td>
-                <button class="btn btn-sm btn-danger"
-                        hx-get="{% url 'ticket_sales:payment-delete' ticket_sale.id payment.id %}"
-                        hx-target="#modal-payment-body-content"
-                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            </td>
+            <td>{{ payment.amount }} ₸</td>
+{#            <td>#}
+{#                <button class="btn btn-sm btn-danger"#}
+{#                        hx-get="{% url 'ticket_sales:payment-delete' ticket_sale.id payment.id %}"#}
+{#                        hx-target="#modal-payment-body-content"#}
+{#                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal">#}
+{#                    <i class="bi bi-x-circle"></i>#}
+{#                </button>#}
+{#            </td>#}
         </tr>
         {% empty %}
         <tr>

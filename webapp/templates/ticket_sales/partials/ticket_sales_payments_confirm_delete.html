@@ -1,6 +1,6 @@
 {% load crispy_forms_tags %}
 
-<form method="post" hx-post="{% url 'ticket_sales:ticket-sales-payments-delete' payment.ticket_sale.id payment.id %}"
+<form method="post" hx-post="{% url 'ticket_sales:payment-delete' payment.ticket_sale.id payment.id %}"
       hx-target="#ticket-sales-payments-list" hx-swap="innerHTML">
     {% csrf_token %}
     <p>Вы уверены, что хотите удалить платеж?</p>

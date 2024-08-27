@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
     TicketSaleDetailView, payment_process, check_payment_status, payment_detail_view, ticket_sale_create_view, \
-    ticket_sale_update_view, cash_payment_process, \
+    ticket_sale_update_view, cash_payment_process, print_ticket_view, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete
 
@@ -22,7 +22,7 @@ urlpatterns = [
     path('<int:ticket_sale_id>/services/<int:pk>/update/', ticket_sales_service_update,
          name='ticket-sales-service-update'),
     path('<int:ticket_sale_id>/services/<int:pk>/delete/', ticket_sales_service_delete,
-         name='ticket-sales-service-delete'),
+         name='service-delete'),
 
     # TicketSalesPayments URLs
     path('<int:ticket_sale_id>/payments/<int:pk>/detail', payment_detail_view, name='payment-detail'),
@@ -37,4 +37,7 @@ urlpatterns = [
     path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status,
          name='check-payment-status'),
     path('cash-payment-process/<int:ticket_sale_id>/', cash_payment_process, name='cash-payment-process'),
+
+    # Print ticket
+    path('ticket-print-data/<int:ticket_sale_id>/', print_ticket_view, name='ticket-print-data'),
 ]

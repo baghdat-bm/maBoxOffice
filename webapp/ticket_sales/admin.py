@@ -6,6 +6,10 @@ from .models import TicketSale, TicketSalesService, TicketSalesPayments
 class TicketSalesServiceInline(admin.StackedInline):
     model = TicketSalesService
     extra = 0
+    readonly_fields = ('ticket_guid',)  # Сделаем поле только для чтения
+    fields = (
+        'service', 'event', 'event_date', 'event_time', 'tickets_count', 'tickets_amount', 'discount', 'total_amount',
+        'ticket_guid')
 
 
 class TicketSalesPaymentsInline(admin.StackedInline):

@@ -153,10 +153,20 @@ def ticket_sales_payments_update(request, ticket_sale_id, pk):
 def ticket_sales_payments_delete(request, ticket_sale_id, pk):
     payment = get_object_or_404(TicketSalesPayments, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
+        ticket_sale = payment.ticket_sale
+        if payment.payment_method == "QR":
+            ticket_sale.paid_qr -= payment.amount
+            ticket_sale.save()
+        elif payment.payment_method == "CD":
+            ticket_sale.paid_card -= payment.amount
+            ticket_sale.save()
+        elif payment.payment_method == "CH":
+            ticket_sale.paid_cash -= payment.amount
+            ticket_sale.save()
         payment.delete()
-        update_ticket_paid_amount(payment.ticket_sale)
+
         return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
-                      {'ticket_sale': payment.ticket_sale})
+                      {'ticket_sale': ticket_sale})
     return render(request, 'ticket_sales/partials/ticket_sales_payments_confirm_delete.html', {'payment': payment})
 
 
@@ -248,3 +258,21 @@ def cash_payment_process(request, ticket_sale_id):
         return JsonResponse({'status': 'success'})
 
     return JsonResponse({'status': 'error'})
+
+
+# печать заказа
+def print_ticket_view(request, ticket_sale_id):
+    services = TicketSalesService.objects.filter(ticket_sale_id=ticket_sale_id)
+    data = {
+        'services': [
+            {
+                'ticket_guid': str(service.ticket_guid),
+                'service_name': service.service.name,
+                'event_date': service.event_date.strftime('%d.%m.%Y'),
+                'event_name': service.event.name,
+                'tickets_count': service.tickets_count
+            }
+            for service in services
+        ]
+    }
+    return JsonResponse(data)

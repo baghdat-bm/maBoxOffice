@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import uuid
 
 from references.models import Service, Event, Inventory
 
@@ -52,6 +53,7 @@ class TicketSalesService(models.Model):
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
     discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
     total_amount = models.IntegerField(verbose_name="Сумма итого")
+    ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
 
     def __str__(self):
         return f'{self.ticket_sale.pk}-{self.pk}'

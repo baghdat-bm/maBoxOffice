@@ -1,7 +1,19 @@
-<header class="bg-light py-2 px-3 d-flex justify-content-between align-items-center border-bottom" style="position: fixed; top: 0; width: 100%; z-index: 1030;">
+<header class="bg-light py-2 px-3 d-flex justify-content-between align-items-center border-bottom"
+        style="position: fixed; top: 0; width: 100%; z-index: 1030;">
     <div class="d-flex align-items-center">
         <a class="navbar-brand h5 mb-0" href="{% url 'home' %}">АРМ Касса</a>
     </div>
+
+    <div class="flex-grow-1 mx-3">
+        <div id="main-progress-bar" class="progress d-none" style="height: 25px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                 role="progressbar"
+                 style="width: 100%">
+                <span id="progress-bar-text">Соединение с терминалом...</span>
+            </div>
+        </div>
+    </div>
+
     <div>
         {% if user.is_authenticated %}
             <span>Привет, {{ user.username }}!</span>

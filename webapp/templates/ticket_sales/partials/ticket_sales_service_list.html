@@ -29,7 +29,7 @@
 {#                    Изменить#}
 {#                </button>#}
                 <button class="btn btn-sm btn-danger"
-                        hx-get="{% url 'ticket_sales:ticket-sales-service-delete' ticket_sale.id service.id %}"
+                        hx-get="{% url 'ticket_sales:service-delete' ticket_sale.id service.id %}"
                         hx-target="#modal-body-content"
                         hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal">
                     <i class="bi bi-x-circle"></i>
