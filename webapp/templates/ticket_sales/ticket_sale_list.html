@@ -3,21 +3,46 @@
 {% block title %}Заказы{% endblock %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h3>Заказы</h3>
-        <a href="{% url 'ticket_sales:ticket-sale-create' %}" class="btn btn-primary mb-2">Новый заказ</a>
-        <ul class="list-group">
+<div class="container mt-4">
+    <h3>Заказы</h3>
+    <a href="{% url 'ticket_sales:ticket-sale-create' %}" class="btn btn-primary mb-2">Новый заказ</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Оплачено</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
             {% for sale in object_list %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">Заказ № {{ sale.id }} от 
-                        {{ sale.date }} на сумму {{ sale.amount }} ₸</a>
-                    <span>
-                <a href="{% url 'ticket_sales:ticket-sale-update' sale.id %}"
-                   class="btn btn-sm btn-warning">Изменить</a>
-                <a href="{% url 'ticket_sales:ticket-sale-delete' sale.id %}" class="btn btn-sm btn-danger">Удалить</a>
-            </span>
-                </li>
+            <tr>
+                <td>
+                    <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">
+                        {{ sale.date }}
+                    </a>
+                </td>
+                <td>{{ sale.amount }} ₸</td>
+                <td>{{ sale.paid_amount }} ₸</td>
+                <td>{{ sale.status }}</td>
+                <td>
+                    <a href="{% url 'ticket_sales:ticket-sale-update' sale.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="{% url 'ticket_sales:ticket-sale-delete' sale.id %}" class="btn btn-sm btn-danger">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Нет данных для отображения.</td>
+            </tr>
             {% endfor %}
-        </ul>
-    </div>
+        </tbody>
+    </table>
+</div>
 {% endblock %}

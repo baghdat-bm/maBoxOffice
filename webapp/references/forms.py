@@ -13,18 +13,8 @@ class EventTemplateForm(forms.ModelForm):
         fields = ['name', 'logo', 'description']
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.layout = Layout(
-            Row(
-                Column('name', css_class='form-group col-md-6 mb-0'),
-                Column('logo', css_class='form-group col-md-6 mb-0'),
-                css_class='form-row'
-            ),
-            'description',
-            Submit('submit', 'Save', css_class='btn btn-primary')
-        )
+        super(EventTemplateForm, self).__init__(*args, **kwargs)
+        self.fields['description'].widget.attrs.update({'style': 'height:70px;'})
 
 
 class EventForm(forms.ModelForm):

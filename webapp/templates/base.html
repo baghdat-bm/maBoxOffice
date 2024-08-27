@@ -135,31 +135,6 @@
     });
 </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Получаем состояние из localStorage
-        const savedState = localStorage.getItem('accordionState');
-        if (savedState === 'open') {
-            const collapseElement = document.getElementById('collapseReferences');
-            collapseElement.classList.add('show');
-            collapseElement.previousElementSibling.classList.remove('collapsed');
-        }
-
-        // Сохраняем состояние при раскрытии/закрытии
-        document.getElementById('navbarAccordion').addEventListener('hide.bs.collapse', function (event) {
-            if (event.target.id === 'collapseReferences') {
-                localStorage.setItem('accordionState', 'closed');
-            }
-        });
-
-        document.getElementById('navbarAccordion').addEventListener('show.bs.collapse', function (event) {
-            if (event.target.id === 'collapseReferences') {
-                localStorage.setItem('accordionState', 'open');
-            }
-        });
-    });
-</script>
-
 {% block scripts %}
 {% endblock %}
 </body>

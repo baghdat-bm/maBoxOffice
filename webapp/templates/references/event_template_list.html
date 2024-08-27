@@ -11,13 +11,16 @@
                 <th>Название</th>
                 <th>Логотип</th>
                 <th>Описание</th>
-                <th>Действия</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
             {% for template in event_templates %}
                 <tr>
-                    <td>{{ template.name }}</td>
+                    <td><a href="{% url 'references:event_template_detail' template.pk %}">
+                        {{ template.name }}
+                    </a>
+                    </td>
                     <td>
                         {% if template.logo %}
                         <img src="{{ template.logo.url }}" alt="Logo" width="50">
@@ -27,9 +30,8 @@
                     </td>
                     <td>{{ template.description }}</td>
                     <td>
-                        <a href="{% url 'references:event_template_detail' template.pk %}" class="btn btn-info btn-sm">Просмотр</a>
-                        <a href="{% url 'references:event_template_update' template.pk %}" class="btn btn-warning btn-sm">Изменить</a>
-                        <a href="{% url 'references:event_template_delete' template.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+                        <a href="{% url 'references:event_template_update' template.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i></a>
+                        <a href="{% url 'references:event_template_delete' template.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i></a>
                     </td>
                 </tr>
             {% endfor %}
