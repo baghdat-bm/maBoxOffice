@@ -103,7 +103,8 @@ def ticket_sales_service_update(request, ticket_sale_id, pk):
                           {'ticket_sale': service.ticket_sale})
     else:
         form = TicketSalesServiceForm(instance=service)
-    return render(request, 'ticket_sales/partials/ticket_sales_service_form.html', {'form': form})
+    return render(request, 'ticket_sales/partials/ticket_sales_service_form.html',
+                  {'form': form, 'ticket_sale': service.ticket_sale})
 
 
 def ticket_sales_service_delete(request, ticket_sale_id, pk):

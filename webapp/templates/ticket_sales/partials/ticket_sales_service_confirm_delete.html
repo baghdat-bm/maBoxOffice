@@ -1,21 +1,19 @@
 {% load crispy_forms_tags %}
 
 <form method="post" hx-post="{% url 'ticket_sales:service-delete' service.ticket_sale.id service.id %}"
-      hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
+      hx-target="#ticket-sales-service-list" hx-swap="innerHTML" hx-on="htmx:afterRequest: closeModal()">
     {% csrf_token %}
-    <p>Вы уверены, что хотите удалить услугу {{ service.name }}?</p>
-    <button type="submit" class="btn btn-danger">Удалить</button>
-    {#    <button type="button" class="btn btn-secondary" #}
-    {#            hx-get="{% url 'ticket_sales:ticket-sale-detail' service.ticket_sale.id %}" #}
-    {#            hx-target="#ticket-sales-service-list" hx-swap="innerHTML">Отменить</button>#}
+    <p>Вы уверены, что хотите удалить услугу {{ service.service.name }}?</p>
+    <button type="submit" class="btn btn-danger">Удалить</button>    
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
 </form>
 
 {% block scripts %}
     <script>
-        document.body.addEventListener('htmx:afterRequest', function (event) {
-            // Если это была успешная отправка формы, обновляем страницу
-            window.location.reload();
-        });
+        function closeModal() {
+            var modalElement = document.getElementById('editServiceModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+        }
     </script>
 {% endblock %}

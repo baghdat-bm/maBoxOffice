@@ -91,28 +91,29 @@
 {% get_available_languages as LANGUAGES %}
 {% get_language_info_list for LANGUAGES as languages %}
 
+<div>
+    <!-- HEADER -->
+    {% include 'site/header.html' %}
 
-<!-- HEADER -->
-{% include 'site/header.html' %}
+    <!-- NAVBAR -->
+    {% include 'site/navbar.html' %}
 
-<!-- NAVBAR -->
-{% include 'site/navbar.html' %}
+    <div class="content" style="margin-left: 250px; padding-top: 60px;">
 
-<div class="content" style="margin-left: 250px; padding-top: 60px;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {{ message.tags }} alert-dismissible shadow fade show" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    {{ message | safe }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert {{ message.tags }} alert-dismissible shadow fade show" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                {{ message | safe }}
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
 </div>
 
 <!-- Bootstrap JavaScript -->

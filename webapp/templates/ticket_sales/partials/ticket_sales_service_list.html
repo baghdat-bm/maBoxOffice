@@ -22,12 +22,6 @@
             <td>{{ service.discount }} ₸</td>
             <td>{{ service.total_amount }} ₸</td>
             <td>
-{#                <button class="btn btn-sm btn-warning"#}
-{#                        hx-get="{% url 'ticket_sales:ticket-sales-service-update' ticket_sale.id service.id %}"#}
-{#                        hx-target="#modal-body-content"#}
-{#                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal">#}
-{#                    Изменить#}
-{#                </button>#}
                 <button class="btn btn-sm btn-danger"
                         hx-get="{% url 'ticket_sales:service-delete' ticket_sale.id service.id %}"
                         hx-target="#modal-body-content"

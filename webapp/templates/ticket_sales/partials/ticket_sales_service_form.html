@@ -1,14 +1,10 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-<form method="post" hx-target="#ticket-sales-service-list" hx-swap="innerHTML" hx-on="htmx:afterRequest: closeModal"
-        {% if form.instance.id %}
-      hx-post="{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}"
-        {% else %}
-      hx-post="{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}"
-        {% endif %}>
+<form method="post" hx-post="{% if form.instance.id %}{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}{% endif %}"
+      hx-target="#ticket-sales-service-list" hx-swap="innerHTML"
+      hx-on="htmx:afterRequest: closeModal()">
     {% csrf_token %}
-    {#    {{ form|crispy }}#}
 
     <!-- Первая строка с полями service, event, event_date, event_time -->
     <div class="row">
@@ -86,25 +82,11 @@
 </form>
 
 {% block scripts %}
-    <script>
-        document.body.addEventListener('htmx:afterRequest', function (event) {
-            // Если это была успешная отправка формы, обновляем страницу
-            window.location.reload();
-        });
-
-        document.body.addEventListener('htmx:afterOnLoad', function (event) {
-            var modalElement = document.getElementById('editServiceModal');
-
-            // Убедимся, что модальное окно открыто
-            var modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-            modalInstance.show();
-        });
-
-        // Закрываем модальное окно после успешного сохранения формы
-        function closeModal() {
-            var modalElement = document.getElementById('editServiceModal');
-            var modalInstance = bootstrap.Modal.getInstance(modalElement);
-            modalInstance.hide();
-        }
-    </script>
+<script>
+    function closeModal() {
+        var modalElement = document.getElementById('editServiceModal');
+        var modalInstance = bootstrap.Modal.getInstance(modalElement);
+        modalInstance.hide();
+    }
+</script>
 {% endblock %}
