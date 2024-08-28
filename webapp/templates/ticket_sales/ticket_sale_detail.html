@@ -3,20 +3,160 @@
 {% block title %}Детали заказа{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3>Заказ №{{ object.id }}</h3>
-    <p>Дата: {{ object.date }}</p>
-    <p>Сумма итого: {{ object.amount }} ₸</p>
-    <p>Статус: {{ object.status }}</p>
 
-    <hr class="my-3"> 
-    {% include 'ticket_sales/partials/ticket_sales_service_list_view.html' with ticket_sale=object %}
+    <!-- Модальное окно для печати -->
+    <div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Увеличим ширину окна -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printTicketModalLabel">Печатная форма заказа</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="print-area">
+                    <!-- Здесь будет формироваться содержимое для печати -->
+                    <div id="print-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="print-button">Печать</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <hr class="my-3"> 
-    {% include 'ticket_sales/partials/ticket_sales_payments_list_view.html' with ticket_sale=object %}
-    
-    <hr class="my-3"> 
-    <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-warning mt-1">Изменить</a>
-    <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary mt-1">Назад к списку</a>
-</div>
+    <div class="container mt-4">
+        <h3>Заказ №{{ object.id }}</h3>
+        <hr class="my-3">
+
+        <!-- Сетка для первой строки -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Дата:</strong> {{ object.date }}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Сумма итого:</strong> {{ object.amount }}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Сумма оплаты:</strong> {{ object.paid_amount }}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Сумма возврата:</strong> {{ object.refund_amount }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Сетка для новой строки -->
+        <div class="row mt-1">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Статус:</strong> {{ object.status }}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Оплачено наличкой:</strong> {{ object.paid_cash }}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Оплачено картой:</strong> {{ object.paid_card }}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <strong>Оплачено QR:</strong> {{ object.paid_qr }}
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3">
+        {% include 'ticket_sales/partials/ticket_sales_service_list_view.html' with ticket_sale=object %}
+
+        {% include 'ticket_sales/partials/ticket_sales_payments_list_view.html' with ticket_sale=object %}
+
+        <div>
+            <button type="button" class="btn btn-outline-secondary" id="print-ticket-button"
+                    data-ticket-sale-id="{{ object.id }}">
+                Печать
+            </button>
+            {% if object.status != "Оплачен" %}
+                <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-primary">Изменить</a>
+            {% endif %}
+            <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Закрыть</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+    {#    JavaScript для печати #}
+    <script>
+        document.getElementById('print-ticket-button').addEventListener('click', function () {
+            const ticketSaleId = this.getAttribute('data-ticket-sale-id');
+
+            // Запрос на получение данных для печати (TicketSalesService)
+            fetch("{% url 'ticket_sales:ticket-print-data' object.id %}", {
+                method: 'GET'                
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const printContent = document.getElementById('print-content');
+                    printContent.innerHTML = '';  // Очистить старый контент
+
+                    data.services.forEach(service => {
+                        for (let i = 0; i < service.tickets_count; i++) {
+                            printContent.innerHTML += `
+                                <div class="ticket" style="width: 302px; font-size: 12px; margin-bottom: 20px; page-break-after: always;">
+                                    <!-- Центрируем QR-код -->
+                                    <div style="text-align: center;">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${service.ticket_guid}" alt="QR Code" style="display: inline-block;">
+                                    </div>
+                                    <p><strong>Услуга:</strong> ${service.service_name}</p>
+                                    <p><strong>Дата мероприятия:</strong> ${service.event_date}</p>
+                                    <p><strong>Мероприятие:</strong> ${service.event_name}</p>
+                                    <p><strong>Подробная информация</strong></p>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    if (!data.services || data.services.length === 0) {
+                        printContent.innerHTML = "<p>Нет данных для печати</p>"
+                    }
+
+                    // Открыть модальное окно для печати
+                    const printTicketModal = new bootstrap.Modal(document.getElementById('printTicketModal'));
+                    printTicketModal.show();
+                });
+        });
+
+        document.getElementById('print-button').addEventListener('click', function () {
+            const printContent = document.getElementById('print-content').innerHTML;
+            const originalContent = document.body.innerHTML;
+
+            // Заменить содержимое body на контент для печати
+            document.body.innerHTML = printContent;
+
+            window.print();
+
+            // Восстановить исходное содержимое после печати
+            document.body.innerHTML = originalContent;
+            location.reload();  // Обновить страницу после печати
+        });
+    </script>
+
 {% endblock %}

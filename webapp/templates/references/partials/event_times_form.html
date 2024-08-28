@@ -2,8 +2,21 @@
 
 <form method="post"
       hx-post="{% if form.instance.id %}{% url 'references:event-times-update' form.instance.event.id form.instance.id %}{% else %}{% url 'references:event-times-create' event.id %}{% endif %}"
-      hx-target="#event-times-list" hx-swap="innerHTML">
+      hx-target="#event-times-list" hx-swap="innerHTML"
+      hx-on="htmx:afterRequest: closeModal()">
     {% csrf_token %}
     {{ form|crispy }}
     <button type="submit" class="btn btn-primary">Добавить</button>
 </form>
+
+{% block scripts %}
+    <script>
+        function closeModal() {
+            // Закрыть модальное окно после успешного добавления или обновления
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editTimeModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    </script>
+{% endblock %}

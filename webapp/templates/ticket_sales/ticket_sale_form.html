@@ -74,7 +74,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Модальное окно для печати -->
     <div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel"
          aria-hidden="true">
@@ -95,46 +95,38 @@
             </div>
         </div>
     </div>
-    
+
     <div class="container mt-4">
         <h3>{% if form.instance.id %}Заказ №{{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
 
         <form id="ticket-sale-form" method="post">
             {% csrf_token %}
-            <!-- Сетка для первой строки с полями date, amount и status -->
+            <!-- Сетка для первой строки -->
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.date.label_tag }}
                         {{ form.date|add_class:"form-control" }}
                     </div>
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.amount.label_tag }}
                         <input type="text" class="form-control" name="{{ form.amount.name }}"
                                id="id_{{ form.amount.name }}" value="{{ form.amount.value }}" disabled>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        {{ form.status.label_tag }}
-                        <input type="text" class="form-control" name="{{ form.status.name }}"
-                               id="id_{{ form.status.name }}" value="{{ form.status.value }}" disabled>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Сетка для новой строки с полями paid_amount и refund_amount -->
-            <div class="row mt-3">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.paid_amount.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_amount.name }}"
                                id="id_{{ form.paid_amount.name }}" value="{{ form.paid_amount.value }}" disabled>
                     </div>
                 </div>
-                <div class="col-md-6">
+
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.refund_amount.label_tag }}
                         <input type="text" class="form-control" name="{{ form.refund_amount.name }}"
@@ -143,23 +135,33 @@
                 </div>
             </div>
 
-            <!-- Сетка для новой строки с полями paid_cash, refund_amount и paid_qr -->
+            <!-- Сетка для новой строки -->
             <div class="row mt-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        {{ form.status.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.status.name }}"
+                               id="id_{{ form.status.name }}" value="{{ form.status.value }}" disabled>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.paid_cash.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_cash.name }}"
                                id="id_{{ form.paid_cash.name }}" value="{{ form.paid_cash.value }}" disabled>
                     </div>
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.paid_card.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_card.name }}"
                                id="id_{{ form.paid_card.name }}" value="{{ form.paid_card.value }}" disabled>
                     </div>
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-3">
                     <div class="form-group">
                         {{ form.paid_qr.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_qr.name }}"
@@ -195,7 +197,7 @@
             </div>
 
             <!-- Кнопки для оплаты -->
-            {% if form.instance.id %}
+            {% if form.instance.amount > 0 %}
                 <button type="button" class="btn btn-success mt-2" id="start-payment"
                         data-ticket-sale-id="{{ form.instance.id }}">
                     Оплата картой
@@ -205,23 +207,23 @@
                         data-ticket-sale-id="{{ form.instance.id }}">
                     Оплата наличными
                 </button>
-                
-                <button type="button" class="btn btn-outline-secondary mt-2" id="print-ticket-button"
-                    data-ticket-sale-id="{{ form.instance.id }}">
-                    Печать
-                </button>
-            {% else %}
-                Для оплаты необходимо сохранить заказ
+
+                <hr class="my-3">
             {% endif %}
 
-            <hr class="my-3">
             <div class="mt-2">
+                {% if form.instance.id %}
+                    <button type="button" class="btn btn-outline-secondary" id="print-ticket-button"
+                            data-ticket-sale-id="{{ form.instance.id }}">
+                        Печать
+                    </button>
+                {% endif %}
                 <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
-                <button type="button" class="btn btn-secondary" id="save-not-close">
+                <button type="button" class="btn btn-primary" id="save-not-close">
                     Сохранить
                 </button>
 
-                <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Назад к списку</a>
+                <a href="{% url 'ticket_sales:ticket-sale-list' %}" id="back-to-list" class="btn btn-secondary">Закрыть</a>
             </div>
         </form>
     </div>
@@ -229,24 +231,49 @@
 
 
 {% block scripts %}
-        
-{#    JavaScript для печати #}
+
+    <!-- Проверяем статус -->
+    {% if form.instance.status == "Оплачен" %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Делаем все элементы формы неактивными
+                const formElements = document.querySelectorAll('#ticket-sale-form input, #ticket-sale-form select, #ticket-sale-form textarea, #ticket-sale-form button');
+                formElements.forEach(element => {
+                    element.disabled = true;
+                });
+
+                // Оставляем активной только кнопку "Распечатать"
+                const printButton = document.getElementById('print-ticket-button');
+                if (printButton) {
+                    printButton.disabled = false;
+                }
+
+                // Оставляем активной только кнопку "Распечатать"
+                const backToList = document.getElementById('back-to-list');
+                if (backToList) {
+                    backToList.disabled = false;
+                }
+            });
+        </script>
+    {% endif %}
+
+    {#    JavaScript для печати #}
     <script>
         document.getElementById('print-ticket-button').addEventListener('click', function () {
             const ticketSaleId = this.getAttribute('data-ticket-sale-id');
-    
-            // Запрос на получение данных для печати (TicketSalesService)            
+
+            // Запрос на получение данных для печати (TicketSalesService)
             fetch("{% if form.instance.id %}{% url 'ticket_sales:ticket-print-data' form.instance.id %}{% endif %}", {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
-            })                
+            })
                 .then(response => response.json())
                 .then(data => {
                     const printContent = document.getElementById('print-content');
                     printContent.innerHTML = '';  // Очистить старый контент
-    
+                    
                     data.services.forEach(service => {
                         for (let i = 0; i < service.tickets_count; i++) {
                             printContent.innerHTML += `
@@ -263,28 +290,32 @@
                             `;
                         }
                     });
-    
+                                        
+                    if (!data.services || data.services.length === 0) {
+                        printContent.innerHTML = "<p>Нет данных для печати</p>"
+                    }
+
                     // Открыть модальное окно для печати
                     const printTicketModal = new bootstrap.Modal(document.getElementById('printTicketModal'));
                     printTicketModal.show();
                 });
         });
-    
+
         document.getElementById('print-button').addEventListener('click', function () {
             const printContent = document.getElementById('print-content').innerHTML;
             const originalContent = document.body.innerHTML;
-    
+
             // Заменить содержимое body на контент для печати
             document.body.innerHTML = printContent;
-    
+
             window.print();
-    
+
             // Восстановить исходное содержимое после печати
             document.body.innerHTML = originalContent;
             location.reload();  // Обновить страницу после печати
         });
     </script>
-    
+
     {#    Скрипт для обработки наличной оплаты:#}
     <script>
         document.getElementById('cash-payment-button').addEventListener('click', function () {
@@ -292,13 +323,13 @@
             const amount = parseFloat('{{ form.amount.value|default_if_none:0 }}');
             const paidAmount = parseFloat('{{ form.paid_amount.value|default_if_none:0 }}');
             const refundAmount = parseFloat('{{ form.refund_amount.value|default_if_none:0 }}');
-    
+
             // Рассчитываем сумму к оплате
             const sumToPay = amount - paidAmount + refundAmount;
-    
+
             // Устанавливаем значение в поле "Сумма к оплате"
             document.getElementById('cash-amount').value = sumToPay.toFixed(2);
-    
+
             // Открываем модальное окно
             const cashPaymentModal = new bootstrap.Modal(document.getElementById('cashPaymentModal'));
             cashPaymentModal.show();

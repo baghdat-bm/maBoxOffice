@@ -3,15 +3,18 @@
 {% block title %}мероприятия{% endblock %}
 {% block content %}
     <div class="container mt-4">
-    <h3>{{ object.name }}</h3>
-    <p>Начало: {{ object.begin_date }}</p>
-    <p>Окончание: {{ object.end_date }}</p>
+        <h3>{{ object.name }}</h3>
+        <p>Начало: {{ object.begin_date }}</p>
+        <p>Окончание: {{ object.end_date }}</p>
 
-    <h4>Время</h4>
-    <div id="event-times-list">
-        {% include 'references/partials/event_times_list_view.html' with event=object %}
+        <h4>Время</h4>
+        <div id="event-times-list">
+            {% include 'references/partials/event_times_list_view.html' with event=object %}
+        </div>
+        
+        <div class="mt-2">
+            <a href="{% url 'references:event-update' object.id %}" class="btn btn-primary">Изменить</a>
+            <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Закрыть</a>
+        </div>
     </div>
-
-    <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Назад к списку</a>
-</div>
 {% endblock %}

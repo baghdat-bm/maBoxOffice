@@ -8,7 +8,7 @@
     <p>Наименование: {{ object.name }}</p>    
     <p>Стоимость: {{ object.cost }}</p>
     <p>Инвентарь: {{ object.inventory }}</p>
-    <a href="{% url 'references:service-update' object.id %}" class="btn btn-warning">Изменить</a>
-    <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Назад к списку</a>
+    <a href="{% url 'references:service-update' object.id %}" class="btn btn-primary">Изменить</a>
+    <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Закрыть</a>
 </div>
 {% endblock %}

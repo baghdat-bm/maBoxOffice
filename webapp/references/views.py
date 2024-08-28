@@ -190,14 +190,11 @@ def event_template_service_create(request, event_template_id):
             service = form.save(commit=False)
             service.event_template = event_template
             service.save()
-            # return redirect('references:event_template_update', pk=event_template.pk)
-            return render(request, 'references/partials/event_template_service_form.html',
-                          {'event_template': event_template})
+            return render(request, 'references/partials/event_template_services_list.html', {'event_template': event_template})
     else:
         form = EventTemplateServicesForm()
 
-    return render(request, 'references/partials/event_template_service_form.html',
-                  {'form': form, 'event_template': event_template})
+    return render(request, 'references/partials/event_template_service_form.html', {'form': form, 'event_template': event_template})
 
 
 def event_template_service_update(request, event_template_id, pk):
@@ -206,14 +203,11 @@ def event_template_service_update(request, event_template_id, pk):
         form = EventTemplateServicesForm(request.POST, instance=service)
         if form.is_valid():
             form.save()
-            # return redirect('references:event_template_update', pk=service.event_template.pk)
-            return render(request, 'references/partials/event_template_service_form.html',
-                          {'event_template': service.event_template})
+            return render(request, 'references/partials/event_template_services_list.html', {'event_template': service.event_template})
     else:
         form = EventTemplateServicesForm(instance=service)
 
-    return render(request, 'references/partials/event_template_service_form.html',
-                  {'form': form})
+    return render(request, 'references/partials/event_template_service_form.html', {'form': form, 'event_template': service.event_template})
 
 
 def event_template_service_delete(request, event_template_id, pk):

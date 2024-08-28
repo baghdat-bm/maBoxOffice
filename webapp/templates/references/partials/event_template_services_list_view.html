@@ -1,0 +1,18 @@
+<table class="table table-bordered mt-3">
+    <thead>
+        <tr>
+            <th>Услуга</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in event_template.eventtemplateservices_set.all %}
+        <tr>
+            <td>{{ service.service }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">Нет добавленных услуг</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

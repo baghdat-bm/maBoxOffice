@@ -64,21 +64,22 @@
             <div class="mt-2">
                 <button type="button" class="btn btn-outline-primary"
                         hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}"
-                        hx-target="#event-times-list" hx-swap="beforeend">
+                        hx-target="#modal-body-content"
+                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editTimeModal">
                     Добавить время
                 </button>
                 <button type="submit" class="btn btn-primary">Сохранить</button>
-                <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Отмена</a>
+                <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Закрыть</a>
             </div>
         </form>
-    
-        <!-- Модальное окно для форм (создание/редактирование/удаление) -->
-        <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
+
+        <!-- Модальное окно для формы добавления времени -->
+        <div class="modal fade" id="editTimeModal" tabindex="-1" aria-labelledby="editTimeModalLabel"
              aria-hidden="true">
             <div class="modal-dialog modal-lg"> <!-- Размер окна изменен на modal-lg -->
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editServiceModalLabel">Услуга</h5>
+                        <h5 class="modal-title" id="editTimeModalLabel">Добавить время</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
