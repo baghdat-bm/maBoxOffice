@@ -69,6 +69,12 @@ class EventTimesForm(forms.ModelForm):
         model = EventTimes
         fields = ['begin_date', 'end_date', 'is_active']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['begin_date'].widget.attrs.update({'class': 'form-control'})
+        self.fields['end_date'].widget.attrs.update({'class': 'form-control'})
+        self.fields['is_active'].widget.attrs.update({'class': 'form-control'})
+
 
 class InventoryForm(forms.ModelForm):
     class Meta:

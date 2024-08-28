@@ -114,8 +114,9 @@ def event_times_update(request, event_id, pk):
 def event_times_delete(request, event_id, pk):
     event_time = get_object_or_404(EventTimes, id=pk, event_id=event_id)
     if request.method == "POST":
+        event = event_time.event
         event_time.delete()
-        return render(request, 'references/partials/event_times_list.html', {'event': event_time.event})
+        return render(request, 'references/partials/event_times_list.html', {'event': event})
     return render(request, 'references/partials/event_times_confirm_delete.html', {'event_time': event_time})
 
 
@@ -214,10 +215,11 @@ def event_template_service_delete(request, event_template_id, pk):
     service = get_object_or_404(EventTemplateServices, id=pk, event_template_id=event_template_id)
 
     if request.method == 'POST':
+        event_template = service.event_template
         service.delete()
         # return redirect('references:event_template_update', pk=event_template_id)
         return render(request, 'references/partials/event_template_services_list.html',
-                      {'event_template': service.event_template})
+                      {'event_template': event_template})
 
     return render(request, 'references/partials/event_template_service_confirm_delete.html',
                   {'service': service})

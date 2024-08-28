@@ -1,11 +1,24 @@
 <ul class="list-group">
     {% for time in event.eventtimes_set.all %}
-    <li id="event-time-{{ time.id }}" class="list-group-item d-flex justify-content-between align-items-center">
-        {{ time.begin_date }} - {{ time.end_date }}
-        <span>
-            <button class="btn btn-sm btn-warning" hx-get="{% url 'references:event-times-update' event.id time.id %}" hx-target="#event-time-{{ time.id }}" hx-swap="outerHTML">Изменить</button>
-            <button class="btn btn-sm btn-danger" hx-get="{% url 'references:event-times-delete' event.id time.id %}" hx-target="#event-time-{{ time.id }}" hx-swap="outerHTML">Удалить</button>
-        </span>
-    </li>
+        <li id="event-time-{{ time.id }}" class="list-group-item d-flex justify-content-between align-items-center">
+            {{ time.begin_date }} - {{ time.end_date }}
+            <span>
+                <!-- Кнопка для редактирования времени -->
+                <button class="btn btn-sm btn-primary"
+                        hx-get="{% url 'references:event-times-update' event.id time.id %}"
+                        hx-target="#modal-body-content"
+                        data-bs-toggle="modal" data-bs-target="#editTimeModal">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                
+                <!-- Кнопка для удаления времени -->
+                <button class="btn btn-sm btn-danger"
+                        hx-get="{% url 'references:event-times-delete' event.id time.id %}"
+                        hx-target="#modal-body-content"
+                        data-bs-toggle="modal" data-bs-target="#editTimeModal">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </span>
+        </li>
     {% endfor %}
 </ul>
