@@ -1,29 +1,36 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-<form method="post" hx-post="{% if form.instance.id %}{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}{% endif %}"
-      hx-target="#ticket-sales-service-list" hx-swap="innerHTML"
-      hx-on="htmx:afterRequest: closeModal()">
+<form method="post" hx-post="
+        
+        {% if form.instance.id %}{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}{% endif %}"
+      hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
     {% csrf_token %}
 
-    <!-- Первая строка с полями service, event, event_date, event_time -->
+    <!-- Первая строка с полями event_date, event, event_time -->
     <div class="row">
         <div class="col-md-4">
             <div class="form-group">
-                {{ form.event.label_tag }}
-                {{ form.event|add_class:"form-control" }}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="form-group">
                 {{ form.event_date.label_tag }}
-                {{ form.event_date|add_class:"form-control" }}
+                <input type="date" id="id_event_date" name="event_date" class="form-control"
+                       onchange="fetchEventsForDate(this.value)">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                {{ form.event_time.label_tag }}
-                {{ form.event_time|add_class:"form-control" }}
+                <label for="event">Мероприятие</label>
+                <select id="event" name="event" class="form-control" onchange="updateEventTimeOptions(this.value)">
+                    <!-- Опции будут динамически добавляться здесь -->
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="event_time">Время мероприятия</label>
+                <select id="event_time" name="event_time" class="form-control">
+                    <option value="">Выберите время</option>
+                    <!-- Этот список будет обновляться с помощью JavaScript -->
+                </select>
             </div>
         </div>
     </div>
@@ -55,7 +62,7 @@
     <!-- Третья строка с полями discount, total_amount -->
     <div class="row mt-3">
         <div class="col-md-4">
-            <div class="form-group">                
+            <div class="form-group">
             </div>
         </div>
         <div class="col-md-4">
@@ -72,7 +79,7 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-1">
+    <button type="submit" class="btn btn-primary mt-1" onclick="closeModal()">
         {% if form.instance.id %}
             Записать
         {% else %}
@@ -82,12 +89,82 @@
 </form>
 
 {% block scripts %}
-<script>
-    function closeModal() {
-        var modalElement = document.getElementById('editServiceModal');
-        var modalInstance = bootstrap.Modal.getInstance(modalElement);
-        modalInstance.hide();
-        window.location.reload();
-    }
-</script>
+    <script>
+        function updateEventTimeOptions(eventId) {
+            const eventTimeSelect = document.getElementById('event_time');
+
+            if (eventId) {
+                const url = new URL("{% url 'ticket_sales:filtered-event-times' %}", window.location.origin);
+                url.searchParams.set('event', eventId);
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Очищаем старые опции
+                        eventTimeSelect.innerHTML = '<option value="">Выберите время</option>';
+                        // Добавляем новые опции
+                        data.times.forEach(time => {
+                            const option = document.createElement('option');
+                            option.value = time.begin_date;
+                            option.textContent = time.begin_date;
+                            eventTimeSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Ошибка загрузки времени:', error));
+            } else {
+                // Если нет выбранного мероприятия, очищаем список времен
+                eventTimeSelect.innerHTML = '<option value="">Выберите время</option>';
+            }
+        }
+
+        function fetchEventsForDate(date) {
+            const url = `{% url 'ticket_sales:filtered-events' %}?date=${date}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    populateEventSelect(data.events);
+                })
+                .catch(error => {
+                    console.error('Error fetching events:', error);
+                });
+        }
+
+        function populateEventSelect(events) {
+            const eventSelect = document.getElementById('event');
+            eventSelect.innerHTML = ''; // Очистить текущие опции
+            if (events.length > 0) {
+                events.forEach(event => {
+                    const option = document.createElement('option');
+                    option.value = event.id;
+                    option.textContent = event.name;
+                    eventSelect.appendChild(option);
+                });
+                
+                updateEventTimeOptions(events[0].id);
+            } else {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Нет доступных мероприятий';
+                eventSelect.appendChild(option);
+            }
+        }
+
+        function closeModal() {
+            var modalElement = document.getElementById('editServiceModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+            console.log("run closeModal()");
+            modalInstance.hide();
+            window.location.reload();
+        }
+
+        (function setDefaultDate() {
+            let eventDateInput = document.getElementById('id_event_date');
+            if (eventDateInput && !eventDateInput.value) {
+                eventDateInput.value = new Date().toISOString().slice(0, 10);
+            }
+            
+            fetchEventsForDate(eventDateInput.value);
+        })();
+
+    </script>
 {% endblock %}

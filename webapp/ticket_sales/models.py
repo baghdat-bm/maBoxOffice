@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from django.utils import timezone
 import uuid
@@ -43,11 +45,15 @@ class TicketSale(models.Model):
         super(TicketSale, self).save(*args, **kwargs)
 
 
+def default_datetime():
+    return datetime.now().date()
+
+
 class TicketSalesService(models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
-    event_date = models.DateField(verbose_name="Дата мероприятия")
+    event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
     event_time = models.TimeField(verbose_name="Время мероприятия")
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")

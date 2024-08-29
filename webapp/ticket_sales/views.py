@@ -1,11 +1,13 @@
 import json
 from datetime import datetime
+from django.utils import timezone
 
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 
+from references.models import Event, EventTimes
 from .models import TicketSale, TicketSalesService, TicketSalesPayments
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
@@ -277,3 +279,22 @@ def print_ticket_view(request, ticket_sale_id):
         ]
     }
     return JsonResponse(data)
+
+
+def filtered_events(request):
+    date = request.GET.get('date')
+    events = []
+    if date:
+        selected_date_naive = datetime.strptime(date, '%Y-%m-%d')
+        selected_date = timezone.make_aware(datetime.combine(selected_date_naive, datetime.min.time()))
+        events = Event.objects.filter(begin_date__lte=selected_date, end_date__gte=selected_date)
+    return JsonResponse({"events": [{"id": event.id, "name": event.event_template.name} for event in events]})
+
+
+def filtered_event_times(request):
+    event_id = request.GET.get('event')
+    if event_id:
+        event_times = EventTimes.objects.filter(event_id=event_id, is_active=True)
+        times_data = [{'begin_date': time.begin_date.strftime('%H:%M')} for time in event_times]
+        return JsonResponse({'times': times_data})
+    return JsonResponse({'times': []})

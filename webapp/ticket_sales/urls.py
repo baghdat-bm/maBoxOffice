@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
     TicketSaleDetailView, payment_process, check_payment_status, payment_detail_view, ticket_sale_create_view, \
-    ticket_sale_update_view, cash_payment_process, print_ticket_view, \
+    ticket_sale_update_view, cash_payment_process, print_ticket_view, filtered_events, filtered_event_times, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete
 
@@ -40,4 +40,8 @@ urlpatterns = [
 
     # Print ticket
     path('ticket-print-data/<int:ticket_sale_id>/', print_ticket_view, name='ticket-print-data'),
+
+    # Filtered events
+    path('filtered-events/', filtered_events, name='filtered-events'),
+    path('filtered-event-times/', filtered_event_times, name='filtered-event-times'),
 ]
