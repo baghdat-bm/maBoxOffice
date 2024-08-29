@@ -19,6 +19,7 @@ class Event(models.Model):
     event_template = models.ForeignKey(EventTemplate, on_delete=models.CASCADE, verbose_name="Шаблон мероприятий")
     begin_date = models.DateTimeField(verbose_name="Дата начала")
     end_date = models.DateTimeField(verbose_name="Дата окончания")
+    quantity = models.PositiveSmallIntegerField(verbose_name="Количество билетов", blank=True, null=True)
     on_monday = models.BooleanField(verbose_name='Понедельник')
     on_tuesday = models.BooleanField(verbose_name='Вторник')
     on_wednesday = models.BooleanField(verbose_name='Среда')
@@ -44,7 +45,7 @@ class EventTimes(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, verbose_name="Мероприятие")
     begin_date = models.TimeField(verbose_name="Дата начала")
     end_date = models.TimeField(verbose_name="Дата окончания")
-    is_active = models.BooleanField(verbose_name="Активность")
+    is_active = models.BooleanField(verbose_name="Активность", default=True)
 
     def __str__(self):
         return f'{self.event.id}: {self.begin_date}-{self.end_date}'

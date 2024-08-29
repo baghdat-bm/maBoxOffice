@@ -65,6 +65,7 @@
                 <button type="button" class="btn btn-outline-primary"
                         hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}"
                         hx-target="#modal-body-content"
+                        hx-swap="innerHTML"
                         hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editTimeModal">
                     Добавить время
                 </button>
@@ -83,11 +84,17 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" id="modal-body-content">
-                        <!-- Сюда будет загружена форма с помощью HTMX -->                        
+                        <!-- Сюда будет загружена форма с помощью HTMX -->
                     </div>
                 </div>
             </div>
         </div>
 
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        
+    </script>
 {% endblock %}

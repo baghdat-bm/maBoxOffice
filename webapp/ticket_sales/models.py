@@ -61,7 +61,7 @@ class TicketSalesService(models.Model):
     class Meta:
         verbose_name = 'Услуга'
         verbose_name_plural = 'Услуги'
-        ordering = ['id']
+        ordering = ['-id']
 
 
 class TicketSalesPayments(models.Model):
@@ -93,4 +93,21 @@ class TicketSalesPayments(models.Model):
     class Meta:
         verbose_name = 'Платеж'
         verbose_name_plural = 'Платежи'
-        ordering = ['id']
+        ordering = ['-id']
+
+
+class TicketsSold(models.Model):
+    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
+    service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
+    event_date = models.DateField(verbose_name="Дата мероприятия")
+    event_time = models.TimeField(verbose_name="Время мероприятия")
+    tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
+
+    def __str__(self):
+        return f'{self.ticket_sale.pk}-{self.pk}'
+
+    class Meta:
+        verbose_name = 'Проданный билет'
+        verbose_name_plural = 'Проданные билеты'
+        ordering = ['-id']

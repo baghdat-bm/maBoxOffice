@@ -23,7 +23,7 @@ class EventTimesInline(admin.StackedInline):
 
 class EventAdmin(admin.ModelAdmin):
     model = Event
-    list_display = ('id', 'begin_date', 'end_date')
+    list_display = ('id', 'begin_date', 'end_date', 'quantity')
     list_display_links = ('id', 'begin_date', 'end_date')
     inlines = (EventTimesInline,)
 

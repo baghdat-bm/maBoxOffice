@@ -31,8 +31,8 @@ class EventForm(forms.ModelForm):
 
     class Meta:
         model = Event
-        fields = ['event_template', 'begin_date', 'end_date', 'on_monday', 'on_tuesday', 'on_wednesday', 'on_thursday',
-                  'on_friday', 'on_saturday', 'on_sunday']
+        fields = ['event_template', 'begin_date', 'end_date', 'quantity', 'on_monday', 'on_tuesday', 'on_wednesday',
+                  'on_thursday', 'on_friday', 'on_saturday', 'on_sunday']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,6 +41,7 @@ class EventForm(forms.ModelForm):
             'event_template',
             'begin_date',
             'end_date',
+            'quantity',
             Row(
                 Div(Field('on_monday'), css_class='d-none'),  # Скрываем поля в общем рендере
                 Div(Field('on_tuesday'), css_class='d-none'),
@@ -71,9 +72,7 @@ class EventTimesForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['begin_date'].widget.attrs.update({'class': 'form-control'})
-        self.fields['end_date'].widget.attrs.update({'class': 'form-control'})
-        self.fields['is_active'].widget.attrs.update({'class': 'form-control'})
+        self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
 
 
 class InventoryForm(forms.ModelForm):
