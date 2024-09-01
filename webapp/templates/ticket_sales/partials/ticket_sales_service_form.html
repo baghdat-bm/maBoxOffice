@@ -39,21 +39,23 @@
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.service.label_tag }}
-                {{ form.service|add_class:"form-control" }}
+                <select id="id_service" name="service" class="form-control" onchange="onServiceChange()">
+                    <!-- Вставьте здесь необходимые опции -->
+                </select>
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.tickets_count.label_tag }}
-                {{ form.tickets_count|add_class:"form-control" }}
+                <input type="number" id="id_tickets_count" name="tickets_count" class="form-control" oninput="onTicketsCountChange()">
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.tickets_amount.label_tag }}
-                {{ form.tickets_amount|add_class:"form-control" }}
+                <input type="number" id="id_tickets_amount" name="tickets_amount" class="form-control" disabled>
             </div>
         </div>
     </div>
@@ -66,14 +68,14 @@
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                {{ form.discount.label_tag }}
-                {{ form.discount|add_class:"form-control" }}
+                {{ form.discount.label_tag }}                
+                <input type="number" id="id_discount" name="discount" class="form-control" oninput="onDiscountChange()">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.total_amount.label_tag }}
-                {{ form.total_amount|add_class:"form-control" }}
+                <input type="number" id="id_total_amount" name="total_amount" class="form-control" disabled>
             </div>
         </div>
     </div>
@@ -89,6 +91,49 @@
 
 {% block scripts %}
     <script>
+                
+        function onServiceChange() {
+            updateTicketsAmount();
+            updateTotalAmount();
+        }
+        
+        function onTicketsCountChange() {
+            updateTicketsAmount();
+            updateTotalAmount();
+        }
+        
+        function updateTicketsAmount() {
+            const serviceSelect = document.getElementById('id_service');
+            const ticketsCountInput = document.getElementById('id_tickets_count');
+            const ticketsAmountInput = document.getElementById('id_tickets_amount');            
+                        
+            const selectedServiceId = serviceSelect.value;
+            const ticketsCount = parseInt(ticketsCountInput.value) || 0;
+    
+            if (selectedServiceId) {
+                const url = `{% url 'ticket_sales:get-service-cost' %}?service_id=${selectedServiceId}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const cost = parseInt(data.cost) || 0;
+                        ticketsAmountInput.value = cost * ticketsCount;
+                    });
+            } else {
+                ticketsAmountInput.value = 0;
+            }
+        }
+        
+        function onDiscountChange() {
+            updateTotalAmount();
+        }
+        
+        function updateTotalAmount() {
+            const discountInput = document.getElementById('id_discount');
+            const ticketsAmountInput = document.getElementById('id_tickets_amount'); 
+            
+            let total_amountInput = document.getElementById('id_total_amount');
+            total_amountInput.value = ticketsAmountInput.value - discountInput.value;            
+        }    
         
         function onEventChange(eventId) {
             updateEventTimeOptions(eventId);
@@ -200,6 +245,27 @@
             }
             
             fetchEventsForDate(eventDateInput.value);
+            
+            let ticketsCountInput = document.getElementById('id_tickets_count');
+            if (ticketsCountInput && !ticketsCountInput.value) {
+                ticketsCountInput.value = 1;
+            }
+            
+            let ticketsAmountInput = document.getElementById('id_tickets_amount');
+            if (ticketsAmountInput && !ticketsAmountInput.value) {
+                ticketsAmountInput.value = 0;
+            }
+            
+            let discountInput = document.getElementById('id_discount');
+            if (discountInput && !discountInput.value) {
+                discountInput.value = 0;
+            }
+            
+            let total_amountInput = document.getElementById('id_total_amount');
+            if (total_amountInput && !total_amountInput.value) {
+                total_amountInput.value = 0;
+            }
+            
         })();
 
     </script>

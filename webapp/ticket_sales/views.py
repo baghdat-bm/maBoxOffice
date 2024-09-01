@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 
-from references.models import Event, EventTimes, EventTemplateServices
+from references.models import Event, EventTimes, EventTemplateServices, Service
 from .models import TicketSale, TicketSalesService, TicketSalesPayments
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
@@ -309,3 +309,14 @@ def filtered_services(request):
             services_data = [{"id": service.service.id, "name": service.service.name} for service in services]
             return JsonResponse(services_data, safe=False)
     return JsonResponse([], safe=False)
+
+
+def get_service_cost(request):
+    service_id = request.GET.get('service_id')
+    if service_id:
+        try:
+            service = Service.objects.get(id=service_id)
+            return JsonResponse({'cost': service.cost})
+        except Service.DoesNotExist:
+            return JsonResponse({'cost': 0})
+    return JsonResponse({'cost': 0})

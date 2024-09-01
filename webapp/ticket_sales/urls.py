@@ -4,7 +4,7 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sale_update_view, cash_payment_process, print_ticket_view, filtered_events, filtered_event_times, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
-    filtered_services
+    filtered_services, get_service_cost
 
 app_name = 'ticket_sales'
 
@@ -46,4 +46,5 @@ urlpatterns = [
     path('filtered-events/', filtered_events, name='filtered-events'),
     path('filtered-event-times/', filtered_event_times, name='filtered-event-times'),
     path('filtered-services/', filtered_services, name='filtered-services'),
+    path('get-service-cost/', get_service_cost, name='get-service-cost'),
 ]
