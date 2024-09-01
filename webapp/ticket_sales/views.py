@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 
-from references.models import Event, EventTimes
+from references.models import Event, EventTimes, EventTemplateServices
 from .models import TicketSale, TicketSalesService, TicketSalesPayments
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
@@ -298,3 +298,14 @@ def filtered_event_times(request):
         times_data = [{'begin_date': time.begin_date.strftime('%H:%M')} for time in event_times]
         return JsonResponse({'times': times_data})
     return JsonResponse({'times': []})
+
+
+def filtered_services(request):
+    event_id = request.GET.get('event_id')
+    if event_id:
+        event = Event.objects.get(id=event_id)
+        if event:
+            services = EventTemplateServices.objects.filter(event_template=event.event_template)
+            services_data = [{"id": service.service.id, "name": service.service.name} for service in services]
+            return JsonResponse(services_data, safe=False)
+    return JsonResponse([], safe=False)

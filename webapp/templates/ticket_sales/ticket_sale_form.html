@@ -179,7 +179,6 @@
             {% if form.instance.id %}
                 <button type="button" class="btn btn-outline-primary"
                         hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
-                        {# hx-target="#ticket-sales-service-list" hx-swap="beforeend"#}
                         hx-target="#modal-body-content"
                         hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
                 >

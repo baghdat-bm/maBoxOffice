@@ -1,8 +1,7 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-<form method="post" hx-post="
-        
+<form method="post" onsubmit="return closeModal();" hx-post="       
         {% if form.instance.id %}{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}{% endif %}"
       hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
     {% csrf_token %}
@@ -19,7 +18,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label for="event">Мероприятие</label>
-                <select id="event" name="event" class="form-control" onchange="updateEventTimeOptions(this.value)">
+                <select id="event" name="event" class="form-control" onchange="onEventChange(this.value)">
                     <!-- Опции будут динамически добавляться здесь -->
                 </select>
             </div>
@@ -79,7 +78,7 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-1" onclick="closeModal()">
+    <button type="submit" class="btn btn-primary mt-1">
         {% if form.instance.id %}
             Записать
         {% else %}
@@ -90,6 +89,12 @@
 
 {% block scripts %}
     <script>
+        
+        function onEventChange(eventId) {
+            updateEventTimeOptions(eventId);
+            updateServicesOptions(eventId);
+        }
+        
         function updateEventTimeOptions(eventId) {
             const eventTimeSelect = document.getElementById('event_time');
 
@@ -116,6 +121,31 @@
                 eventTimeSelect.innerHTML = '<option value="">Выберите время</option>';
             }
         }
+        
+        function updateServicesOptions(eventId) {
+            var serviceSelect = document.getElementById('id_service');
+
+            if (eventId) {
+                const url = new URL("{% url 'ticket_sales:filtered-services' %}", window.location.origin);
+                url.searchParams.set('event_id', eventId);
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Очистить старые опции
+                        serviceSelect.innerHTML = '<option value="">Выберите услугу</option>';
+                        // Добавить новые опции
+                        data.forEach(function(service) {
+                            var option = document.createElement('option');
+                            option.value = service.id;
+                            option.text = service.name;
+                            serviceSelect.appendChild(option);
+                        });
+                    });
+            } else {
+                // Очистить поле выбора услуг, если мероприятие не выбрано
+                serviceSelect.innerHTML = '<option value="">Выберите услугу</option>';
+            }
+        }
 
         function fetchEventsForDate(date) {
             const url = `{% url 'ticket_sales:filtered-events' %}?date=${date}`;
@@ -140,7 +170,7 @@
                     eventSelect.appendChild(option);
                 });
                 
-                updateEventTimeOptions(events[0].id);
+                onEventChange(events[0].id);
             } else {
                 const option = document.createElement('option');
                 option.value = '';
@@ -154,7 +184,13 @@
             var modalInstance = bootstrap.Modal.getInstance(modalElement);
             console.log("run closeModal()");
             modalInstance.hide();
-            window.location.reload();
+            
+            // Используем setTimeout, чтобы дать время записи сохраниться
+            setTimeout(function() {
+                window.location.reload();
+            }, 500);  // Задержка в 500 мс (можно увеличить, если необходимо больше времени)
+            
+            return false;  // Предотвращаем повторную отправку формы
         }
 
         (function setDefaultDate() {
