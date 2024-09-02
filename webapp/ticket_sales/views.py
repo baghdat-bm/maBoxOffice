@@ -193,9 +193,7 @@ def payment_process(request, ticket_sale_id):
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
-        headers = {
-            'accesstoken': terminal['access_token']
-        }
+        headers = {'accesstoken': terminal['access_token']}
         response = requests.get(f'https://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
                                 headers=headers)
         json_data = response.json()
@@ -211,8 +209,12 @@ def payment_process(request, ticket_sale_id):
 
 
 def check_payment_status(request, process_id, ticket_sale_id):
+    terminal = get_terminal_settings()
+    if not terminal:
+        return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
-        response = requests.get(f'http://localhost:8080/status?processId={process_id}')
+        headers = {'accesstoken': terminal['access_token']}
+        response = requests.get(f'http://localhost:8080/status?processId={process_id}', headers=headers)
         response_data = response.json()
         if response.status_code == 200:
             response_data = response_data.get('data')
