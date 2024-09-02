@@ -244,10 +244,9 @@
 
             // Используем setTimeout, чтобы дать время записи сохраниться
             setTimeout(function () {
-                //window.location.reload();
-            }, 500);  // Задержка в 500 мс (можно увеличить, если необходимо больше времени)
-
-            console.log("run closeModal()");
+                window.location.reload();
+            }, 100);  // Задержка в 500 мс (можно увеличить, если необходимо больше времени)
+            
             modalInstance.hide();
 
             return false;  // Предотвращаем повторную отправку формы
