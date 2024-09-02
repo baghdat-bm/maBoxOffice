@@ -6,9 +6,13 @@ import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
+from django.contrib import messages
+from django.utils.dateparse import parse_datetime
+from django.core.exceptions import ValidationError
+from django.utils.timezone import make_aware
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
-from .models import TicketSale, TicketSalesService, TicketSalesPayments
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
@@ -320,3 +324,88 @@ def get_service_cost(request):
         except Service.DoesNotExist:
             return JsonResponse({'cost': 0})
     return JsonResponse({'cost': 0})
+
+
+def terminal_settings_view(request):
+    settings = TerminalSettings.objects.first()
+
+    if request.method == 'POST':
+        ip_address = request.POST.get('ip_address')
+        username = request.POST.get('username')
+        access_token = request.POST.get('access_token')
+        refresh_token = request.POST.get('refresh_token')
+        expiration_date = request.POST.get('expiration_date')
+
+        if not ip_address or not username:
+            messages.error(request, "Необходимо заполнить поля IP Address и Username.")
+            return redirect('ticket_sales:terminal-settings')
+
+        if settings is None:
+            settings = TerminalSettings(
+                ip_address=ip_address,
+                username=username,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expiration_date=expiration_date
+            )
+        else:
+            settings.ip_address = ip_address
+            settings.username = username
+            settings.access_token = access_token
+            settings.refresh_token = refresh_token
+            settings.expiration_date = expiration_date
+
+        settings.save()
+        messages.success(request, "Настройки сохранены.")
+
+        return redirect('ticket_sales:terminal-settings')
+
+    context = {
+        'settings': settings,
+    }
+    return render(request, 'ticket_sales/terminal_settings.html', context)
+
+
+def register_terminal(request):
+    ip_address = request.GET.get('ip_address')
+    username = request.GET.get('username')
+
+    if not ip_address or not username:
+        return JsonResponse({'error': 'IP address and username are required.'}, status=400)
+
+    url = f"https://{ip_address}:8080/register?name={username}"
+
+    try:
+        response = requests.get(url, timeout=10, verify=False)
+
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        elif response.status_code == 500:
+            return JsonResponse({'error': response.json().get('message', 'Unknown error')}, status=500)
+        else:
+            return JsonResponse({'error': 'Unknown error occurred during registration.'}, status=response.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'Connection error: {str(e)}'}, status=500)
+
+
+def refresh_terminal_token(request):
+    ip_address = request.GET.get('ip_address')
+    username = request.GET.get('username')
+    refresh_token = request.GET.get('refresh_token')
+
+    if not ip_address or not username:
+        return JsonResponse({'error': 'IP address and username are required.'}, status=400)
+
+    url = f"https://{ip_address}:8080/v2/revoke?name={username}&refreshToken={refresh_token}"
+
+    try:
+        response = requests.get(url, timeout=10, verify=False)
+
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        elif response.status_code == 500:
+            return JsonResponse({'error': response.json().get('message', 'Unknown error')}, status=500)
+        else:
+            return JsonResponse({'error': 'Unknown error occurred during registration.'}, status=response.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'Connection error: {str(e)}'}, status=500)

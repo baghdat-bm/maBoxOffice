@@ -1,7 +1,7 @@
 <div class="list-group bg-light"
      style="position: fixed; top: 0; left: 0; height: 100%; width: 250px; padding-top: 60px;">
     <a href="{% url 'ticket_sales:ticket-sale-list' %}"
-       class="list-group-item list-group-item-action {% if 'ticket-sales' in request.path %}active{% endif %}">
+       class="list-group-item list-group-item-action {% if 'ticket-sales' in request.path and not 'terminal' in request.path%}active{% endif %}">
         <i class="bi bi-ticket-perforated-fill me-2"></i> Заказы
     </a>
     <a href="{% url 'references:event_template_list' %}"
@@ -19,5 +19,9 @@
     <a href="{% url 'references:service-list' %}"
        class="list-group-item list-group-item-action {% if 'service' in request.path %}active{% endif %}">
         <i class="bi bi-wrench me-2"></i> Услуги
+    </a>
+    <a href="{% url 'ticket_sales:terminal-settings' %}"
+       class="list-group-item list-group-item-action {% if 'terminal' in request.path %}active{% endif %}">
+        <i class="bi bi-gear-wide-connected"></i> Настройки терминала
     </a>
 </div>

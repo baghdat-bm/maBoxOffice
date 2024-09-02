@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h3>Настройки терминала</h3>
+
+        <form id="terminal-settings-form" method="post" action="{% url 'ticket_sales:terminal-settings' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="ip_address" class="form-label">IP Address</label>
+                <input type="text" id="ip_address" name="ip_address" class="form-control"
+                       value="{{ settings.ip_address|default_if_none:'' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-control"
+                       value="{{ settings.username|default_if_none:'' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="access_token" class="form-label">Access Token</label>
+                <input type="text" id="access_token" name="access_token" class="form-control"
+                       value="{{ settings.access_token|default_if_none:'' }}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="refresh_token" class="form-label">Refresh Token</label>
+                <input type="text" id="refresh_token" name="refresh_token" class="form-control"
+                       value="{{ settings.refresh_token|default_if_none:'' }}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="expiration_date" class="form-label">Expiration Date</label>
+                <input type="datetime" id="expiration_date" name="expiration_date" class="form-control"
+                       value="{{ settings.expiration_date|date:'Y-m-d H:i:s' }}" readonly>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="register-button" onclick="registerTerminal()">
+                Регистрация
+            </button>
+            <button type="button" class="btn btn-primary" id="register-button" onclick="refreshToken()">
+                Обновить токен доступа
+            </button>
+            <button type="submit" class="btn btn-success">Сохранить настройки</button>
+        </form>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>       
+
+        function registerTerminal() {
+            const ip_address = document.getElementById('ip_address').value;
+            const username = document.getElementById('username').value;
+
+            if (!ip_address || !username) {
+                alert('Необходимо заполнить IP-адрес и имя пользователя.');
+                return;
+            }
+
+            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(`Ошибка: ${data.error}`);
+                    } else {
+                        document.getElementById('access_token').value = data.accessToken;
+                        document.getElementById('refresh_token').value = data.refreshToken;
+                        // Преобразование строки даты в формат Django
+                        const expirationDate = new Date(data.expirationDate);                        
+                        document.getElementById('expiration_date').value = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
+
+                        // Добавьте код для сохранения данных в модели Django
+                        //saveSettings(ip_address, username, data.accessToken, data.refreshToken, data.expirationDate);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка соединения:', error);
+                    alert("Ошибка соединения с терминалом...");
+                });
+        }
+        
+        function refreshToken() {
+            const ip_address = document.getElementById('ip_address').value;
+            const username = document.getElementById('username').value;
+            const refreshToken = document.getElementById('refresh_token').value;
+
+            if (!ip_address || !username) {
+                alert('Необходимо заполнить IP-адрес и имя пользователя.');
+                return;
+            }
+            
+            if (!refreshToken) {
+                alert('Сначала необходимо выполнить регистрацию.');
+                return;
+            }
+
+            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&refresh_token=${refreshToken}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(`Ошибка: ${data.error}`);
+                    } else {
+                        tokenData = data.data;                        
+                        document.getElementById('access_token').value = tokenData.accessToken;
+                        document.getElementById('refresh_token').value = tokenData.refreshToken;                        
+                        const expirationDate = new Date(tokenData.expirationDate);                        
+                        document.getElementById('expiration_date').value = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
+
+                        // Добавьте код для сохранения данных в модели Django
+                        //saveSettings(ip_address, username, data.accessToken, data.refreshToken, data.expirationDate);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка соединения:', error);
+                    alert("Ошибка соединения с терминалом...");
+                });
+        }
+
+        function saveSettings(ip_address, username, access_token, refresh_token, expiration_date) {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const formData = new FormData();
+            formData.append('ip_address', ip_address);
+            formData.append('username', username);
+            formData.append('access_token', access_token);
+            formData.append('refresh_token', refresh_token);
+            formData.append('expiration_date', expiration_date);
+
+            fetch("{% url 'ticket_sales:terminal-settings' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert("Регистрация успешно завершена.");
+                    } else {
+                        alert("Ошибка при сохранении настроек.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка сохранения настроек:', error);
+                    alert("Ошибка сохранения настроек.");
+                });
+        }
+
+    </script>
+{% endblock %}

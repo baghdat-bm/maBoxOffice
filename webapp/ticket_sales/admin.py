@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketsSold
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketsSold, TerminalSettings
 
 
 class TicketSalesServiceInline(admin.StackedInline):
@@ -29,4 +29,19 @@ class TicketSaleAdmin(admin.ModelAdmin):
     inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketsSoldInline)
 
 
+class TerminalSettingsAdmin(admin.ModelAdmin):
+    model = TerminalSettings
+    list_display = ('username', 'ip_address', 'refresh_token', 'expiration_date')
+    search_fields = ('username', 'ip_address')
+
+    def has_add_permission(self, request):
+        # Разрешить добавление записи, только если её еще нет
+        return not TerminalSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Запретить удаление записи
+        return False
+
+
 admin.site.register(TicketSale, TicketSaleAdmin)
+admin.site.register(TerminalSettings, TerminalSettingsAdmin)

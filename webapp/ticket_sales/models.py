@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 import uuid
 
 from references.models import Service, Event, Inventory
@@ -117,3 +118,28 @@ class TicketsSold(models.Model):
         verbose_name = 'Проданный билет'
         verbose_name_plural = 'Проданные билеты'
         ordering = ['-id']
+
+
+class TerminalSettings(models.Model):
+    ip_address = models.GenericIPAddressField(verbose_name="IP Address")
+    username = models.CharField(max_length=150, verbose_name="Username")
+    access_token = models.TextField(verbose_name="Access Token")
+    refresh_token = models.TextField(verbose_name="Refresh Token")
+    expiration_date = models.DateTimeField(verbose_name="Expiration date", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
+
+    class Meta:
+        verbose_name = 'Настройки терминала'
+        verbose_name_plural = 'Настройки терминала'
+
+    def clean(self):
+        if TerminalSettings.objects.exists() and not self.pk:
+            raise ValidationError("Можно создать только одну запись TerminalSettings.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super(TerminalSettings, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Terminal settings for {self.username} to {self.ip_address}"
