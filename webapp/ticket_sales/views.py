@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from django.utils import timezone
+import re
 
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
@@ -195,17 +196,18 @@ def payment_process(request, ticket_sale_id):
     try:
         headers = {'accesstoken': terminal['access_token']}
         response = requests.get(f'https://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
-                                headers=headers)
-        json_data = response.json()
-        if json_data:
-            response_data = json_data.get('data')
-            if response.status_code == 200 and response_data.get('status') == 'wait':
-                process_id = response_data.get('processId')
+                                headers=headers, verify=False, timeout=100)
+        response_data = response.json()
+        if response_data:
+            if response.status_code == 200 and response_data['status'] == 'wait':
+                process_id = response_data['processId']
                 return JsonResponse({'status': 'wait', 'process_id': process_id})
         else:
             return JsonResponse({'status': 'fail'}, status=400)
-    except requests.RequestException:
-        return JsonResponse({'status': 'fail'}, status=500)
+    except Exception as e:
+        error = e.__str__()
+        print('error >> ', error)
+        return JsonResponse({'status': 'fail', 'error': error}, status=500)
 
 
 def check_payment_status(request, process_id, ticket_sale_id):
@@ -214,21 +216,22 @@ def check_payment_status(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        response = requests.get(f'http://localhost:8080/status?processId={process_id}', headers=headers)
+        response = requests.get(f'https://{terminal['ip_address']}:8080/status?processId={process_id}',
+                                headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response.status_code == 200:
-            response_data = response_data.get('data')
-            if response_data.get('status') == 'success':
-                chequeInfo = response_data.get("chequeInfo")
+            if response_data['status'] == 'success':
+                chequeInfo = response_data["chequeInfo"]
                 ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
                 new_payment = TicketSalesPayments()
                 new_payment.ticket_sale = ticket_sale
                 new_payment.process_id = process_id
-                new_payment.amount = chequeInfo['amount']
                 if chequeInfo['date']:
                     new_payment.payment_date = datetime.strptime(chequeInfo['date'], "%d.%m.%y %H:%M:%S")
                 else:
                     new_payment.payment_date = datetime.now()
+
+                new_payment.amount = int(re.sub(r'\D', '', chequeInfo['amount']))
 
                 if chequeInfo['method'] == 'qr':
                     new_payment.payment_method = "QR"
@@ -249,8 +252,8 @@ def check_payment_status(request, process_id, ticket_sale_id):
             else:
                 return JsonResponse({'status': 'wait'})
         return JsonResponse(response.json())
-    except requests.RequestException:
-        return JsonResponse({'status': 'fail'})
+    # except requests.RequestException:
+    #     return JsonResponse({'status': 'fail'})
     except Exception as e:
         print(e.__str__())
         return JsonResponse({'status': 'wait', 'error': e.__str__()})
