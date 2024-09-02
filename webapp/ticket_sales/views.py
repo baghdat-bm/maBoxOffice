@@ -16,7 +16,7 @@ from .models import TicketSale, TicketSalesService, TicketSalesPayments, Termina
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
-from .utils import update_ticket_amount, update_ticket_paid_amount
+from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal_settings, update_terminal_token
 
 
 # TicketSale Views
@@ -94,7 +94,8 @@ def ticket_sales_service_create(request, ticket_sale_id):
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html', {'ticket_sale': ticket_sale})
     else:
         form = TicketSalesServiceForm()
-    return render(request, 'ticket_sales/partials/ticket_sales_service_form.html', {'form': form, 'ticket_sale': ticket_sale})
+    return render(request, 'ticket_sales/partials/ticket_sales_service_form.html',
+                  {'form': form, 'ticket_sale': ticket_sale})
 
 
 def ticket_sales_service_update(request, ticket_sale_id, pk):
@@ -140,7 +141,8 @@ def ticket_sales_payments_create(request, ticket_sale_id):
                           {'ticket_sale': ticket_sale})
     else:
         form = TicketSalesPaymentsForm()
-    return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'form': form, 'ticket_sale': ticket_sale})
+    return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html',
+                  {'form': form, 'ticket_sale': ticket_sale})
 
 
 def ticket_sales_payments_update(request, ticket_sale_id, pk):
@@ -187,8 +189,15 @@ def payment_detail_view(request, ticket_sale_id, pk):
 
 def payment_process(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
+    terminal = get_terminal_settings()
+    if not terminal:
+        return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
-        response = requests.get(f'http://localhost:8080/payment?amount={ticket_sale.amount}')
+        headers = {
+            'accesstoken': terminal['access_token']
+        }
+        response = requests.get(f'https://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
+                                headers=headers)
         json_data = response.json()
         if json_data:
             response_data = json_data.get('data')
@@ -196,9 +205,9 @@ def payment_process(request, ticket_sale_id):
                 process_id = response_data.get('processId')
                 return JsonResponse({'status': 'wait', 'process_id': process_id})
         else:
-            return JsonResponse({'status': 'fail'})
+            return JsonResponse({'status': 'fail'}, status=400)
     except requests.RequestException:
-        return JsonResponse({'status': 'fail'})
+        return JsonResponse({'status': 'fail'}, status=500)
 
 
 def check_payment_status(request, process_id, ticket_sale_id):
@@ -371,7 +380,9 @@ def register_terminal(request):
     username = request.GET.get('username')
 
     if not ip_address or not username:
-        return JsonResponse({'error': 'IP address and username are required.'}, status=400)
+        message = 'Необходимо заполнить поля IP Address и Username'
+        messages.error(request, message)
+        return JsonResponse({'error': message}, status=400)
 
     url = f"https://{ip_address}:8080/register?name={username}"
 
@@ -379,7 +390,26 @@ def register_terminal(request):
         response = requests.get(url, timeout=10, verify=False)
 
         if response.status_code == 200:
-            return JsonResponse(response.json())
+            data = response.json()
+            expiration_date = make_aware(parse_datetime(data['expirationDate']))
+            settings = TerminalSettings.objects.first()
+            if settings:
+                settings.ip_address = ip_address
+                settings.username = username
+                settings.access_token = data['accessToken']
+                settings.refresh_token = data['refreshToken']
+                settings.expiration_date = expiration_date
+            else:
+                settings = TerminalSettings(
+                    ip_address=ip_address,
+                    username=username,
+                    access_token=data['accessToken'],
+                    refresh_token=data['refreshToken'],
+                    expiration_date=expiration_date,
+                )
+            settings.save()
+            messages.success(request, "Регистрация прошла успешно.")
+            return JsonResponse({'status': 'success'})
         elif response.status_code == 500:
             return JsonResponse({'error': response.json().get('message', 'Unknown error')}, status=500)
         else:
@@ -393,19 +423,19 @@ def refresh_terminal_token(request):
     username = request.GET.get('username')
     refresh_token = request.GET.get('refresh_token')
 
-    if not ip_address or not username:
-        return JsonResponse({'error': 'IP address and username are required.'}, status=400)
+    terminal_settings = get_terminal_settings()
+    if not terminal_settings:
+        terminal_settings = TerminalSettings(
+            ip_address=ip_address,
+            username=username,
+            access_token='',
+            refresh_token=refresh_token
+        )
 
-    url = f"https://{ip_address}:8080/v2/revoke?name={username}&refreshToken={refresh_token}"
-
-    try:
-        response = requests.get(url, timeout=10, verify=False)
-
-        if response.status_code == 200:
-            return JsonResponse(response.json())
-        elif response.status_code == 500:
-            return JsonResponse({'error': response.json().get('message', 'Unknown error')}, status=500)
-        else:
-            return JsonResponse({'error': 'Unknown error occurred during registration.'}, status=response.status_code)
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({'error': f'Connection error: {str(e)}'}, status=500)
+    result = update_terminal_token(terminal_settings)
+    if result['status'] == 200:
+        messages.success(request, "Токен успешно обновлен.")
+        return JsonResponse({'status': 'success'})
+    else:
+        messages.error(request, result['error'])
+        return JsonResponse({'status': 'fail', 'error': result['error']}, status=400)

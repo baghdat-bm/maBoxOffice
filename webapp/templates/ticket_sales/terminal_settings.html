@@ -70,14 +70,15 @@
                     if (data.error) {
                         alert(`Ошибка: ${data.error}`);
                     } else {
-                        document.getElementById('access_token').value = data.accessToken;
-                        document.getElementById('refresh_token').value = data.refreshToken;
+                        //document.getElementById('access_token').value = data.accessToken;
+                        //document.getElementById('refresh_token').value = data.refreshToken;
                         // Преобразование строки даты в формат Django
-                        const expirationDate = new Date(data.expirationDate);                        
-                        document.getElementById('expiration_date').value = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
+                        //const expirationDate = new Date(data.expirationDate);                        
+                        //document.getElementById('expiration_date').value = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
 
                         // Добавьте код для сохранения данных в модели Django
                         //saveSettings(ip_address, username, data.accessToken, data.refreshToken, data.expirationDate);
+                        location.reload();
                     }
                 })
                 .catch(error => {
@@ -109,14 +110,15 @@
                     if (data.error) {
                         alert(`Ошибка: ${data.error}`);
                     } else {
-                        tokenData = data.data;                        
-                        document.getElementById('access_token').value = tokenData.accessToken;
-                        document.getElementById('refresh_token').value = tokenData.refreshToken;                        
-                        const expirationDate = new Date(tokenData.expirationDate);                        
-                        document.getElementById('expiration_date').value = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
+                        //tokenData = data.data;                        
+                        //document.getElementById('access_token').value = tokenData.accessToken;
+                        //document.getElementById('refresh_token').value = tokenData.refreshToken;                        
+                        //const expirationDate = new Date(tokenData.expirationDate);                        
+                        //document.getElementById('expiration_date').value = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
 
                         // Добавьте код для сохранения данных в модели Django
                         //saveSettings(ip_address, username, data.accessToken, data.refreshToken, data.expirationDate);
+                        location.reload();
                     }
                 })
                 .catch(error => {
