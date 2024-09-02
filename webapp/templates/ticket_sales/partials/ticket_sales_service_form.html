@@ -1,7 +1,7 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-<form method="post" onsubmit="return closeModal();" hx-post="       
+<form method="post" onsubmit="return closeModal();" hx-post="
         {% if form.instance.id %}{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}{% endif %}"
       hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
     {% csrf_token %}
@@ -11,14 +11,14 @@
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.event_date.label_tag }}
-                <input type="date" id="id_event_date" name="event_date" class="form-control"
-                       onchange="fetchEventsForDate(this.value)">
+                <input type="date" id="id_event_date" name="event_date" class="form-control" required
+                       onchange="onEventDateChange(this.value)">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
                 <label for="event">Мероприятие</label>
-                <select id="event" name="event" class="form-control" onchange="onEventChange(this.value)">
+                <select id="event" name="event" class="form-control" onchange="onEventChange(this.value)" required>
                     <!-- Опции будут динамически добавляться здесь -->
                 </select>
             </div>
@@ -26,7 +26,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label for="event_time">Время мероприятия</label>
-                <select id="event_time" name="event_time" class="form-control">
+                <select id="event_time" name="event_time" class="form-control" required>
                     <option value="">Выберите время</option>
                     <!-- Этот список будет обновляться с помощью JavaScript -->
                 </select>
@@ -39,7 +39,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.service.label_tag }}
-                <select id="id_service" name="service" class="form-control" onchange="onServiceChange()">
+                <select id="id_service" name="service" class="form-control" onchange="onServiceChange()" required>
                     <!-- Вставьте здесь необходимые опции -->
                 </select>
             </div>
@@ -48,14 +48,15 @@
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.tickets_count.label_tag }}
-                <input type="number" id="id_tickets_count" name="tickets_count" class="form-control" oninput="onTicketsCountChange()">
+                <input type="number" id="id_tickets_count" name="tickets_count" class="form-control"
+                       oninput="onTicketsCountChange()" min="1" required>
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.tickets_amount.label_tag }}
-                <input type="number" id="id_tickets_amount" name="tickets_amount" class="form-control" disabled>
+                <input type="number" id="id_tickets_amount" name="tickets_amount" class="form-control" readonly>
             </div>
         </div>
     </div>
@@ -68,14 +69,14 @@
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                {{ form.discount.label_tag }}                
+                {{ form.discount.label_tag }}
                 <input type="number" id="id_discount" name="discount" class="form-control" oninput="onDiscountChange()">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.total_amount.label_tag }}
-                <input type="number" id="id_total_amount" name="total_amount" class="form-control" disabled>
+                <input type="number" id="id_total_amount" name="total_amount" class="form-control" readonly>
             </div>
         </div>
     </div>
@@ -91,25 +92,23 @@
 
 {% block scripts %}
     <script>
-                
+
         function onServiceChange() {
-            updateTicketsAmount();
-            updateTotalAmount();
+            updateTicketsAmount(true);
         }
-        
+
         function onTicketsCountChange() {
-            updateTicketsAmount();
-            updateTotalAmount();
+            updateTicketsAmount(true);
         }
-        
-        function updateTicketsAmount() {
+
+        function updateTicketsAmount(updateTotalAmountAfterRequest = false) {
             const serviceSelect = document.getElementById('id_service');
             const ticketsCountInput = document.getElementById('id_tickets_count');
-            const ticketsAmountInput = document.getElementById('id_tickets_amount');            
-                        
+            const ticketsAmountInput = document.getElementById('id_tickets_amount');
+
             const selectedServiceId = serviceSelect.value;
             const ticketsCount = parseInt(ticketsCountInput.value) || 0;
-    
+
             if (selectedServiceId) {
                 const url = `{% url 'ticket_sales:get-service-cost' %}?service_id=${selectedServiceId}`;
                 fetch(url)
@@ -117,29 +116,33 @@
                     .then(data => {
                         const cost = parseInt(data.cost) || 0;
                         ticketsAmountInput.value = cost * ticketsCount;
+                        if (updateTotalAmountAfterRequest)
+                            updateTotalAmount();
                     });
             } else {
                 ticketsAmountInput.value = 0;
+                if (updateTotalAmountAfterRequest)
+                    updateTotalAmount();
             }
         }
-        
+
         function onDiscountChange() {
             updateTotalAmount();
         }
-        
+
         function updateTotalAmount() {
             const discountInput = document.getElementById('id_discount');
-            const ticketsAmountInput = document.getElementById('id_tickets_amount'); 
-            
+            const ticketsAmountInput = document.getElementById('id_tickets_amount');
+
             let total_amountInput = document.getElementById('id_total_amount');
-            total_amountInput.value = ticketsAmountInput.value - discountInput.value;            
-        }    
-        
+            total_amountInput.value = ticketsAmountInput.value - discountInput.value;
+        }
+
         function onEventChange(eventId) {
             updateEventTimeOptions(eventId);
-            updateServicesOptions(eventId);
+            updateServicesOptions(eventId);            
         }
-        
+
         function updateEventTimeOptions(eventId) {
             const eventTimeSelect = document.getElementById('event_time');
 
@@ -166,7 +169,7 @@
                 eventTimeSelect.innerHTML = '<option value="">Выберите время</option>';
             }
         }
-        
+
         function updateServicesOptions(eventId) {
             var serviceSelect = document.getElementById('id_service');
 
@@ -179,29 +182,39 @@
                         // Очистить старые опции
                         serviceSelect.innerHTML = '<option value="">Выберите услугу</option>';
                         // Добавить новые опции
-                        data.forEach(function(service) {
+                        data.forEach(function (service) {
                             var option = document.createElement('option');
                             option.value = service.id;
                             option.text = service.name;
                             serviceSelect.appendChild(option);
                         });
+                        
+                        updateTicketsAmount(true);
                     });
             } else {
                 // Очистить поле выбора услуг, если мероприятие не выбрано
                 serviceSelect.innerHTML = '<option value="">Выберите услугу</option>';
+                updateTicketsAmount(true);
             }
         }
 
-        function fetchEventsForDate(date) {
-            const url = `{% url 'ticket_sales:filtered-events' %}?date=${date}`;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    populateEventSelect(data.events);
-                })
-                .catch(error => {
-                    console.error('Error fetching events:', error);
-                });
+        function onEventDateChange(date) {
+
+            if (date) {
+                const url = `{% url 'ticket_sales:filtered-events' %}?date=${date}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        populateEventSelect(data.events);                        
+                    })
+                    .catch(error => {
+                        console.error('Error fetching events:', error);
+                        updateTicketsAmount(true);
+                    });
+            }
+            else {
+                populateEventSelect([]);                
+            }            
         }
 
         function populateEventSelect(events) {
@@ -214,27 +227,29 @@
                     option.textContent = event.name;
                     eventSelect.appendChild(option);
                 });
-                
+
                 onEventChange(events[0].id);
             } else {
                 const option = document.createElement('option');
                 option.value = '';
                 option.textContent = 'Нет доступных мероприятий';
                 eventSelect.appendChild(option);
+                onEventChange('');
             }
         }
 
         function closeModal() {
             var modalElement = document.getElementById('editServiceModal');
             var modalInstance = bootstrap.Modal.getInstance(modalElement);
+
+            // Используем setTimeout, чтобы дать время записи сохраниться
+            setTimeout(function () {
+                //window.location.reload();
+            }, 500);  // Задержка в 500 мс (можно увеличить, если необходимо больше времени)
+
             console.log("run closeModal()");
             modalInstance.hide();
-            
-            // Используем setTimeout, чтобы дать время записи сохраниться
-            setTimeout(function() {
-                window.location.reload();
-            }, 500);  // Задержка в 500 мс (можно увеличить, если необходимо больше времени)
-            
+
             return false;  // Предотвращаем повторную отправку формы
         }
 
@@ -243,29 +258,29 @@
             if (eventDateInput && !eventDateInput.value) {
                 eventDateInput.value = new Date().toISOString().slice(0, 10);
             }
-            
-            fetchEventsForDate(eventDateInput.value);
-            
+
+            onEventDateChange(eventDateInput.value);
+
             let ticketsCountInput = document.getElementById('id_tickets_count');
             if (ticketsCountInput && !ticketsCountInput.value) {
                 ticketsCountInput.value = 1;
             }
-            
+
             let ticketsAmountInput = document.getElementById('id_tickets_amount');
             if (ticketsAmountInput && !ticketsAmountInput.value) {
                 ticketsAmountInput.value = 0;
             }
-            
+
             let discountInput = document.getElementById('id_discount');
             if (discountInput && !discountInput.value) {
                 discountInput.value = 0;
             }
-            
+
             let total_amountInput = document.getElementById('id_total_amount');
             if (total_amountInput && !total_amountInput.value) {
                 total_amountInput.value = 0;
             }
-            
+
         })();
 
     </script>

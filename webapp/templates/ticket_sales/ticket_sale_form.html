@@ -185,6 +185,9 @@
                     Добавить услугу
                 </button>
             {% else %}
+                <button type="button" class="btn btn-outline-primary" disabled>
+                    Добавить услугу
+                </button>
                 Перед добавлением услуги необходимо сохранить заказ
             {% endif %}
 
@@ -206,9 +209,16 @@
                         data-ticket-sale-id="{{ form.instance.id }}">
                     Оплата наличными
                 </button>
+            {% else %}
+                <button type="button" class="btn btn-success mt-2" id="start-payment" disabled>
+                    Оплата картой
+                </button>
 
-                <hr class="my-3">
+                <button type="button" class="btn btn-info mt-2" id="cash-payment-button" disabled>
+                    Оплата наличными
+                </button>
             {% endif %}
+            <hr class="my-3">
 
             <div class="mt-2">
                 {% if form.instance.id %}
@@ -222,7 +232,8 @@
                     Сохранить
                 </button>
 
-                <a href="{% url 'ticket_sales:ticket-sale-list' %}" id="back-to-list" class="btn btn-secondary">Закрыть</a>
+                <a href="{% url 'ticket_sales:ticket-sale-list' %}" id="back-to-list"
+                   class="btn btn-secondary">Закрыть</a>
             </div>
         </form>
     </div>
@@ -272,7 +283,7 @@
                 .then(data => {
                     const printContent = document.getElementById('print-content');
                     printContent.innerHTML = '';  // Очистить старый контент
-                    
+
                     data.services.forEach(service => {
                         for (let i = 0; i < service.tickets_count; i++) {
                             printContent.innerHTML += `
@@ -289,7 +300,7 @@
                             `;
                         }
                     });
-                                        
+
                     if (!data.services || data.services.length === 0) {
                         printContent.innerHTML = "<p>Нет данных для печати</p>"
                     }
@@ -393,7 +404,14 @@
             const form = document.getElementById('ticket-sale-form');
             const formData = new FormData(form);
 
-            fetch("{% if form.instance.id %} {% url 'ticket_sales:ticket-sale-update-x' form.instance.id %} {% else %} {% url 'ticket_sales:ticket-sale-create-x' %} {% endif %}",
+            let url = '';
+            {% if form.instance.id %}
+                url = "{% url 'ticket_sales:ticket-sale-update-x' form.instance.id %}";
+            {% else %}
+                url = "{% url 'ticket_sales:ticket-sale-create-x' %}";
+            {% endif %};
+            
+            fetch(url,
                 {
                     method: 'POST',
                     headers:
