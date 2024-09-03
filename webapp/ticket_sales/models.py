@@ -86,7 +86,7 @@ class TicketSalesPayments(models.Model):
         default="QR",
     )
     amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
-    process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', unique=True)
+    process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
     last_status = models.CharField(max_length=15, verbose_name='Последний статус', null=True, blank=True)
     error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
     transaction_id = models.CharField(max_length=20, verbose_name='Идентификатор успешной транзакции', null=True,
@@ -100,6 +100,21 @@ class TicketSalesPayments(models.Model):
     class Meta:
         verbose_name = 'Платеж'
         verbose_name_plural = 'Платежи'
+        ordering = ['-id']
+
+
+class TicketSalesTicket(models.Model):
+    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
+    service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
+    amount = models.IntegerField(verbose_name="Сумма билета")
+    ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
+
+    def __str__(self):
+        return f'{self.ticket_sale.pk}-{self.pk}'
+
+    class Meta:
+        verbose_name = 'Билет'
+        verbose_name_plural = 'Билеты'
         ordering = ['-id']
 
 

@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketsSold, TerminalSettings
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketsSold, TerminalSettings, \
+    TicketSalesTicket
 
 
 class TicketSalesServiceInline(admin.StackedInline):
@@ -22,11 +23,16 @@ class TicketsSoldInline(admin.StackedInline):
     extra = 0
 
 
+class TicketSalesTicketInline(admin.TabularInline):
+    model = TicketSalesTicket
+    extra = 0
+
+
 class TicketSaleAdmin(admin.ModelAdmin):
     model = TicketSale
     list_display = ('id', 'date', 'amount', 'status')
     list_display_links = ('id', 'date')
-    inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketsSoldInline)
+    inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketsSoldInline, TicketSalesTicketInline)
 
 
 class TerminalSettingsAdmin(admin.ModelAdmin):
