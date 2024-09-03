@@ -1,11 +1,6 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-{% block header %}
-
-
-{% endblock %}
-
 <form method="post" onsubmit="return closeModal();"
       hx-target="#ticket-sales-service-list" hx-swap="innerHTML"
       hx-post="{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}"
@@ -21,6 +16,27 @@
                        onchange="onEventDateChange(this.value)">
             </div>
         </div>
+
+        <!-- Таблица для выбора мероприятия -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div style="max-height: 200px; min-height: 200px; overflow-y: auto; border: 1px solid #d3d3d3;">
+                    <table class="table table-hover" id="event-selection-table" style="border: 1px solid #d3d3d3; table-layout: fixed; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Мероприятие</th>
+                                <th style="width: 40%;">Время начало - время окончания</th>
+                                <th style="width: 20%;">Количество услуг</th>
+                            </tr>
+                        </thead>
+                        <tbody id="event-selection-table-tbody">
+                            <!-- Динамически добавляемые строки -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="col-md-4">
             <div class="form-group">
                 <label for="event">Мероприятие</label>
@@ -104,8 +120,8 @@
                 .then(response => response.json())
                 .then(data => {
                     const availableDates = data.available_dates.map(date => {
-                        let d = new Date(date);
-                        return d.toISOString().split('T')[0]; // Преобразуем в формат YYYY-MM-DD
+                        const localDate = new Date(date + 'T00:00:00');  // Явно указываем время как полночь
+                        return localDate.toISOString().split('T')[0];    // Преобразуем в формат YYYY-MM-DD
                     });
 
                     $('#id_event_date').datepicker({
@@ -175,7 +191,7 @@
             updateServicesOptions(eventId);
         }
 
-        function updateEventTimeOptions(eventId) {
+        function updateEventTimeOptions(eventId, currentValue = null) {
             const eventTimeSelect = document.getElementById('event_time');
 
             if (eventId) {
@@ -185,14 +201,23 @@
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
-                        // Очищаем старые опции
+                        // Очищаем старые опции                        
                         eventTimeSelect.innerHTML = '<option value="">Выберите время</option>';
+                        if (currentValue) {
+                            const option = document.createElement('option');
+                            option.value = currentValue;
+                            option.textContent = currentValue;
+                            option.selected = true;
+                            eventTimeSelect.appendChild(option);                            
+                        }                        
                         // Добавляем новые опции
                         data.times.forEach(time => {
-                            const option = document.createElement('option');
-                            option.value = time.begin_date;
-                            option.textContent = time.begin_date;
-                            eventTimeSelect.appendChild(option);
+                            if (!currentValue || currentValue !== time.begin_date) {
+                                const option = document.createElement('option');
+                                option.value = time.begin_date;
+                                option.textContent = time.begin_date;
+                                eventTimeSelect.appendChild(option);
+                            }
                         });
                     })
                     .catch(error => console.error('Ошибка загрузки времени:', error));
@@ -230,7 +255,42 @@
             }
         }
 
+        // Функция для заполнения таблицы мероприятиями
+        function populateEventTable(events) {
+            const tableBody = document.getElementById('event-selection-table-tbody');
+            tableBody.innerHTML = ''; // Очистка таблицы перед заполнением
+
+            events.forEach(event => {
+                event.times.forEach(time => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${event.name}</td>
+                        <td>${time.begin_date} - ${time.end_date}</td>
+                        <td>${event.quantity}</td>
+                    `;
+                    row.addEventListener('click', function () {                        
+                        updateServicesOptions(event.id);
+                        document.getElementById('event').value = event.id;
+                        //document.getElementById('event_time').value = time.begin_date;
+                        updateEventTimeOptions(event.id, time.begin_date);
+                    });
+                    tableBody.appendChild(row);
+                });
+            });
+        }
+
         function onEventDateChange(date) {
+
+            if (date) {
+                const url = `{% url 'ticket_sales:get-events' %}?date=${date}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        populateEventTable(data.events);
+                    });
+            } else {
+                populateEventTable([]);
+            }
 
             if (date) {
                 const url = `{% url 'ticket_sales:filtered-events' %}?date=${date}`;

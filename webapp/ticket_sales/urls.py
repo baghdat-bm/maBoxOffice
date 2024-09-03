@@ -5,7 +5,7 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
     filtered_services, get_service_cost, terminal_settings_view, register_terminal, refresh_terminal_token, \
-    get_events_dates
+    get_events_dates, get_events
 
 app_name = 'ticket_sales'
 
@@ -49,6 +49,7 @@ urlpatterns = [
     path('filtered-services/', filtered_services, name='filtered-services'),
     path('get-service-cost/', get_service_cost, name='get-service-cost'),
     path('get-events-dates/', get_events_dates, name='get-events-dates'),
+    path('get-events/', get_events, name='get-events'),
 
     # Terminal settings
     path('terminal-settings/', terminal_settings_view, name='terminal-settings'),

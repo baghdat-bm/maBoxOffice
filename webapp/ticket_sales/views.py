@@ -318,6 +318,32 @@ def filtered_event_times(request):
     return JsonResponse({'times': []})
 
 
+def get_events(request):
+    date = request.GET.get('date')
+    date_naive = datetime.strptime(date, '%Y-%m-%d')
+    selected_date = timezone.make_aware(datetime.combine(date_naive, datetime.min.time()))
+    print('date', date, 'date_naive', date_naive, 'selected_date', selected_date)
+    events = Event.objects.filter(begin_date__lte=selected_date, end_date__gte=selected_date)
+    data = []
+
+    for event in events:
+        times = EventTimes.objects.filter(event=event)
+        event_data = {
+            'id': event.id,
+            'name': event.name,
+            'quantity': event.quantity,
+            'times': [
+                {
+                    'begin_date': time.begin_date.strftime('%H:%M'),
+                    'end_date': time.end_date.strftime('%H:%M')
+                } for time in times
+            ]
+        }
+        data.append(event_data)
+
+    return JsonResponse({'events': data})
+
+
 def filtered_services(request):
     event_id = request.GET.get('event_id')
     if event_id:
@@ -453,6 +479,7 @@ def get_events_dates(request):
         start_date = event.begin_date
         end_date = event.end_date
         available_dates.extend([start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1)])
-    available_dates = list(set(available_dates))  # Удалить дубликаты
+
+    available_dates = sorted(list(set(available_dates)))  # Удалить дубликаты и отсортировать даты
 
     return JsonResponse({"available_dates": available_dates})

@@ -9,8 +9,8 @@
 
     <table class="table table-striped">
         <thead>
-            <tr>
-                <th>Дата</th>
+            <tr>                
+                <th>Заказ</th>
                 <th>Сумма</th>
                 <th>Оплачено</th>
                 <th>Статус</th>
@@ -19,10 +19,10 @@
         </thead>
         <tbody>
             {% for sale in object_list %}
-            <tr>
+            <tr>                
                 <td>
                     <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">
-                        {{ sale.date }}
+                        № {{ sale.id }} от {{ sale.date }}
                     </a>
                 </td>
                 <td>{{ sale.amount }} ₸</td>
