@@ -45,6 +45,33 @@ class TicketSale(models.Model):
 
         super(TicketSale, self).save(*args, **kwargs)
 
+        # После сохранения, если оплата >= суммы заказа, обновляем записи TicketSalesTicket
+        if self.paid_amount >= self.amount:
+            # Удаляем все связанные записи TicketSalesTicket
+            TicketSalesTicket.objects.filter(ticket_sale=self).delete()
+
+            # Получаем все связанные записи TicketSalesService
+            services = TicketSalesService.objects.filter(ticket_sale=self)
+
+            # Создаем новые записи TicketSalesTicket для каждого билета в TicketSalesService
+            tickets_to_create = []
+            for service in services:
+                for _ in range(service.tickets_count):
+                    ticket = TicketSalesTicket(
+                        ticket_sale=self,
+                        service=service.service,
+                        event=service.event,
+                        event_date=service.event_date,
+                        event_time=service.event_time,
+                        amount=service.tickets_amount // service.tickets_count,
+                        # Предполагаем, что сумма билетов делится на количество
+                        ticket_guid=uuid.uuid4()  # Генерация нового уникального GUID
+                    )
+                    tickets_to_create.append(ticket)
+
+            # Используем bulk_create для создания всех записей разом
+            TicketSalesTicket.objects.bulk_create(tickets_to_create)
+
 
 def default_datetime():
     return datetime.now().date()
@@ -108,6 +135,9 @@ class TicketSalesTicket(models.Model):
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     amount = models.IntegerField(verbose_name="Сумма билета")
     ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
+    event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
+    event_time = models.TimeField(verbose_name="Время мероприятия")
 
     def __str__(self):
         return f'{self.ticket_sale.pk}-{self.pk}'

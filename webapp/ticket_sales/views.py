@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
-from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
@@ -283,17 +283,17 @@ def cash_payment_process(request, ticket_sale_id):
 
 # печать заказа
 def print_ticket_view(request, ticket_sale_id):
-    services = TicketSalesService.objects.filter(ticket_sale_id=ticket_sale_id)
+    tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
     data = {
         'services': [
             {
-                'ticket_guid': str(service.ticket_guid),
-                'service_name': service.service.name,
-                'event_date': service.event_date.strftime('%d.%m.%Y'),
-                'event_name': service.event.name,
-                'tickets_count': service.tickets_count
+                'ticket_guid': str(ticket.ticket_guid),
+                'service_name': ticket.service.name,
+                'event_date': ticket.event_date.strftime('%d.%m.%Y'),
+                'event_name': ticket.event.name,
+                'tickets_count': 1
             }
-            for service in services
+            for ticket in tickets
         ]
     }
     return JsonResponse(data)
@@ -332,13 +332,26 @@ def get_events(request):
             'id': event.id,
             'name': event.name,
             'quantity': event.quantity,
-            'times': [
-                {
-                    'begin_date': time.begin_date.strftime('%H:%M'),
-                    'end_date': time.end_date.strftime('%H:%M')
-                } for time in times
-            ]
+            'times': []
         }
+
+        for time in times:
+            # Получаем количество проданных билетов для текущего времени мероприятия
+            sold_tickets_count = TicketSalesTicket.objects.filter(
+                event=event,
+                event_time=time.begin_date
+            ).count()
+
+            # Вычисляем количество доступных билетов
+            available_quantity = event.quantity - sold_tickets_count
+
+            # Добавляем время мероприятия с количеством доступных билетов
+            event_data['times'].append({
+                'begin_date': time.begin_date.strftime('%H:%M'),
+                'end_date': time.end_date.strftime('%H:%M'),
+                'quantity': available_quantity
+            })
+
         data.append(event_data)
 
     return JsonResponse({'events': data})
