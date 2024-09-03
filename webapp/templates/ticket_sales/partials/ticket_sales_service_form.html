@@ -43,7 +43,7 @@
         <div class="row" style="display: none;">
             <div class="col-md-4">
                 <div class="form-group">
-                    <select id="event" name="event" class="form-control" onchange="onEventChange(this.value)">
+                    <select id="event" name="event" class="form-control">
                         <!-- Опции будут динамически добавляться здесь -->
                     </select>
                 </div>
@@ -54,6 +54,12 @@
                         <option value="">Выберите время</option>
                         <!-- Этот список будет обновляться с помощью JavaScript -->
                     </select>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="date" id="event_time_end" name="event_time_end" class="form-control">
                 </div>
             </div>
         </div>
@@ -232,7 +238,7 @@
 
         function updateEventTimeOptions(eventId, currentValue = null) {
             const eventTimeSelect = document.getElementById('event_time');
-
+                        
             if (eventId) {
                 const url = new URL("{% url 'ticket_sales:filtered-event-times' %}", window.location.origin);
                 url.searchParams.set('event', eventId);
@@ -249,6 +255,7 @@
                             option.selected = true;
                             eventTimeSelect.appendChild(option);
                         }
+                        
                         // Добавляем новые опции
                         data.times.forEach(time => {
                             if (!currentValue || currentValue !== time.begin_date) {
@@ -314,6 +321,7 @@
                         // После выбора строки делаем кнопку "Добавить" доступной
                         document.getElementById('submitBtn').disabled = false;
                         //document.getElementById('event_time').value = time.begin_date;
+                        document.getElementById('event_time_end').value = time.end_date;
                         updateEventTimeOptions(event.id, time.begin_date);
                     });
                     tableBody.appendChild(row);

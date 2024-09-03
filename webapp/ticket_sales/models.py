@@ -63,6 +63,7 @@ class TicketSale(models.Model):
                         event=service.event,
                         event_date=service.event_date,
                         event_time=service.event_time,
+                        event_time_end=service.event_time_end,
                         amount=service.tickets_amount // service.tickets_count,
                         # Предполагаем, что сумма билетов делится на количество
                         ticket_guid=uuid.uuid4()  # Генерация нового уникального GUID
@@ -82,12 +83,12 @@ class TicketSalesService(models.Model):
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
     event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
-    event_time = models.TimeField(verbose_name="Время мероприятия")
+    event_time = models.TimeField(verbose_name="Время начала мероприятия")
+    event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
     discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
     total_amount = models.IntegerField(verbose_name="Сумма итого")
-    ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
 
     def __str__(self):
         return f'{self.ticket_sale.pk}-{self.pk}'
@@ -137,7 +138,8 @@ class TicketSalesTicket(models.Model):
     ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
     event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
-    event_time = models.TimeField(verbose_name="Время мероприятия")
+    event_time = models.TimeField(verbose_name="Время начала мероприятия")
+    event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
 
     def __str__(self):
         return f'{self.ticket_sale.pk}-{self.pk}'
