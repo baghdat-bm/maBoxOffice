@@ -13,6 +13,7 @@
                 <th>Наименование</th>
                 <th>Стоимость</th>
                 <th>Инвентарь</th>
+                <th>Учитывать в подсчете билетов</th>
                 <th></th>
             </tr>
         </thead>
@@ -30,6 +31,13 @@
                         {{ service.inventory.name }}
                     {% else %}
                         <em>---</em>
+                    {% endif %}
+                </td>
+                <td>                    
+                    {% if service.on_calculation %}
+                        <i class="bi bi-check-circle-fill text-success"></i> <!-- Green checkmark for active -->
+                    {% else %}
+                        <i class="bi bi-x-circle-fill text-danger"></i> <!-- Red cross for inactive -->
                     {% endif %}
                 </td>
                 <td>

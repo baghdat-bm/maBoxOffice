@@ -84,7 +84,7 @@ class InventoryForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'cost', 'inventory']
+        fields = ['name', 'cost', 'inventory', 'on_calculation']
 
 
 class EventTemplateServicesForm(forms.ModelForm):

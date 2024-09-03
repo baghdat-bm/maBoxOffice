@@ -75,6 +75,7 @@ class Service(models.Model):
     name = models.CharField(max_length=300, verbose_name='Наименование')
     cost = models.IntegerField(verbose_name="Стоимость")
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, verbose_name="Инвентарь", null=True, blank=True)
+    on_calculation = models.BooleanField(verbose_name="Учитывать в подсчете билетов", default=False)
 
     def __str__(self):
         return f'{self.name}'

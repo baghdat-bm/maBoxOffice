@@ -61,14 +61,16 @@
                 {% endif %}
             </div>
 
-            <div class="mt-2">
+            <div class="mt-2">                
                 <button type="button" class="btn btn-outline-primary"
                         hx-get="{% if object %}{% url 'references:event-times-create' object.id %}{% else %}#{% endif %}"
                         hx-target="#modal-body-content"
                         hx-swap="innerHTML"
-                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editTimeModal">
+                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editTimeModal" 
+                        {% if not object %} disabled {% endif %}>
                     Добавить время
                 </button>
+                
                 <button type="submit" class="btn btn-primary">Сохранить</button>
                 <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Закрыть</a>
             </div>
