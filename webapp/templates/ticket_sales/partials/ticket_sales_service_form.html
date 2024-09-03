@@ -9,55 +9,66 @@
 
     <!-- Первая строка с полями event_date, event, event_time -->
     <div class="row">
-        <div class="col-md-4">
-            <div class="form-group">
-                {{ form.event_date.label_tag }}
+        <div class="row justify-content-center">
+            <div class="col-md-8 d-flex align-items-center">
+                <button type="button" class="btn btn-secondary me-2" onclick="setToday()">Сегодня</button>
+                <button type="button" class="btn btn-secondary me-2" onclick="setTomorrow()">Завтра</button>
                 <input type="text" id="id_event_date" name="event_date" class="form-control" required
-                       onchange="onEventDateChange(this.value)">
+                       onchange="onEventDateChange(this.value)" style="max-width: 200px;">
             </div>
         </div>
+
 
         <!-- Таблица для выбора мероприятия -->
         <div class="row mt-3">
             <div class="col-md-12">
                 <div style="max-height: 200px; min-height: 200px; overflow-y: auto; border: 1px solid #d3d3d3;">
-                    <table class="table table-hover" id="event-selection-table" style="border: 1px solid #d3d3d3; table-layout: fixed; width: 100%;">
+                    <table class="table table-hover" id="event-selection-table"
+                           style="border: 1px solid #d3d3d3; table-layout: fixed; width: 100%;">
                         <thead>
-                            <tr>
-                                <th style="width: 40%;">Мероприятие</th>
-                                <th style="width: 40%;">Время начало - время окончания</th>
-                                <th style="width: 20%;">Количество услуг</th>
-                            </tr>
+                        <tr>
+                            <th style="width: 40%;">Мероприятие</th>
+                            <th style="width: 40%;">Время сеанса</th>
+                            <th style="width: 20%;">Доступно билетов</th>
+                        </tr>
                         </thead>
                         <tbody id="event-selection-table-tbody">
-                            <!-- Динамически добавляемые строки -->
+                        <!-- Динамически добавляемые строки -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="form-group">
-                <label for="event">Мероприятие</label>
-                <select id="event" name="event" class="form-control" onchange="onEventChange(this.value)" required>
-                    <!-- Опции будут динамически добавляться здесь -->
-                </select>
+        <div class="row" style="display: none;">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select id="event" name="event" class="form-control" onchange="onEventChange(this.value)">
+                        <!-- Опции будут динамически добавляться здесь -->
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="form-group">
-                <label for="event_time">Время мероприятия</label>
-                <select id="event_time" name="event_time" class="form-control" required>
-                    <option value="">Выберите время</option>
-                    <!-- Этот список будет обновляться с помощью JavaScript -->
-                </select>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select id="event_time" name="event_time" class="form-control">
+                        <option value="">Выберите время</option>
+                        <!-- Этот список будет обновляться с помощью JavaScript -->
+                    </select>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Вторая строка с полями service, tickets_count, tickets_amount -->
+    <!-- Вторая строка с полями event_field, service, tickets_count -->
     <div class="row mt-3">
+
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Мероприятие</label>
+                <input type="text" id="event_field" name="event_field" class="form-control" readonly required>
+            </div>
+        </div>
+
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.service.label_tag }}
@@ -75,20 +86,17 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Третья строка с полями tickets_amount, discount, total_amount -->
+    <div class="row mt-3">
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.tickets_amount.label_tag }}
                 <input type="number" id="id_tickets_amount" name="tickets_amount" class="form-control" readonly>
             </div>
         </div>
-    </div>
 
-    <!-- Третья строка с полями discount, total_amount -->
-    <div class="row mt-3">
-        <div class="col-md-4">
-            <div class="form-group">
-            </div>
-        </div>
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.discount.label_tag }}
@@ -103,12 +111,8 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-1">
-        {% if form.instance.id %}
-            Записать
-        {% else %}
-            Добавить
-        {% endif %}
+    <button type="submit" class="btn btn-primary mt-1" id="submitBtn">
+         Добавить
     </button>
 </form>
 
@@ -119,10 +123,27 @@
             fetch("{% url 'ticket_sales:get-events-dates' %}")
                 .then(response => response.json())
                 .then(data => {
-                    const availableDates = data.available_dates.map(date => {
-                        const localDate = new Date(date + 'T00:00:00');  // Явно указываем время как полночь
-                        return localDate.toISOString().split('T')[0];    // Преобразуем в формат YYYY-MM-DD
-                    });
+                    const availableDates = data.available_dates;
+
+                    // Установка первой доступной даты
+                    if (availableDates.length > 0) {
+                        $('#id_event_date').val(availableDates[0]);
+                        onEventDateChange(availableDates[0]);
+                    }
+
+                    const today = new Date().toISOString().split('T')[0];
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
+
+                    // Отключение кнопок "Сегодня" и "Завтра" при необходимости
+                    if (!availableDates.includes(today)) {
+                        $('button:contains("Сегодня")').attr('disabled', true);
+                    }
+
+                    if (!availableDates.includes(tomorrowFormatted)) {
+                        $('button:contains("Завтра")').attr('disabled', true);
+                    }
 
                     $('#id_event_date').datepicker({
                         format: 'yyyy-mm-dd',
@@ -138,7 +159,25 @@
                         }
                     });
                 });
+            
+            // Изначально кнопка "Добавить" должна быть отключена
+            document.getElementById('submitBtn').disabled = true;
         });
+
+
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('id_event_date').value = today;
+            onEventDateChange(today);
+        }
+
+        function setTomorrow() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const formattedDate = tomorrow.toISOString().split('T')[0];
+            document.getElementById('id_event_date').value = formattedDate;
+            onEventDateChange(formattedDate);
+        }
 
 
         function onServiceChange() {
@@ -208,8 +247,8 @@
                             option.value = currentValue;
                             option.textContent = currentValue;
                             option.selected = true;
-                            eventTimeSelect.appendChild(option);                            
-                        }                        
+                            eventTimeSelect.appendChild(option);
+                        }
                         // Добавляем новые опции
                         data.times.forEach(time => {
                             if (!currentValue || currentValue !== time.begin_date) {
@@ -268,9 +307,12 @@
                         <td>${time.begin_date} - ${time.end_date}</td>
                         <td>${event.quantity}</td>
                     `;
-                    row.addEventListener('click', function () {                        
+                    row.addEventListener('click', function () {
                         updateServicesOptions(event.id);
                         document.getElementById('event').value = event.id;
+                        document.getElementById('event_field').value = `${event.name} - ${time.begin_date}`;
+                        // После выбора строки делаем кнопку "Добавить" доступной
+                        document.getElementById('submitBtn').disabled = false;
                         //document.getElementById('event_time').value = time.begin_date;
                         updateEventTimeOptions(event.id, time.begin_date);
                     });
@@ -280,7 +322,9 @@
         }
 
         function onEventDateChange(date) {
-
+            document.getElementById('event_field').value = "Выберите мероприятие";
+            document.getElementById('submitBtn').disabled = true; // Отключаем кнопку "Добавить"
+            
             if (date) {
                 const url = `{% url 'ticket_sales:get-events' %}?date=${date}`;
                 fetch(url)
@@ -344,13 +388,6 @@
         }
 
         (function setDefaultDate() {
-            let eventDateInput = document.getElementById('id_event_date');
-            if (eventDateInput && !eventDateInput.value) {
-                eventDateInput.value = new Date().toISOString().slice(0, 10);
-            }
-
-            onEventDateChange(eventDateInput.value);
-
             let ticketsCountInput = document.getElementById('id_tickets_count');
             if (ticketsCountInput && !ticketsCountInput.value) {
                 ticketsCountInput.value = 1;
