@@ -18,26 +18,27 @@ class EventTemplateForm(forms.ModelForm):
 
 
 class EventForm(forms.ModelForm):
-    begin_date = forms.DateTimeField(
-        widget=forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local'}),
-        input_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M'],
+    begin_date = forms.DateField(
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+        input_formats=['%Y-%m-%d'],
         label='Дата начала'
     )
-    end_date = forms.DateTimeField(
-        widget=forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local'}),
-        input_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M'],
+    end_date = forms.DateField(
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+        input_formats=['%Y-%m-%d'],
         label='Дата окончания'
     )
 
     class Meta:
         model = Event
-        fields = ['event_template', 'begin_date', 'end_date', 'quantity', 'on_monday', 'on_tuesday', 'on_wednesday',
-                  'on_thursday', 'on_friday', 'on_saturday', 'on_sunday']
+        fields = ['name', 'event_template', 'begin_date', 'end_date', 'quantity', 'on_monday', 'on_tuesday',
+                  'on_wednesday', 'on_thursday', 'on_friday', 'on_saturday', 'on_sunday']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
+            'name',
             'event_template',
             'begin_date',
             'end_date',

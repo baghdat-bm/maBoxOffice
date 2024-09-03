@@ -16,9 +16,10 @@ class EventTemplate(models.Model):
 
 
 class Event(models.Model):
+    name = models.CharField(max_length=300, verbose_name='Наименование')
     event_template = models.ForeignKey(EventTemplate, on_delete=models.CASCADE, verbose_name="Шаблон мероприятий")
-    begin_date = models.DateTimeField(verbose_name="Дата начала")
-    end_date = models.DateTimeField(verbose_name="Дата окончания")
+    begin_date = models.DateField(verbose_name="Дата начала")
+    end_date = models.DateField(verbose_name="Дата окончания")
     quantity = models.PositiveSmallIntegerField(verbose_name="Количество билетов", blank=True, null=True)
     on_monday = models.BooleanField(verbose_name='Понедельник')
     on_tuesday = models.BooleanField(verbose_name='Вторник')
@@ -29,11 +30,7 @@ class Event(models.Model):
     on_sunday = models.BooleanField(verbose_name='Воскресенье')
 
     def __str__(self):
-        return f'{self.event_template.name} ({self.id})'
-
-    @property
-    def name(self) -> str:
-        return f'{self.event_template.name} ({self.id})'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = 'Мероприятие'

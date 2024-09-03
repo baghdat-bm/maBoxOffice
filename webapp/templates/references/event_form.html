@@ -20,6 +20,7 @@
                 {% if object %}{{ object.get_update_url }}{% else %}{% url 'references:event-create' %}{% endif %}"
               hx-target="body" hx-swap="outerHTML">
             {% csrf_token %}
+            {{ form.name|as_crispy_field }}
             {{ form.event_template|as_crispy_field }}
             <div class="mb-3">
                 <div class="form-check-inline">

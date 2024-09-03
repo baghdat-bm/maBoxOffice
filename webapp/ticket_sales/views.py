@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
 import re
 
@@ -306,7 +306,7 @@ def filtered_events(request):
         selected_date_naive = datetime.strptime(date, '%Y-%m-%d')
         selected_date = timezone.make_aware(datetime.combine(selected_date_naive, datetime.min.time()))
         events = Event.objects.filter(begin_date__lte=selected_date, end_date__gte=selected_date)
-    return JsonResponse({"events": [{"id": event.id, "name": event.event_template.name} for event in events]})
+    return JsonResponse({"events": [{"id": event.id, "name": event.name} for event in events]})
 
 
 def filtered_event_times(request):
@@ -444,3 +444,15 @@ def refresh_terminal_token(request):
     else:
         messages.error(request, result['error'])
         return JsonResponse({'status': 'fail', 'error': result['error']}, status=400)
+
+
+def get_events_dates(request):
+    events = Event.objects.all()
+    available_dates = []
+    for event in events:
+        start_date = event.begin_date
+        end_date = event.end_date
+        available_dates.extend([start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1)])
+    available_dates = list(set(available_dates))  # Удалить дубликаты
+
+    return JsonResponse({"available_dates": available_dates})

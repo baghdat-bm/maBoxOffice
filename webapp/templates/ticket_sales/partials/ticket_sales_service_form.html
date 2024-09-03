@@ -1,9 +1,15 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-<form method="post" onsubmit="return closeModal();" hx-post="
-        {% if form.instance.id %}{% url 'ticket_sales:ticket-sales-service-update' form.instance.ticket_sale.id form.instance.id %}{% else %}{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}{% endif %}"
-      hx-target="#ticket-sales-service-list" hx-swap="innerHTML">
+{% block header %}
+
+
+{% endblock %}
+
+<form method="post" onsubmit="return closeModal();"
+      hx-target="#ticket-sales-service-list" hx-swap="innerHTML"
+      hx-post="{% url 'ticket_sales:ticket-sales-service-create' ticket_sale.id %}"
+>
     {% csrf_token %}
 
     <!-- Первая строка с полями event_date, event, event_time -->
@@ -11,7 +17,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.event_date.label_tag }}
-                <input type="date" id="id_event_date" name="event_date" class="form-control" required
+                <input type="text" id="id_event_date" name="event_date" class="form-control" required
                        onchange="onEventDateChange(this.value)">
             </div>
         </div>
@@ -93,6 +99,32 @@
 {% block scripts %}
     <script>
 
+        $(document).ready(function () {
+            fetch("{% url 'ticket_sales:get-events-dates' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const availableDates = data.available_dates.map(date => {
+                        let d = new Date(date);
+                        return d.toISOString().split('T')[0]; // Преобразуем в формат YYYY-MM-DD
+                    });
+
+                    $('#id_event_date').datepicker({
+                        format: 'yyyy-mm-dd',
+                        language: 'ru',  // Локализация на русский
+                        weekStart: 1,    // Первый день недели - понедельник
+                        autoclose: true, // Автоматическое закрытие после выбора даты
+                        beforeShowDay: function (date) {
+                            const formattedDate = $.fn.datepicker.DPGlobal.formatDate(date, 'yyyy-mm-dd', 'en');
+                            if (availableDates.includes(formattedDate)) {
+                                return {classes: 'available-date', tooltip: 'Available'};
+                            }
+                            return false; // Disable all other dates
+                        }
+                    });
+                });
+        });
+
+
         function onServiceChange() {
             updateTicketsAmount(true);
         }
@@ -140,7 +172,7 @@
 
         function onEventChange(eventId) {
             updateEventTimeOptions(eventId);
-            updateServicesOptions(eventId);            
+            updateServicesOptions(eventId);
         }
 
         function updateEventTimeOptions(eventId) {
@@ -188,7 +220,7 @@
                             option.text = service.name;
                             serviceSelect.appendChild(option);
                         });
-                        
+
                         updateTicketsAmount(true);
                     });
             } else {
@@ -205,16 +237,15 @@
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
-                        populateEventSelect(data.events);                        
+                        populateEventSelect(data.events);
                     })
                     .catch(error => {
                         console.error('Error fetching events:', error);
                         updateTicketsAmount(true);
                     });
+            } else {
+                populateEventSelect([]);
             }
-            else {
-                populateEventSelect([]);                
-            }            
         }
 
         function populateEventSelect(events) {
@@ -246,7 +277,7 @@
             setTimeout(function () {
                 window.location.reload();
             }, 100);  // Задержка в 500 мс (можно увеличить, если необходимо больше времени)
-            
+
             modalInstance.hide();
 
             return false;  // Предотвращаем повторную отправку формы
