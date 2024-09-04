@@ -55,6 +55,7 @@ class TicketSale(models.Model):
 
             # Создаем новые записи TicketSalesTicket для каждого билета в TicketSalesService
             tickets_to_create = []
+            curr_num = 1
             for service in services:
                 for _ in range(service.tickets_count):
                     ticket = TicketSalesTicket(
@@ -66,9 +67,11 @@ class TicketSale(models.Model):
                         event_time_end=service.event_time_end,
                         amount=service.tickets_amount // service.tickets_count,
                         # Предполагаем, что сумма билетов делится на количество
-                        ticket_guid=uuid.uuid4()  # Генерация нового уникального GUID
+                        ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
+                        number = curr_num
                     )
                     tickets_to_create.append(ticket)
+                    curr_num += 1
 
             # Используем bulk_create для создания всех записей разом
             TicketSalesTicket.objects.bulk_create(tickets_to_create)
@@ -135,6 +138,7 @@ class TicketSalesTicket(models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     amount = models.IntegerField(verbose_name="Сумма билета")
+    number = models.PositiveSmallIntegerField(verbose_name="Номер билета")
     ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
     event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
@@ -142,12 +146,12 @@ class TicketSalesTicket(models.Model):
     event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
 
     def __str__(self):
-        return f'{self.ticket_sale.pk}-{self.pk}'
+        return f'{self.number}'
 
     class Meta:
         verbose_name = 'Билет'
         verbose_name_plural = 'Билеты'
-        ordering = ['-id']
+        ordering = ['number']
 
 
 class TicketsSold(models.Model):

@@ -40,6 +40,7 @@
             </div>
         </div>
 
+        <!-- style="display: none;" -->
         <div class="row" style="display: none;">
             <div class="col-md-4">
                 <div class="form-group">
@@ -59,7 +60,7 @@
             
             <div class="col-md-4">
                 <div class="form-group">
-                    <input type="date" id="event_time_end" name="event_time_end" class="form-control">
+                    <input type="text" id="event_time_end" name="event_time_end" class="form-control">
                 </div>
             </div>
         </div>
@@ -99,7 +100,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 {{ form.tickets_amount.label_tag }}
-                <input type="number" id="id_tickets_amount" name="tickets_amount" class="form-control" readonly>
+                <input type="number" id="id_tickets_amount" name="tickets_amount"  min="1" max="1" class="form-control" readonly>
             </div>
         </div>
 
@@ -200,7 +201,18 @@
             const ticketsAmountInput = document.getElementById('id_tickets_amount');
 
             const selectedServiceId = serviceSelect.value;
-            const ticketsCount = parseInt(ticketsCountInput.value) || 0;
+            let ticketsCount = parseInt(ticketsCountInput.value) || 1;
+            
+            if (ticketsCount > ticketsCountInput.max){
+                ticketsCountInput.value = ticketsCountInput.max;
+                ticketsCount = ticketsCountInput.max;
+            }
+            
+            if (ticketsCount < 1){
+                ticketsCountInput.value = 1;
+                ticketsCount = 1;
+            }
+                
 
             if (selectedServiceId) {
                 const url = `{% url 'ticket_sales:get-service-cost' %}?service_id=${selectedServiceId}`;
@@ -317,12 +329,17 @@
                     row.addEventListener('click', function () {
                         updateServicesOptions(event.id);
                         document.getElementById('event').value = event.id;
-                        document.getElementById('event_field').value = `${event.name} - ${time.begin_date}`;
-                        // После выбора строки делаем кнопку "Добавить" доступной
-                        document.getElementById('submitBtn').disabled = false;
-                        //document.getElementById('event_time').value = time.begin_date;
+                        const event_field_value = `${event.name} c ${time.begin_date} по ${time.end_date}`;
+                        document.getElementById('event_field').value = event_field_value;                                                                   
                         document.getElementById('event_time_end').value = time.end_date;
                         updateEventTimeOptions(event.id, time.begin_date);
+                        
+                        // После выбора строки делаем кнопку "Добавить" доступной
+                        document.getElementById('submitBtn').disabled = false;
+                        
+                        // Устанавливаем максимальное количество билетов в зависимости от time.quantity
+                        const ticketsCountInput = document.getElementById('id_tickets_count');
+                        ticketsCountInput.max = time.quantity;
                     });
                     tableBody.appendChild(row);
                 });

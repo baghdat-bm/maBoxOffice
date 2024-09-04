@@ -17,12 +17,12 @@ class TicketSalesPaymentsInline(admin.StackedInline):
     extra = 0
 
 
-class TicketsSoldInline(admin.StackedInline):
-    model = TicketsSold
-    extra = 0
+# class TicketsSoldInline(admin.StackedInline):
+#     model = TicketsSold
+#     extra = 0
 
 
-class TicketSalesTicketInline(admin.TabularInline):
+class TicketSalesTicketInline(admin.StackedInline):
     model = TicketSalesTicket
     extra = 0
     readonly_fields = ('ticket_guid',)
@@ -33,7 +33,7 @@ class TicketSaleAdmin(admin.ModelAdmin):
     model = TicketSale
     list_display = ('id', 'date', 'amount', 'status')
     list_display_links = ('id', 'date')
-    inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketsSoldInline, TicketSalesTicketInline)
+    inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketSalesTicketInline)
 
 
 class TerminalSettingsAdmin(admin.ModelAdmin):
