@@ -17,6 +17,7 @@ class TicketSale(models.Model):
     paid_card = models.IntegerField(verbose_name="Оплачено картой", blank=True, default=0)
     paid_qr = models.IntegerField(verbose_name="Оплачено QR", blank=True, default=0)
     status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Новый заказ')
+    tickets_count = models.PositiveSmallIntegerField(verbose_name="Всего билетов", blank=True, default=0)
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'
@@ -43,9 +44,7 @@ class TicketSale(models.Model):
         elif self.paid_amount < self.amount:
             self.status = 'Частично оплачен'
 
-        super(TicketSale, self).save(*args, **kwargs)
-
-        # После сохранения, если оплата >= суммы заказа, обновляем записи TicketSalesTicket
+        # Если оплата >= суммы заказа, обновляем записи TicketSalesTicket
         if self.paid_amount >= self.amount:
             # Удаляем все связанные записи TicketSalesTicket
             TicketSalesTicket.objects.filter(ticket_sale=self).delete()
@@ -75,6 +74,8 @@ class TicketSale(models.Model):
 
             # Используем bulk_create для создания всех записей разом
             TicketSalesTicket.objects.bulk_create(tickets_to_create)
+
+        super(TicketSale, self).save(*args, **kwargs)
 
 
 def default_datetime():

@@ -13,6 +13,7 @@
                 <th>Заказ</th>
                 <th>Сумма</th>
                 <th>Оплачено</th>
+                <th>Кол-во билетов</th>
                 <th>Статус</th>
                 <th></th>
             </tr>
@@ -27,6 +28,7 @@
                 </td>
                 <td>{{ sale.amount }} ₸</td>
                 <td>{{ sale.paid_amount }} ₸</td>
+                <td>{{ sale.tickets_count }}</td>
                 <td>{{ sale.status }}</td>
                 <td>
                     <a href="{% url 'ticket_sales:ticket-sale-update' sale.id %}" class="btn btn-sm btn-primary">

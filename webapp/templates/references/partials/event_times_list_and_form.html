@@ -3,6 +3,11 @@
         {% for time in event.eventtimes_set.all %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
             {{ time.begin_date }} - {{ time.end_date }}
+            {% if time.is_active %}
+                <i class="bi bi-check-circle-fill text-success"></i> <!-- Green checkmark for active -->
+            {% else %}
+                <i class="bi bi-x-circle-fill text-danger"></i> <!-- Red cross for inactive -->
+            {% endif %}
             <span>
                 <button class="btn btn-sm btn-warning" hx-get="{% url 'references:event-times-update' event.id time.id %}" hx-target="#event-time-{{ time.id }}" hx-swap="outerHTML">Изменить</button>
                 <button class="btn btn-sm btn-danger" hx-get="{% url 'references:event-times-delete' event.id time.id %}" hx-target="#event-time-{{ time.id }}" hx-swap="outerHTML">Удалить</button>

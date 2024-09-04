@@ -3,12 +3,21 @@
 {% block title %}Информация об услуге{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3>{{ object.name }}</h3>
-    <p>Наименование: {{ object.name }}</p>    
-    <p>Стоимость: {{ object.cost }}</p>
-    <p>Инвентарь: {{ object.inventory }}</p>
-    <a href="{% url 'references:service-update' object.id %}" class="btn btn-primary">Изменить</a>
-    <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Закрыть</a>
-</div>
+    <div class="container mt-4">
+        <h3>{{ object.name }}</h3>
+        <p>Наименование: {{ object.name }}</p>
+        <p>Стоимость: {{ object.cost }}</p>
+        <p>Инвентарь: {{ object.inventory }}</p>
+        <div>Учитывается в подсчете билетов:  {% if object.on_calculation %}
+                <strong class="text-success">Да</strong>
+            {% else %}
+                <strong class="text-danger">Нет</strong>
+            {% endif %}
+        </div>
+        
+        <div class="mt-2">
+            <a href="{% url 'references:service-update' object.id %}" class="btn btn-primary">Изменить</a>
+            <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Закрыть</a>
+        </div>
+    </div>
 {% endblock %}

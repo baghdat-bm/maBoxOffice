@@ -1,11 +1,13 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf.urls.i18n import i18n_patterns
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from rest_framework.authtoken import views
 
 from ticket_sales.views import TicketSaleListView
+from .drf_yasg_schema import schema_view
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
@@ -13,6 +15,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("references/", include("references.urls")),
     path("ticket-sales/", include("ticket_sales.urls")),
+
+    path('api-token-auth/', views.obtain_auth_token),
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
     path('', TicketSaleListView.as_view(), name='home'),
 ]
 

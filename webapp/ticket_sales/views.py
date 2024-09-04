@@ -305,9 +305,12 @@ def print_ticket_view(request, ticket_sale_id):
         'services': [
             {
                 'ticket_guid': str(ticket.ticket_guid),
+                'number': ticket.number,
                 'service_name': ticket.service.name,
                 'event_date': ticket.event_date.strftime('%d.%m.%Y'),
+                'event_time': f'{ticket.event_time.strftime('%H:%M')} - {ticket.event_time_end.strftime('%H:%M')}',
                 'event_name': ticket.event.name,
+                'amount': ticket.amount,
                 'tickets_count': 1
             }
             for ticket in tickets
@@ -512,11 +515,34 @@ def refresh_terminal_token(request):
 def get_events_dates(request):
     events = Event.objects.all()
     available_dates = []
+
+    # Функция для проверки, включен ли день недели для данного мероприятия
+    def is_day_included(event, date):
+        day_of_week = date.weekday()  # Получаем день недели (0 - понедельник, 6 - воскресенье)
+        return (
+                (day_of_week == 0 and event.on_monday) or
+                (day_of_week == 1 and event.on_tuesday) or
+                (day_of_week == 2 and event.on_wednesday) or
+                (day_of_week == 3 and event.on_thursday) or
+                (day_of_week == 4 and event.on_friday) or
+                (day_of_week == 5 and event.on_saturday) or
+                (day_of_week == 6 and event.on_sunday)
+        )
+
+    # Итерация по каждому мероприятию
     for event in events:
         start_date = event.begin_date
         end_date = event.end_date
-        available_dates.extend([start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1)])
 
-    available_dates = sorted(list(set(available_dates)))  # Удалить дубликаты и отсортировать даты
+        # Проходим по всем датам от начала до конца мероприятия
+        for day in range((end_date - start_date).days + 1):
+            current_date = start_date + timedelta(days=day)
+
+            # Проверяем, включен ли текущий день недели для данного мероприятия
+            if is_day_included(event, current_date):
+                available_dates.append(current_date)
+
+    # Удаление дубликатов и сортировка дат
+    available_dates = sorted(list(set(available_dates)))
 
     return JsonResponse({"available_dates": available_dates})

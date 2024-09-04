@@ -6,9 +6,16 @@ from datetime import datetime
 
 
 def update_ticket_amount(ticket_sale):
-    total_amount = TicketSalesService.objects.filter(
-        ticket_sale=ticket_sale).aggregate(total=models.Sum('total_amount'))['total'] or 0
-    ticket_sale.amount = total_amount
+    # Получаем общие суммы для total_amount и tickets_count в одном запросе
+    totals = TicketSalesService.objects.filter(
+        ticket_sale=ticket_sale).aggregate(
+        total_amount=models.Sum('total_amount'),
+        total_tickets=models.Sum('tickets_count')
+    )
+
+    # Устанавливаем значения для ticket_sale
+    ticket_sale.amount = totals['total_amount'] or 0
+    ticket_sale.tickets_count = totals['total_tickets'] or 0
     ticket_sale.save()
 
 

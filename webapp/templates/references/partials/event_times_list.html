@@ -1,6 +1,7 @@
 <ul class="list-group">
     {% for time in event.eventtimes_set.all %}
-        <li id="event-time-{{ time.id }}" class="list-group-item d-flex justify-content-between align-items-center">
+        <li id="event-time-{{ time.id }}" class="list-group-item d-flex justify-content-between align-items-center"
+            style="max-width: 400px;">
             {{ time.begin_date }} - {{ time.end_date }}
             {% if time.is_active %}
                 <i class="bi bi-check-circle-fill text-success"></i> <!-- Green checkmark for active -->

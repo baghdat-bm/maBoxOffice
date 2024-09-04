@@ -6,12 +6,44 @@
         <h3>{{ object.name }}</h3>
         <p>Начало: {{ object.begin_date }}</p>
         <p>Окончание: {{ object.end_date }}</p>
+        <p>Количество билетов: {{ object.quantity }}</p>
 
+        <div class="mb-3">
+            <div class="form-check form-check-inline"
+                style="color:{% if object.on_monday %} green {% else %} red {% endif %}">
+                Пн
+            </div>
+            <div class="form-check form-check-inline"
+                style="color:{% if object.on_tuesday %} green {% else %} red {% endif %}">
+                Вт
+            </div>
+            <div class="form-check form-check-inline" 
+                 style="color:{% if object.on_wednesday %} green {% else %} red {% endif %}">
+                Ср 
+            </div>
+            <div class="form-check form-check-inline"
+                style="color:{% if object.on_thursday %} green {% else %} red {% endif %}">
+                Чт
+            </div>
+            <div class="form-check form-check-inline"
+                style="color:{% if object.on_friday %} green {% else %} red {% endif %}">
+                Пт
+            </div>
+            <div class="form-check form-check-inline"
+                style="color:{% if object.on_saturday %} green {% else %} red {% endif %}">
+                Сб
+            </div>
+            <div class="form-check form-check-inline"
+                style="color:{% if object.on_sunday %} green {% else %} red {% endif %}">
+                Вс
+            </div>
+        </div>
+        
         <h4>Время</h4>
         <div id="event-times-list">
             {% include 'references/partials/event_times_list_view.html' with event=object %}
         </div>
-        
+
         <div class="mt-2">
             <a href="{% url 'references:event-update' object.id %}" class="btn btn-primary">Изменить</a>
             <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Закрыть</a>

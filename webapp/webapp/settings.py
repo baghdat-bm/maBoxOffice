@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "django_htmx",
+    'rest_framework',
+    'rest_framework.authtoken',
+    'drf_yasg',
     # Local
     "references.apps.ReferencesConfig",
     "ticket_sales.apps.TicketSalesConfig",
@@ -209,3 +212,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'ticket_sales:ticket-sale-list'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
