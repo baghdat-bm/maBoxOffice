@@ -357,7 +357,8 @@ def get_events(request):
             sold_tickets = TicketSalesService.objects.filter(
                 event=event,
                 event_time=time.begin_date,
-                event_time_end=time.end_date
+                event_time_end=time.end_date,
+                service__on_calculation=True
             ).aggregate(total_sold_tickets=Sum('tickets_count'))
 
             # Извлекаем сумму проданных билетов
