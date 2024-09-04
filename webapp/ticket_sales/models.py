@@ -28,9 +28,10 @@ class TicketSale(models.Model):
         ordering = ['-date']
 
     def save(self, *args, **kwargs):
-
+        # Рассчитываем сумму оплаты
         self.paid_amount = self.paid_cash + self.paid_card + self.paid_qr
 
+        # Обновляем статус заказа в зависимости от суммы оплаты и возврата
         if self.paid_amount == 0:
             self.status = 'Не оплачен'
         elif self.paid_amount >= self.amount:
@@ -46,35 +47,59 @@ class TicketSale(models.Model):
 
         # Если оплата >= суммы заказа, обновляем записи TicketSalesTicket
         if self.paid_amount >= self.amount:
-            # Удаляем все связанные записи TicketSalesTicket
-            TicketSalesTicket.objects.filter(ticket_sale=self).delete()
+            # Получаем существующие билеты до обработки
+            previous_tickets = list(TicketSalesTicket.objects.filter(ticket_sale=self))
+
+            # Список для хранения текущих билетов (которые найдены или созданы)
+            current_tickets = []
 
             # Получаем все связанные записи TicketSalesService
             services = TicketSalesService.objects.filter(ticket_sale=self)
 
-            # Создаем новые записи TicketSalesTicket для каждого билета в TicketSalesService
-            tickets_to_create = []
-            curr_num = 1
+            # Переменная для нумерации билетов
+            curr_num = len(previous_tickets) + 1
+
             for service in services:
                 for _ in range(service.tickets_count):
-                    ticket = TicketSalesTicket(
+                    # Ищем существующую запись TicketSalesTicket по условиям
+                    ticket = TicketSalesTicket.objects.filter(
                         ticket_sale=self,
                         service=service.service,
                         event=service.event,
                         event_date=service.event_date,
                         event_time=service.event_time,
-                        event_time_end=service.event_time_end,
-                        amount=service.tickets_amount // service.tickets_count,
-                        # Предполагаем, что сумма билетов делится на количество
-                        ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
-                        number = curr_num
-                    )
-                    tickets_to_create.append(ticket)
-                    curr_num += 1
+                        event_time_end=service.event_time_end
+                    ).first()
 
-            # Используем bulk_create для создания всех записей разом
-            TicketSalesTicket.objects.bulk_create(tickets_to_create)
+                    if ticket:
+                        # Если запись найдена, обновляем только поле amount
+                        ticket.amount = service.tickets_amount // service.tickets_count
+                        ticket.save()
+                    else:
+                        # Если запись не найдена, создаем новую
+                        ticket = TicketSalesTicket.objects.create(
+                            ticket_sale=self,
+                            service=service.service,
+                            event=service.event,
+                            event_date=service.event_date,
+                            event_time=service.event_time,
+                            event_time_end=service.event_time_end,
+                            amount=service.tickets_amount // service.tickets_count,
+                            ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
+                            number=curr_num
+                        )
+                        curr_num += 1
 
+                    # Добавляем обработанный или созданный билет в список current_tickets
+                    current_tickets.append(ticket)
+
+            # сравниваем списки previous_tickets и current_tickets
+            # Удаляем все билеты, которые были в previous_tickets, но отсутствуют в current_tickets
+            for ticket in previous_tickets:
+                if ticket not in current_tickets:
+                    ticket.delete()
+
+        # Вызов метода super() для завершения стандартного сохранения модели
         super(TicketSale, self).save(*args, **kwargs)
 
 
@@ -145,6 +170,7 @@ class TicketSalesTicket(models.Model):
     event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
     event_time = models.TimeField(verbose_name="Время начала мероприятия")
     event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
+    last_event_code = models.CharField(max_length=1, verbose_name="Код последнего события", blank=True, null=True)
 
     def __str__(self):
         return f'{self.number}'

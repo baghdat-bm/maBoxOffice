@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from rest_framework.authtoken import views
 
+from ticket_sales.api import api_urls
 from ticket_sales.views import TicketSaleListView
 from .drf_yasg_schema import schema_view
 
@@ -23,6 +24,8 @@ urlpatterns = [
 
     path('', TicketSaleListView.as_view(), name='home'),
 ]
+
+urlpatterns += api_urls
 
 # # Add this to include language prefixes
 # urlpatterns += i18n_patterns(
