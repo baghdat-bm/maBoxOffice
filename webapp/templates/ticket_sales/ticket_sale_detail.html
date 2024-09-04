@@ -120,15 +120,31 @@
                     data.services.forEach(service => {
                         for (let i = 0; i < service.tickets_count; i++) {
                             printContent.innerHTML += `
-                                <div class="ticket" style="width: 302px; font-size: 12px; margin-bottom: 20px; page-break-after: always;">
+                                <div class="ticket" style="width: 302px; font-size: 12px; page-break-after: always;">
                                     <!-- Центрируем QR-код -->
                                     <div style="text-align: center;">
-                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${service.ticket_guid}" alt="QR Code" style="display: inline-block;">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${service.ticket_guid}" 
+                                            alt="QR Code" style="display: inline-block;">
                                     </div>
-                                    <p><strong>Услуга:</strong> ${service.service_name}</p>
-                                    <p><strong>Дата мероприятия:</strong> ${service.event_date}</p>
-                                    <p><strong>Мероприятие:</strong> ${service.event_name}</p>
-                                    <p><strong>Подробная информация</strong></p>
+                                    <strong>Услуга:</strong>
+                                    <div>${service.service_name}</div>
+                                    <br>
+                                    Количество билетов:
+                                    <div><strong>1</strong></div>
+                                    <br>
+                                    <strong>Дата и время сеанса:</strong>
+                                    <div>${service.event_date}  ${service.event_time}</div>
+                                    <br>
+                                    <strong>Мероприятие:</strong>
+                                    <div>${service.event_name}</div>
+                                    <br>
+                                    <strong>Стоимость билета:</strong>
+                                    <div>${service.amount}</div>
+                                    <br>
+                                    <strong>Подробная информация:</strong>
+                                    <div>www.muzaidyny.kz</div>
+                                    <div>8(7172) 242424</div>
+                                    <hr>
                                 </div>
                             `;
                         }

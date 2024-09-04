@@ -61,7 +61,7 @@ class TicketSale(models.Model):
 
             for service in services:
                 for _ in range(service.tickets_count):
-                    # Ищем существующую запись TicketSalesTicket по условиям
+                    # Ищем существующую запись TicketSalesTicket по условиям, исключая билеты, которые уже в current_tickets
                     ticket = TicketSalesTicket.objects.filter(
                         ticket_sale=self,
                         service=service.service,
@@ -69,7 +69,7 @@ class TicketSale(models.Model):
                         event_date=service.event_date,
                         event_time=service.event_time,
                         event_time_end=service.event_time_end
-                    ).first()
+                    ).exclude(id__in=[t.id for t in current_tickets]).first()
 
                     if ticket:
                         # Если запись найдена, обновляем только поле amount

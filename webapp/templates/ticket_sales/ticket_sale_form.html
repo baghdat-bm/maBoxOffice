@@ -271,8 +271,7 @@
     {#    JavaScript для печати #}
     <script>
         function printTicket() {
-            //const ticketSaleId = this.getAttribute('data-ticket-sale-id');
-
+            
             // Запрос на получение данных для печати (TicketSalesService)
             fetch("{% if form.instance.id %}{% url 'ticket_sales:ticket-print-data' form.instance.id %}{% endif %}", {
                 method: 'GET',
