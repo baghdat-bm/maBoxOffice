@@ -1,5 +1,7 @@
 import json
 from datetime import datetime, timedelta
+
+from django.db.models import Sum
 from django.utils import timezone
 import re
 
@@ -50,6 +52,21 @@ class TicketSaleDeleteView(DeleteView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_confirm_delete.html'
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+
+    def post(self, request, *args, **kwargs):
+        # Получаем объект заказа, который пытаемся удалить
+        self.object = self.get_object()
+
+        # Проверяем, оплачено ли поле paid_amount
+        if self.object.paid_amount > 0:
+            # Сообщение об ошибке для пользователя
+            messages.error(request, 'Невозможно удалить оплаченный заказ.')
+
+            # Перенаправляем пользователя обратно на список заказов
+            return redirect('ticket_sales:ticket-sale-list')
+
+        # Если заказ не оплачен, выполняем стандартное удаление
+        return super().post(request, *args, **kwargs)
 
 
 def ticket_sale_create_view(request):
@@ -336,23 +353,29 @@ def get_events(request):
         }
 
         for time in times:
-            # Получаем количество проданных билетов для текущего времени мероприятия
-            sold_tickets_count = TicketSalesTicket.objects.filter(
+            # Получаем записи TicketSalesService для текущего мероприятия и времени
+            sold_tickets = TicketSalesService.objects.filter(
                 event=event,
-                event_time=time.begin_date
-            ).count()
+                event_time=time.begin_date,
+                event_time_end=time.end_date
+            ).aggregate(total_sold_tickets=Sum('tickets_count'))
+
+            # Извлекаем сумму проданных билетов
+            sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
 
             # Вычисляем количество доступных билетов
             available_quantity = event.quantity - sold_tickets_count
 
-            # Добавляем время мероприятия с количеством доступных билетов
-            event_data['times'].append({
-                'begin_date': time.begin_date.strftime('%H:%M'),
-                'end_date': time.end_date.strftime('%H:%M'),
-                'quantity': available_quantity
-            })
+            if available_quantity > 0:
+                # Добавляем время мероприятия с количеством доступных билетов
+                event_data['times'].append({
+                    'begin_date': time.begin_date.strftime('%H:%M'),
+                    'end_date': time.end_date.strftime('%H:%M'),
+                    'quantity': available_quantity
+                })
 
-        data.append(event_data)
+        if len(event_data['times']) > 0:
+            data.append(event_data)
 
     return JsonResponse({'events': data})
 
