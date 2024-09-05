@@ -18,6 +18,7 @@ class TicketSale(models.Model):
     paid_qr = models.IntegerField(verbose_name="Оплачено QR", blank=True, default=0)
     status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Новый заказ')
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Всего билетов", blank=True, default=0)
+    tickets_made = models.BooleanField(verbose_name="Билеты сформированы", blank=True, default=False)
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'
@@ -45,61 +46,30 @@ class TicketSale(models.Model):
         elif self.paid_amount < self.amount:
             self.status = 'Частично оплачен'
 
-        # Если оплата >= суммы заказа, обновляем записи TicketSalesTicket
-        if self.paid_amount >= self.amount:
-            # Получаем существующие билеты до обработки
-            previous_tickets = list(TicketSalesTicket.objects.filter(ticket_sale=self))
-
-            # Список для хранения текущих билетов (которые найдены или созданы)
-            current_tickets = []
-
+        if self.paid_amount >= self.amount and not self.tickets_made:
             # Получаем все связанные записи TicketSalesService
             services = TicketSalesService.objects.filter(ticket_sale=self)
 
             # Переменная для нумерации билетов
-            curr_num = len(previous_tickets) + 1
+            curr_num = 1
 
             for service in services:
                 for _ in range(service.tickets_count):
-                    # Ищем существующую запись TicketSalesTicket по условиям, исключая билеты, которые уже в current_tickets
-                    ticket = TicketSalesTicket.objects.filter(
+                    ticket = TicketSalesTicket.objects.create(
                         ticket_sale=self,
                         service=service.service,
                         event=service.event,
                         event_date=service.event_date,
                         event_time=service.event_time,
-                        event_time_end=service.event_time_end
-                    ).exclude(id__in=[t.id for t in current_tickets]).first()
-
-                    if ticket:
-                        # Если запись найдена, обновляем только поле amount
-                        ticket.amount = service.tickets_amount // service.tickets_count
-                        ticket.save()
-                    else:
-                        # Если запись не найдена, создаем новую
-                        ticket = TicketSalesTicket.objects.create(
-                            ticket_sale=self,
-                            service=service.service,
-                            event=service.event,
-                            event_date=service.event_date,
-                            event_time=service.event_time,
-                            event_time_end=service.event_time_end,
-                            amount=service.tickets_amount // service.tickets_count,
-                            ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
-                            number=curr_num
-                        )
-                        curr_num += 1
-
-                    # Добавляем обработанный или созданный билет в список current_tickets
-                    current_tickets.append(ticket)
-
-            # сравниваем списки previous_tickets и current_tickets
-            # Удаляем все билеты, которые были в previous_tickets, но отсутствуют в current_tickets
-            for ticket in previous_tickets:
-                if ticket not in current_tickets:
-                    ticket.delete()
+                        event_time_end=service.event_time_end,
+                        amount=service.tickets_amount // service.tickets_count,
+                        ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
+                        number=curr_num
+                    )
+                    curr_num += 1
 
         # Вызов метода super() для завершения стандартного сохранения модели
+        self.tickets_made = True
         super(TicketSale, self).save(*args, **kwargs)
 
 
