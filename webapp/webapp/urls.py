@@ -7,7 +7,7 @@ from django.contrib.auth import views as auth_views
 from rest_framework.authtoken import views
 
 from ticket_sales.api import api_urls
-from ticket_sales.views import TicketSaleListView
+from references.views import home_page
 from .drf_yasg_schema import schema_view
 
 urlpatterns = [
@@ -22,7 +22,7 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
-    path('', TicketSaleListView.as_view(), name='home'),
+    path('', home_page, name='home'),
 ]
 
 urlpatterns += api_urls

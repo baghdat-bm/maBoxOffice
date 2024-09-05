@@ -8,6 +8,10 @@ from .forms import EventTemplateForm, EventForm, EventTimesForm, InventoryForm, 
 from .models import Event, EventTemplate, EventTimes, Service, Inventory, EventTemplateServices
 
 
+def home_page(request):
+    return render(request, 'site/home.html')
+
+
 def event_template_create_view(request):
     if request.method == 'POST':
         form = EventTemplateForm(request.POST, request.FILES)
