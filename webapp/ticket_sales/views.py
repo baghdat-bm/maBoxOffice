@@ -311,7 +311,8 @@ def print_ticket_view(request, ticket_sale_id):
                 'event_time': f'{ticket.event_time.strftime('%H:%M')} - {ticket.event_time_end.strftime('%H:%M')}',
                 'event_name': ticket.event.name,
                 'amount': ticket.amount,
-                'tickets_count': 1
+                'tickets_count': 1,
+                'sale_id': ticket_sale_id
             }
             for ticket in tickets
         ]

@@ -293,14 +293,15 @@
                                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${service.ticket_guid}" 
                                             alt="QR Code" style="display: inline-block;">
                                     </div>
-                                    <strong>Услуга:</strong>
-                                    <div>${service.service_name}</div>
+                                    Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
                                     <br>
-                                    Количество билетов:
-                                    <div><strong>1</strong></div>
+                                    <div>Количество билетов: <strong>1</strong></div>
                                     <br>
                                     <strong>Дата и время сеанса:</strong>
-                                    <div>${service.event_date}  ${service.event_time}</div>
+                                    <div>${service.event_date}    ${service.event_time}</div>
+                                    <br>
+                                    <strong>Услуга:</strong>
+                                    <div>${service.service_name}</div>
                                     <br>
                                     <strong>Мероприятие:</strong>
                                     <div>${service.event_name}</div>
