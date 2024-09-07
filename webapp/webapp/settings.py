@@ -221,3 +221,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'localhost']
