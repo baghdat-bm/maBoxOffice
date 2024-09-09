@@ -43,6 +43,13 @@ class TicketSaleUpdateView(UpdateView):
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
 
 
+class TerminalTicketSaleUpdateView(UpdateView):
+    model = TicketSale
+    form_class = TicketSaleForm
+    template_name = 'ticket_sales/ticket_sale_form.html'
+    success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+
+
 class TicketSaleDetailView(DetailView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_detail.html'
