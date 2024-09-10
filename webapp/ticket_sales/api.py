@@ -1,58 +1,33 @@
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from django.utils import timezone
-from django.urls import path
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import TicketSalesTicket
+from .serializers import TicketCheckSerializer
+from .ticket_sale_utils import get_available_events_dates
 
 
 class TicketCheckView(APIView):
     # Ограничение доступа только для аутентифицированных пользователей
     permission_classes = [IsAuthenticated]
 
-    # Описание входных параметров для Swagger
     @swagger_auto_schema(
-        operation_description="Check the ticket by its GUID and event code.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'ID': openapi.Schema(type=openapi.TYPE_STRING, description='Ticket GUID (UUID format)'),
-                'event_code': openapi.Schema(type=openapi.TYPE_STRING,
-                                             description='Event code ("1" for entry, "0" for exit)', max_length=1),
-            },
-            required=['ID', 'event_code']
-        ),
-        responses={
-            200: openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'result': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='The result of the check'),
-                },
-            ),
-            400: openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'result': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='The result of the check'),
-                    'error_code': openapi.Schema(type=openapi.TYPE_STRING, description='Error code'),
-                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Error message'),
-                },
-            ),
-        }
+        request_body=TicketCheckSerializer,  # Здесь мы указываем, что тело запроса должно соответствовать сериализатору
+        responses={200: 'Успешная проверка билета', 400: 'Неверные данные'},  # Пример ответов
     )
-
     def post(self, request, *args, **kwargs):
-        # Получаем параметры из тела запроса
-        ticket_guid = request.data.get('ID')  # ID билета
-        event_code = request.data.get('event_code')  # Код события (1-вход, 0-выход)
-
-        # Проверка наличия обязательных параметров
-        if not ticket_guid or not event_code:
-            return Response({'result': False, 'error_code': '1', 'message': 'Отсутствуют параметры ID или event_code'},
+        serializer = TicketCheckSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({'result': False, 'error_code': '1', 'message': 'Неверные данные'},
                             status=HTTP_400_BAD_REQUEST)
+
+        ticket_guid = serializer.validated_data['ID']
+        event_code = serializer.validated_data['event_code']
 
         try:
             # 1. Поиск билета по ticket_guid
@@ -93,6 +68,9 @@ class TicketCheckView(APIView):
         return Response({'result': True}, status=HTTP_200_OK)
 
 
-api_urls = [
-    path('api/ticket_check/', TicketCheckView.as_view(), name='ticket_check'),
-]
+class AvailableDatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        available_dates = get_available_events_dates()
+        return Response({"available_dates": available_dates})

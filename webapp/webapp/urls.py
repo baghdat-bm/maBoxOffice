@@ -6,7 +6,6 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from rest_framework.authtoken import views
 
-from ticket_sales.api import api_urls
 from references.views import home_page
 from .drf_yasg_schema import schema_view
 
@@ -18,14 +17,12 @@ urlpatterns = [
     path("ticket-sales/", include("ticket_sales.urls")),
 
     path('api-token-auth/', views.obtain_auth_token),
-    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path("api/", include("ticket_sales.api_urls")),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     path('', home_page, name='home'),
 ]
-
-urlpatterns += api_urls
 
 # # Add this to include language prefixes
 # urlpatterns += i18n_patterns(

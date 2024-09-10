@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.utils import timezone
 
 from references.models import Event
 
@@ -20,17 +21,27 @@ def get_available_events_dates():
                 (day_of_week == 6 and event.on_sunday)
         )
 
+    # Определяем диапазон дат: сегодня и +30 дней
+    today = timezone.now().date()
+    date_limit = today + timedelta(days=30)
+
     # Итерация по каждому мероприятию
     for event in events:
         start_date = event.begin_date
         end_date = event.end_date
 
+        # Убедимся, что конец мероприятия не превышает наш лимит +30 дней
+        if end_date > date_limit:
+            end_date = date_limit
+
         # Проходим по всем датам от начала до конца мероприятия
         for day in range((end_date - start_date).days + 1):
             current_date = start_date + timedelta(days=day)
 
+            # if is_day_included(event, current_date):
             # Проверяем, включен ли текущий день недели для данного мероприятия
-            if is_day_included(event, current_date):
+            # и входит ли дата в диапазон [сегодня, сегодня + 30 дней]
+            if today <= current_date <= date_limit and is_day_included(event, current_date):
                 available_dates.append(current_date)
 
     # Удаление дубликатов и сортировка дат
