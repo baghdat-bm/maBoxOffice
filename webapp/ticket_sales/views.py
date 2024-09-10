@@ -43,11 +43,23 @@ class TicketSaleUpdateView(UpdateView):
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
 
 
-class TerminalTicketSaleUpdateView(UpdateView):
+def home_page_terminal(request):
+    return render(request, 'ticket_sales/home_page_terminal.html')
+
+
+def create_ticket_sale_terminal(request):
+    # Создаем новую запись TicketSale
+    ticket_sale = TicketSale.objects.create(terminal=True)
+
+    # Перенаправляем на страницу редактирования
+    return redirect(reverse('ticket_sales:ticket-sale-update-t', kwargs={'pk': ticket_sale.pk}))
+
+
+class TicketSaleUpdateViewTerminal(UpdateView):
     model = TicketSale
     form_class = TicketSaleForm
-    template_name = 'ticket_sales/ticket_sale_form.html'
-    success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+    template_name = 'ticket_sales/ticket_sale_form_terminal.html'
+    success_url = reverse_lazy('ticket_sales:home-terminal')
 
 
 class TicketSaleDetailView(DetailView):

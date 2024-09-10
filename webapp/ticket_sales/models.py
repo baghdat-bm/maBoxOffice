@@ -19,6 +19,7 @@ class TicketSale(models.Model):
     status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Новый заказ')
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Всего билетов", blank=True, default=0)
     tickets_made = models.BooleanField(verbose_name="Билеты сформированы", blank=True, default=False)
+    terminal = models.BooleanField(verbose_name="Куплен в терминале", blank=True, default=False)
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'

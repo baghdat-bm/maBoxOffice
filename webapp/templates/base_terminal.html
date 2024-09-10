@@ -57,7 +57,17 @@
                 </div>
             {% endfor %}
         {% endif %}
-
+            
+        <div class="flex-grow-1 mx-3">
+            <div id="main-progress-bar" class="progress d-none" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: 100%">
+                    <span id="progress-bar-text">Соединение с терминалом...</span>
+                </div>
+            </div>
+        </div>
+    
         <main>
             {% block content %}
             {% endblock %}

@@ -25,7 +25,7 @@ class TicketSalesPaymentsInline(admin.StackedInline):
 class TicketSalesTicketInline(admin.StackedInline):
     model = TicketSalesTicket
     extra = 0
-    readonly_fields = ('ticket_guid',)
+    readonly_fields = ('ticket_guid', 'amount')
     fields = ('service', 'event', 'event_date', 'event_time', 'event_time_end', 'amount', 'ticket_guid',
               'last_event_code')
 
@@ -34,7 +34,7 @@ class TicketSaleAdmin(admin.ModelAdmin):
     model = TicketSale
     list_display = ('id', 'date', 'amount', 'tickets_count', 'status')
     list_display_links = ('id', 'date')
-    readonly_fields = ('tickets_made',)
+    readonly_fields = ('tickets_made', 'terminal')
     inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketSalesTicketInline)
 
 

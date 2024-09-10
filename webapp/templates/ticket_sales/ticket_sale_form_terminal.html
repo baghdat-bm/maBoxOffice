@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'base_terminal.html' %}
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-{% block title %}{% if form.instance.id %}Изменение{% else %}Создание{% endif %} заказа{% endblock %}
+{% block title %}Продажа билета{% endblock %}
 
 {% block content %}
     <!-- Модальное окно Добавление услуги -->
@@ -98,7 +98,7 @@
     </div>
 
     <div class="container mt-4">
-        <h3>{% if form.instance.id %}Заказ №{{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
+        <h3>Продажа билета</h3>
 
         <form id="ticket-sale-form" method="post">
             {% csrf_token %}
@@ -177,21 +177,15 @@
                     {% include 'ticket_sales/partials/ticket_sales_service_list.html' with ticket_sale=form.instance %}
                 {% endif %}
             </div>
-            {% if form.instance.id %}
-                <button type="button" class="btn btn-outline-primary"
-                        hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
-                        hx-target="#modal-body-content"
-                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
-                >
-                    Добавить услугу
-                </button>
-            {% else %}
-                <button type="button" class="btn btn-outline-primary" disabled>
-                    Добавить услугу
-                </button>
-                Перед добавлением услуги необходимо сохранить заказ
-            {% endif %}
-
+            
+            <button type="button" class="btn btn-outline-primary"
+                    hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
+                    hx-target="#modal-body-content"
+                    hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
+            >
+                Добавить услугу
+            </button>
+            
             <hr class="my-3">
             <div id="ticket-sales-payments-list">
                 {% if form.instance.id %}
@@ -203,20 +197,11 @@
             {% if form.instance.amount > 0 %}
                 <button type="button" class="btn btn-success mt-2" id="start-payment"
                         data-ticket-sale-id="{{ form.instance.id }}">
-                    Оплата картой
-                </button>
-
-                <button type="button" class="btn btn-info mt-2" id="cash-payment-button"
-                        data-ticket-sale-id="{{ form.instance.id }}">
-                    Оплата наличными
-                </button>
+                    Оплата
+                </button>                
             {% else %}
                 <button type="button" class="btn btn-success mt-2" id="start-payment" disabled>
-                    Оплата картой
-                </button>
-
-                <button type="button" class="btn btn-info mt-2" id="cash-payment-button" disabled>
-                    Оплата наличными
+                    Оплата
                 </button>
             {% endif %}
             <hr class="my-3">
@@ -228,13 +213,16 @@
                         Печать
                     </button>
                 {% endif %}
+                
+                <!--
                 <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
                 <button type="button" class="btn btn-primary" id="save-not-close">
                     Сохранить
                 </button>
-
-                <a href="{% url 'ticket_sales:ticket-sale-list' %}" id="back-to-list"
-                   class="btn btn-secondary">Закрыть</a>
+                -->
+            
+                <a href="{% url 'ticket_sales:home-terminal' %}" id="back-to-list"
+                   class="btn btn-secondary">Отмена</a>
             </div>
         </form>
     </div>
@@ -319,7 +307,7 @@
                     });
 
                     if (!data.services || data.services.length === 0) {
-                        printContent.innerHTML = "<p>Заказ не оплачен</p>"
+                        printContent.innerHTML = "<p>Билеты не оплачены</p>"
                     }
 
                     // Открыть модальное окно для печати
@@ -343,109 +331,8 @@
         });
     </script>
 
-    {#    Скрипт для обработки наличной оплаты:#}
     <script>
-        document.getElementById('cash-payment-button').addEventListener('click', function () {
-            // Получаем значения полей
-            const amount = parseFloat('{{ form.amount.value|default_if_none:0 }}');
-            const paidAmount = parseFloat('{{ form.paid_amount.value|default_if_none:0 }}');
-            const refundAmount = parseFloat('{{ form.refund_amount.value|default_if_none:0 }}');
-
-            // Рассчитываем сумму к оплате
-            const sumToPay = amount - paidAmount + refundAmount;
-
-            // Устанавливаем значение в поле "Сумма к оплате"
-            document.getElementById('cash-amount').value = sumToPay.toFixed(2);
-
-            // Открываем модальное окно
-            const cashPaymentModal = new bootstrap.Modal(document.getElementById('cashPaymentModal'));
-            cashPaymentModal.show();
-        });
-
-        document.getElementById('cash-received').addEventListener('input', function () {
-            const cashAmount = parseFloat(document.getElementById('cash-amount').value);
-            const cashReceived = parseFloat(this.value);
-
-            if (cashReceived > cashAmount) {
-                const change = cashReceived - cashAmount;
-                document.getElementById('change-amount').value = change.toFixed(2);
-            } else {
-                document.getElementById('change-amount').value = '';
-            }
-        });
-
-        document.getElementById('submit-cash-payment').addEventListener('click', function () {
-            const cashAmount = parseFloat(document.getElementById('cash-amount').value);
-            const cashReceived = parseFloat(document.getElementById('cash-received').value);
-
-            if (isNaN(cashReceived) || cashReceived < cashAmount) {
-                alert('Сумма налички не достаточно к оплате!');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('paid_cash', cashAmount);
-
-            fetch("{% if form.instance.id %}{% url 'ticket_sales:cash-payment-process' form.instance.id %}{% endif %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: formData
-            }).then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
-                        cashPaymentModal.hide();
-                        window.location.reload();
-                    } else {
-                        alert('Ошибка при оплате');
-                    }
-                }).catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при оплате');
-            });
-        });
-
-        document.getElementById('cancel-cash-payment').addEventListener('click', function () {
-            const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
-            cashPaymentModal.hide();
-        });
-
-    </script>
-
-    <script>
-        document.getElementById('save-not-close').addEventListener('click', function (event) {
-            event.preventDefault();
-
-            const form = document.getElementById('ticket-sale-form');
-            const formData = new FormData(form);
-
-            let url = '';
-            {% if form.instance.id %}
-                url = "{% url 'ticket_sales:ticket-sale-update-x' form.instance.id %}";
-            {% else %}
-                url = "{% url 'ticket_sales:ticket-sale-create-x' %}";
-            {% endif %};
-            
-            fetch(url,
-                {
-                    method: 'POST',
-                    headers:
-                        {
-                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                        },
-                    body: formData,
-                }
-            ).then(response => response.json())
-                .then(data => {
-                    if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
-                    }
-                })
-                .catch(error => console.error('Ошибка:', error));
-        });
-
+      
         function hideServiceModal() {
             //window.location.reload();
         }

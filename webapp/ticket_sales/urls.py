@@ -5,7 +5,7 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
     filtered_services, get_service_cost, terminal_settings_view, register_terminal, refresh_terminal_token, \
-    get_events_dates, get_events
+    get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal
 
 app_name = 'ticket_sales'
 
@@ -17,6 +17,9 @@ urlpatterns = [
     path('<int:pk>/', TicketSaleDetailView.as_view(), name='ticket-sale-detail'),
     path('create-x/', ticket_sale_create_view, name='ticket-sale-create-x'),
     path('<int:pk>/update-x/', ticket_sale_update_view, name='ticket-sale-update-x'),
+    path('<int:pk>/update-t/', TicketSaleUpdateViewTerminal.as_view(), name='ticket-sale-update-t'),
+    path('home-terminal/', home_page_terminal, name='home-terminal'),
+    path('create-sale-terminal/', create_ticket_sale_terminal, name='create-sale-terminal'),
 
     # TicketSalesService URLs
     path('<int:ticket_sale_id>/services/create/', ticket_sales_service_create,

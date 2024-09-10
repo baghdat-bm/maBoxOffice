@@ -1,0 +1,11 @@
+{% extends 'base_terminal.html' %}
+
+{% block content %}	
+    <div class="container mt-5">
+        <h3>Покупка билета</h3>
+        <form action="{% url 'ticket_sales:create-sale-terminal' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Купить билет</button>
+        </form>
+    </div>
+{% endblock %}
