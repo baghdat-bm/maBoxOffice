@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.utils import timezone
+from django.db.models import Sum
 
-from references.models import Event
+from references.models import Event, EventTimes
+from ticket_sales.models import TicketSalesService
 
 
 def get_available_events_dates():
@@ -47,3 +49,47 @@ def get_available_events_dates():
     # Удаление дубликатов и сортировка дат
     available_dates = sorted(list(set(available_dates)))
     return available_dates
+
+
+def get_events_data(date):
+    date_naive = datetime.strptime(date, '%Y-%m-%d')
+    selected_date = timezone.make_aware(datetime.combine(date_naive, datetime.min.time()))
+    events = Event.objects.filter(begin_date__lte=selected_date, end_date__gte=selected_date)
+    data = []
+
+    for event in events:
+        times = EventTimes.objects.filter(event=event)
+        event_data = {
+            'id': event.id,
+            'name': event.name,
+            # 'quantity': event.quantity,
+            'times': []
+        }
+
+        for time in times:
+            # Получаем записи TicketSalesService для текущего мероприятия и времени
+            sold_tickets = TicketSalesService.objects.filter(
+                event=event,
+                event_time=time.begin_date,
+                event_time_end=time.end_date,
+                service__on_calculation=True
+            ).aggregate(total_sold_tickets=Sum('tickets_count'))
+
+            # Извлекаем сумму проданных билетов
+            sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
+
+            # Вычисляем количество доступных билетов
+            available_quantity = event.quantity - sold_tickets_count
+
+            if available_quantity > 0:
+                # Добавляем время мероприятия с количеством доступных билетов
+                event_data['times'].append({
+                    'begin_date': time.begin_date.strftime('%H:%M'),
+                    'end_date': time.end_date.strftime('%H:%M'),
+                    'quantity': available_quantity
+                })
+
+        if len(event_data['times']) > 0:
+            data.append(event_data)
+
+    return data

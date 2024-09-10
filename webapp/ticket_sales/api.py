@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -8,8 +9,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import TicketSalesTicket
-from .serializers import TicketCheckSerializer
-from .ticket_sale_utils import get_available_events_dates
+from .serializers import TicketCheckSerializer, EventsListSerializer
+from .ticket_sale_utils import get_available_events_dates, get_events_data
 
 
 class TicketCheckView(APIView):
@@ -74,3 +75,28 @@ class AvailableDatesView(APIView):
     def get(self, request, *args, **kwargs):
         available_dates = get_available_events_dates()
         return Response({"available_dates": available_dates})
+
+
+class EventsListView(APIView):
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'date',
+                openapi.IN_QUERY,
+                description="Дата в формате YYYY-MM-DD",
+                type=openapi.TYPE_STRING,
+                required=True,
+                format='date'
+            )
+        ],
+        responses={200: 'Список сеансов', 400: 'Неверные параметры'},
+    )
+    def get(self, request, *args, **kwargs):
+        serializer = EventsListSerializer(data=request.GET)
+
+        if serializer.is_valid():
+            date = serializer.validated_data['date'].strftime('%Y-%m-%d')
+            data = get_events_data(date)
+            return Response({'events': data}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
