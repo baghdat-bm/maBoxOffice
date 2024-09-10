@@ -13,12 +13,14 @@ from django.contrib import messages
 from django.utils.dateparse import parse_datetime
 from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
+from django.views.decorators.csrf import csrf_exempt
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
+from .ticket_sale_utils import get_available_events_dates
 from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal_settings, update_terminal_token
 
 
@@ -47,6 +49,7 @@ def home_page_terminal(request):
     return render(request, 'ticket_sales/home_page_terminal.html')
 
 
+@csrf_exempt
 def create_ticket_sale_terminal(request):
     # Создаем новую запись TicketSale
     ticket_sale = TicketSale.objects.create(terminal=True)
@@ -533,36 +536,5 @@ def refresh_terminal_token(request):
 
 
 def get_events_dates(request):
-    events = Event.objects.all()
-    available_dates = []
-
-    # Функция для проверки, включен ли день недели для данного мероприятия
-    def is_day_included(event, date):
-        day_of_week = date.weekday()  # Получаем день недели (0 - понедельник, 6 - воскресенье)
-        return (
-                (day_of_week == 0 and event.on_monday) or
-                (day_of_week == 1 and event.on_tuesday) or
-                (day_of_week == 2 and event.on_wednesday) or
-                (day_of_week == 3 and event.on_thursday) or
-                (day_of_week == 4 and event.on_friday) or
-                (day_of_week == 5 and event.on_saturday) or
-                (day_of_week == 6 and event.on_sunday)
-        )
-
-    # Итерация по каждому мероприятию
-    for event in events:
-        start_date = event.begin_date
-        end_date = event.end_date
-
-        # Проходим по всем датам от начала до конца мероприятия
-        for day in range((end_date - start_date).days + 1):
-            current_date = start_date + timedelta(days=day)
-
-            # Проверяем, включен ли текущий день недели для данного мероприятия
-            if is_day_included(event, current_date):
-                available_dates.append(current_date)
-
-    # Удаление дубликатов и сортировка дат
-    available_dates = sorted(list(set(available_dates)))
-
+    available_dates = get_available_events_dates()
     return JsonResponse({"available_dates": available_dates})

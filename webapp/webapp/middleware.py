@@ -8,7 +8,7 @@ class LoginRequiredMiddleware:
 
     def __call__(self, request):
         if request.user.is_authenticated or request.path in [reverse('login'), reverse('logout'), reverse('home')]\
-                or '/api/' in request.path:
+                or '/api/' in request.path or '/home-terminal/' in request.path:
             response = self.get_response(request)
             return response
 
