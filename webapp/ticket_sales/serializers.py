@@ -18,4 +18,4 @@ class EventsListSerializer(serializers.Serializer):
 
 
 class ServiceListSerializer(serializers.Serializer):
-    EventID = serializers.IntegerField()
+    eventID = serializers.IntegerField()

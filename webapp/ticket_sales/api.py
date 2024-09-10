@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 from .models import TicketSalesTicket
 from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer
-from .ticket_sale_utils import get_available_events_dates, get_events_data, get_filtered_services
+from .ticket_sale_utils import get_available_events_dates, get_events_data, get_available_services
 
 
 class TicketCheckView(APIView):
@@ -106,7 +106,7 @@ class ServicesListView(APIView):
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
-                'EventID',
+                'eventID',
                 openapi.IN_QUERY,
                 description="ID мероприятия",
                 type=openapi.TYPE_STRING,
@@ -119,8 +119,8 @@ class ServicesListView(APIView):
     def get(self, request, *args, **kwargs):
         serializer = ServiceListSerializer(data=request.GET)
         if serializer.is_valid():
-            event_id = serializer.validated_data['EventID']
-            data = get_filtered_services(event_id)
-            return Response({'events': data}, status=status.HTTP_200_OK)
+            event_id = serializer.validated_data['eventID']
+            data = get_available_services(event_id)
+            return Response({'services': data}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

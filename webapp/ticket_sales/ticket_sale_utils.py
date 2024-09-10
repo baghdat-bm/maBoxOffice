@@ -103,3 +103,50 @@ def get_filtered_services(event_id):
             services_data = [{"id": service.service.id, "name": service.service.name} for service in services]
             return services_data
     return []
+
+
+def get_available_services(event_id):
+    if event_id:
+        event = Event.objects.get(id=event_id)
+        if event:
+            services = EventTemplateServices.objects.filter(event_template=event.event_template)
+            services_data = []
+
+            for service in services:
+                # Получаем доступные EventTimes для данного мероприятия
+                times = EventTimes.objects.filter(event=event)
+                service_data = {
+                    "id": service.service.id,
+                    "name": service.service.name,
+                    "times": []
+                }
+
+                for time in times:
+                    # Получаем записи TicketSalesService для текущего сервиса, мероприятия и времени
+                    sold_tickets = TicketSalesService.objects.filter(
+                        event=event,
+                        event_time=time.begin_date,
+                        event_time_end=time.end_date,
+                        service=service.service,  # Фильтруем по сервису
+                        service__on_calculation=True
+                    ).aggregate(total_sold_tickets=Sum('tickets_count'))
+
+                    # Извлекаем сумму проданных билетов для этого сервиса и времени
+                    sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
+
+                    # Вычисляем доступное количество билетов для этого сервиса
+                    available_quantity = event.quantity - sold_tickets_count
+
+                    if available_quantity > 0:
+                        # Добавляем время мероприятия с количеством доступных билетов
+                        service_data['times'].append({
+                            'begin_date': time.begin_date.strftime('%H:%M'),
+                            'end_date': time.end_date.strftime('%H:%M'),
+                            'quantity': available_quantity
+                        })
+
+                if len(service_data['times']) > 0:
+                    services_data.append(service_data)
+
+            return services_data
+    return []
