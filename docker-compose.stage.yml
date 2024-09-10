@@ -33,8 +33,8 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certs:/etc/nginx/certs
-      - ./static:/code/static
-      - ./media:/code/media
+      - static_volume:/static
+      - media_volume:/media
     depends_on:
       - webapp
 

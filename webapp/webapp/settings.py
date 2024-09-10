@@ -232,4 +232,4 @@ SWAGGER_SETTINGS = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost']

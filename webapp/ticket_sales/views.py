@@ -20,7 +20,7 @@ from .models import TicketSale, TicketSalesService, TicketSalesPayments, Termina
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
-from .ticket_sale_utils import get_available_events_dates, get_events_data
+from .ticket_sale_utils import get_available_events_dates, get_events_data, get_filtered_services
 from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal_settings, update_terminal_token
 
 
@@ -369,13 +369,8 @@ def get_events(request):
 
 def filtered_services(request):
     event_id = request.GET.get('event_id')
-    if event_id:
-        event = Event.objects.get(id=event_id)
-        if event:
-            services = EventTemplateServices.objects.filter(event_template=event.event_template)
-            services_data = [{"id": service.service.id, "name": service.service.name} for service in services]
-            return JsonResponse(services_data, safe=False)
-    return JsonResponse([], safe=False)
+    data = get_filtered_services(event_id)
+    return JsonResponse(data, safe=False)
 
 
 def get_service_cost(request):

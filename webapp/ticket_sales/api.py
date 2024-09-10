@@ -9,8 +9,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import TicketSalesTicket
-from .serializers import TicketCheckSerializer, EventsListSerializer
-from .ticket_sale_utils import get_available_events_dates, get_events_data
+from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer
+from .ticket_sale_utils import get_available_events_dates, get_events_data, get_filtered_services
 
 
 class TicketCheckView(APIView):
@@ -97,6 +97,30 @@ class EventsListView(APIView):
         if serializer.is_valid():
             date = serializer.validated_data['date'].strftime('%Y-%m-%d')
             data = get_events_data(date)
+            return Response({'events': data}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ServicesListView(APIView):
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'EventID',
+                openapi.IN_QUERY,
+                description="ID мероприятия",
+                type=openapi.TYPE_STRING,
+                required=True,
+                format='number'
+            )
+        ],
+        responses={200: 'Список услуг', 400: 'Неверные параметры'},
+    )
+    def get(self, request, *args, **kwargs):
+        serializer = ServiceListSerializer(data=request.GET)
+        if serializer.is_valid():
+            event_id = serializer.validated_data['EventID']
+            data = get_filtered_services(event_id)
             return Response({'events': data}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

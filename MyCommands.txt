@@ -16,7 +16,7 @@ docker compose -f docker-compose.dev.yml up --build
 docker compose -f docker-compose.dev.yml exec web python manage.py makemigrations
 docker compose -f docker-compose.dev.yml exec web python manage.py migrate --noinput
 docker compose -f docker-compose.dev.yml exec web python manage.py createsuperuser
-docker exec -it sportzal-web-1 /bin/bash
+docker exec -it maboxoffice-webapp-1 /bin/bash
 # apt-get update
 # apt-get install gettext
 # ONLY ONE TIME: django-admin makemessages -l ru
@@ -30,6 +30,8 @@ docker compose -f docker-compose.dev.yml logs -f
 docker compose -f docker-compose.stage.yml up --build
 docker compose -f docker-compose.stage.yml exec webapp python manage.py migrate
 docker compose -f docker-compose.stage.yml exec webapp python manage.py createsuperuser
+docker exec -it maboxoffice-webapp-1 /bin/bash
+docker exec -it maboxoffice-nginx-1 /bin/bash
 
 ### For production
 # first set up the certificates.

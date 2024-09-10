@@ -15,3 +15,7 @@ class EventsListSerializer(serializers.Serializer):
         if value < timezone.now().date():
             raise serializers.ValidationError("Дата не может быть в прошлом.")
         return value
+
+
+class ServiceListSerializer(serializers.Serializer):
+    EventID = serializers.IntegerField()

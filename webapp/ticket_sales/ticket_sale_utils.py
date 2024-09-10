@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from django.utils import timezone
 from django.db.models import Sum
 
-from references.models import Event, EventTimes
+from references.models import Event, EventTimes, EventTemplateServices
 from ticket_sales.models import TicketSalesService
 
 
@@ -93,3 +93,13 @@ def get_events_data(date):
             data.append(event_data)
 
     return data
+
+
+def get_filtered_services(event_id):
+    if event_id:
+        event = Event.objects.get(id=event_id)
+        if event:
+            services = EventTemplateServices.objects.filter(event_template=event.event_template)
+            services_data = [{"id": service.service.id, "name": service.service.name} for service in services]
+            return services_data
+    return []
