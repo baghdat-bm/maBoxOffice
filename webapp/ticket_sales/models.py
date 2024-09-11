@@ -47,7 +47,7 @@ class TicketSale(models.Model):
         elif self.paid_amount < self.amount:
             self.status = 'Частично оплачен'
 
-        if self.paid_amount >= self.amount and not self.tickets_made:
+        if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
             # Получаем все связанные записи TicketSalesService
             services = TicketSalesService.objects.filter(ticket_sale=self)
 
@@ -67,10 +67,12 @@ class TicketSale(models.Model):
                         ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
                         number=curr_num
                     )
+                    ticket.save()
                     curr_num += 1
 
-        # Вызов метода super() для завершения стандартного сохранения модели
-        self.tickets_made = True
+            # Вызов метода super() для завершения стандартного сохранения модели
+            self.tickets_made = True
+
         super(TicketSale, self).save(*args, **kwargs)
 
 

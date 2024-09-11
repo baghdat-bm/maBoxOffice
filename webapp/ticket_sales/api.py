@@ -73,7 +73,7 @@ class AvailableDatesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        available_dates = get_available_events_dates()
+        available_dates = get_available_events_dates(True)
         return Response({"available_dates": available_dates})
 
 

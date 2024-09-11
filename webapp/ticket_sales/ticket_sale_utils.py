@@ -6,7 +6,7 @@ from references.models import Event, EventTimes, EventTemplateServices
 from ticket_sales.models import TicketSalesService
 
 
-def get_available_events_dates():
+def get_available_events_dates(include_tickets=False):
     events = Event.objects.all()
     available_dates = []
 
@@ -43,30 +43,37 @@ def get_available_events_dates():
             # Проверяем, включен ли текущий день недели для данного мероприятия
             # и входит ли дата в диапазон [сегодня, сегодня + 30 дней]
             if today <= current_date <= date_limit and is_day_included(event, current_date):
-                # Преобразование даты в строку, если это необходимо для фильтрации
-                current_date_str = current_date.isoformat()
 
-                # Подсчет проданных билетов для данного мероприятия на текущую дату
-                sold_tickets = TicketSalesService.objects.filter(
-                    event=event,
-                    event_date=current_date_str,  # Преобразование текущей даты в строку, если это необходимо
-                    service__on_calculation=True
-                ).aggregate(total_sold_tickets=Sum('tickets_count'))
+                if include_tickets:
+                    # Преобразование даты в строку, если это необходимо для фильтрации
+                    current_date_str = current_date.isoformat()
 
-                # Извлекаем сумму проданных билетов или используем 0, если билеты не продавались
-                sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
+                    # Подсчет проданных билетов для данного мероприятия на текущую дату
+                    sold_tickets = TicketSalesService.objects.filter(
+                        event=event,
+                        event_date=current_date_str,  # Преобразование текущей даты в строку, если это необходимо
+                        service__on_calculation=True
+                    ).aggregate(total_sold_tickets=Sum('tickets_count'))
 
-                # Вычисляем доступное количество билетов
-                available_quantity = event.quantity - sold_tickets_count
+                    # Извлекаем сумму проданных билетов или используем 0, если билеты не продавались
+                    sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
 
-                # Добавляем дату и количество доступных билетов в список
-                available_dates.append({
-                    'date': current_date,
-                    'available_tickets': available_quantity
-                })
+                    # Вычисляем доступное количество билетов
+                    available_quantity = event.quantity - sold_tickets_count
+
+                    # Добавляем дату и количество доступных билетов в список
+                    available_dates.append({
+                        'date': current_date,
+                        'available_tickets': available_quantity
+                    })
+                else:
+                    available_dates.append(current_date)
 
     # Удаление дубликатов и сортировка по дате
-    available_dates = sorted(available_dates, key=lambda x: x['date'])
+    if include_tickets:
+        available_dates = sorted(available_dates, key=lambda x: x['date'])
+    else:
+        available_dates = sorted(list(set(available_dates)))
 
     return available_dates
 
