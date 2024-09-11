@@ -1,6 +1,7 @@
 webapp/db.sqlite
 webapp/media
 webapp/logs
+webapp/staticfiles
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

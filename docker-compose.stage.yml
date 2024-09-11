@@ -17,7 +17,7 @@ services:
       - ./.prod.env
     volumes:
       - ./webapp:/code
-      - static_volume:/code/static
+      - static_volume:/code/staticfiles
       - media_volume:/code/media
       - logs_volume:/code/logs
     depends_on:
@@ -33,7 +33,7 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certs:/etc/nginx/certs
-      - static_volume:/static
+      - static_volume:/staticfiles
       - media_volume:/media
     depends_on:
       - webapp
