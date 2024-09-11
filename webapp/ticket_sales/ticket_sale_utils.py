@@ -40,14 +40,34 @@ def get_available_events_dates():
         for day in range((end_date - start_date).days + 1):
             current_date = start_date + timedelta(days=day)
 
-            # if is_day_included(event, current_date):
             # Проверяем, включен ли текущий день недели для данного мероприятия
             # и входит ли дата в диапазон [сегодня, сегодня + 30 дней]
             if today <= current_date <= date_limit and is_day_included(event, current_date):
-                available_dates.append(current_date)
+                # Преобразование даты в строку, если это необходимо для фильтрации
+                current_date_str = current_date.isoformat()
 
-    # Удаление дубликатов и сортировка дат
-    available_dates = sorted(list(set(available_dates)))
+                # Подсчет проданных билетов для данного мероприятия на текущую дату
+                sold_tickets = TicketSalesService.objects.filter(
+                    event=event,
+                    event_date=current_date_str,  # Преобразование текущей даты в строку, если это необходимо
+                    service__on_calculation=True
+                ).aggregate(total_sold_tickets=Sum('tickets_count'))
+
+                # Извлекаем сумму проданных билетов или используем 0, если билеты не продавались
+                sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
+
+                # Вычисляем доступное количество билетов
+                available_quantity = event.quantity - sold_tickets_count
+
+                # Добавляем дату и количество доступных билетов в список
+                available_dates.append({
+                    'date': current_date,
+                    'available_tickets': available_quantity
+                })
+
+    # Удаление дубликатов и сортировка по дате
+    available_dates = sorted(available_dates, key=lambda x: x['date'])
+
     return available_dates
 
 
