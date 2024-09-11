@@ -5,7 +5,11 @@
 {% block content %}
 <div class="container mt-4">
     <h3>Заказы</h3>
-    <a href="{% url 'ticket_sales:ticket-sale-create' %}" class="btn btn-primary mb-2">Новый заказ</a>
+    
+    <form action="{% url 'ticket_sales:ticket-sale-create' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary mb-2">Новый заказ</button>
+    </form>
 
     <table class="table table-striped">
         <thead>

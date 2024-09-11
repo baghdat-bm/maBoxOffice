@@ -1,5 +1,6 @@
 webapp/db.sqlite
 webapp/media
+webapp/media/*
 webapp/logs
 webapp/staticfiles
 

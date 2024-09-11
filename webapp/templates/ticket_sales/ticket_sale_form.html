@@ -106,8 +106,9 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        {{ form.date.label_tag }}
-                        {{ form.date|add_class:"form-control" }}
+                        {{ form.date.label_tag }}                        
+                        <input type="text" class="form-control" name="{{ form.date.name }}"
+                               id="id_{{ form.date.name }}" value="{{ form.date.value }}" disabled>
                     </div>
                 </div>
 
@@ -227,11 +228,7 @@
                             data-ticket-sale-id="{{ form.instance.id }}" onclick="printTicket()">
                         Печать
                     </button>
-                {% endif %}
-                <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
-                <button type="button" class="btn btn-primary" id="save-not-close">
-                    Сохранить
-                </button>
+                {% endif %}                
 
                 <a href="{% url 'ticket_sales:ticket-sale-list' %}" id="back-to-list"
                    class="btn btn-secondary">Закрыть</a>

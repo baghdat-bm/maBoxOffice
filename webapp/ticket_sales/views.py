@@ -38,6 +38,14 @@ class TicketSaleCreateView(CreateView):
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
 
 
+def create_ticket_sale_cashier(request):
+    # Создаем новую запись TicketSale
+    ticket_sale = TicketSale.objects.create(terminal=True)
+
+    # Перенаправляем на страницу редактирования
+    return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))
+
+
 class TicketSaleUpdateView(UpdateView):
     model = TicketSale
     form_class = TicketSaleForm

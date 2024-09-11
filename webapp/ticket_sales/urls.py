@@ -5,13 +5,14 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
     filtered_services, get_service_cost, terminal_settings_view, register_terminal, refresh_terminal_token, \
-    get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal
+    get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
+    create_ticket_sale_cashier
 
 app_name = 'ticket_sales'
 
 urlpatterns = [
     path('list/', TicketSaleListView.as_view(), name='ticket-sale-list'),
-    path('create/', TicketSaleCreateView.as_view(), name='ticket-sale-create'),
+    path('create/', create_ticket_sale_cashier, name='ticket-sale-create'),
     path('<int:pk>/update/', TicketSaleUpdateView.as_view(), name='ticket-sale-update'),
     path('<int:pk>/delete/', TicketSaleDeleteView.as_view(), name='ticket-sale-delete'),
     path('<int:pk>/', TicketSaleDetailView.as_view(), name='ticket-sale-detail'),
