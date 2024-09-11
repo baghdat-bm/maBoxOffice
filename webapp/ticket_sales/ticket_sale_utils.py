@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 from references.models import Event, EventTimes, EventTemplateServices
 from ticket_sales.models import TicketSalesService
@@ -105,29 +105,61 @@ def get_filtered_services(event_id):
     return []
 
 
-def get_available_services(event_id):
-    if event_id:
-        event = Event.objects.get(id=event_id)
+def get_available_services(event_id, date):
+    if event_id and date:
+        # Преобразуем дату из строки в datetime объект
+        date_naive = datetime.strptime(date, '%Y-%m-%d')
+        selected_date = timezone.make_aware(datetime.combine(date_naive, datetime.min.time()))
+
+        # Получаем день недели (0 - понедельник, 6 - воскресенье)
+        day_of_week = selected_date.weekday()
+
+        # Создаем фильтр по дням недели с использованием Q-объектов
+        day_filter = Q()
+        if day_of_week == 0:
+            day_filter &= Q(on_monday=True)
+        elif day_of_week == 1:
+            day_filter &= Q(on_tuesday=True)
+        elif day_of_week == 2:
+            day_filter &= Q(on_wednesday=True)
+        elif day_of_week == 3:
+            day_filter &= Q(on_thursday=True)
+        elif day_of_week == 4:
+            day_filter &= Q(on_friday=True)
+        elif day_of_week == 5:
+            day_filter &= Q(on_saturday=True)
+        elif day_of_week == 6:
+            day_filter &= Q(on_sunday=True)
+
+        # Фильтруем мероприятия по дате и дню недели
+        event = Event.objects.filter(
+            id=event_id,
+            begin_date__lte=selected_date,
+            end_date__gte=selected_date
+        ).filter(day_filter).first()
+
         if event:
             services = EventTemplateServices.objects.filter(event_template=event.event_template)
             services_data = []
 
             for service in services:
-                # Получаем доступные EventTimes для данного мероприятия
-                times = EventTimes.objects.filter(event=event)
+                service_item = service.service
                 service_data = {
-                    "id": service.service.id,
-                    "name": service.service.name,
+                    "id": service_item.id,
+                    "name": service_item.name,
+                    "cost": service_item.cost,
                     "times": []
                 }
 
+                # Получаем доступные EventTimes для данного мероприятия
+                times = EventTimes.objects.filter(event=event, is_active=True)
                 for time in times:
                     # Получаем записи TicketSalesService для текущего сервиса, мероприятия и времени
                     sold_tickets = TicketSalesService.objects.filter(
                         event=event,
                         event_time=time.begin_date,
                         event_time_end=time.end_date,
-                        service=service.service,  # Фильтруем по сервису
+                        service=service_item,  # Фильтруем по сервису
                         service__on_calculation=True
                     ).aggregate(total_sold_tickets=Sum('tickets_count'))
 

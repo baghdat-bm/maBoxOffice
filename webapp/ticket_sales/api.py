@@ -112,6 +112,14 @@ class ServicesListView(APIView):
                 type=openapi.TYPE_STRING,
                 required=True,
                 format='number'
+            ),
+            openapi.Parameter(
+                'date',
+                openapi.IN_QUERY,
+                description="Дата в формате YYYY-MM-DD",
+                type=openapi.TYPE_STRING,
+                required=True,
+                format='date'
             )
         ],
         responses={200: 'Список услуг', 400: 'Неверные параметры'},
@@ -120,7 +128,8 @@ class ServicesListView(APIView):
         serializer = ServiceListSerializer(data=request.GET)
         if serializer.is_valid():
             event_id = serializer.validated_data['eventID']
-            data = get_available_services(event_id)
+            date = serializer.validated_data['date'].strftime('%Y-%m-%d')
+            data = get_available_services(event_id, date)
             return Response({'services': data}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

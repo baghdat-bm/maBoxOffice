@@ -19,3 +19,9 @@ class EventsListSerializer(serializers.Serializer):
 
 class ServiceListSerializer(serializers.Serializer):
     eventID = serializers.IntegerField()
+    date = serializers.DateField(format='%Y-%m-%d', input_formats=['%Y-%m-%d'])
+
+    def validate_date(self, value):
+        if value < timezone.now().date():
+            raise serializers.ValidationError("Дата не может быть в прошлом.")
+        return value
