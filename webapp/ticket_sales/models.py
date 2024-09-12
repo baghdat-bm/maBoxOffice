@@ -59,7 +59,7 @@ class TicketSale(models.Model):
     class Meta:
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
-        ordering = ['-date']
+        ordering = ['-id']
 
     def save(self, *args, **kwargs):
         # Рассчитываем сумму оплаты

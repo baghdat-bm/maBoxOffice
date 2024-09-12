@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timedelta
-
-from django.db.models import Sum
+from django.core.paginator import Paginator
+from django.db.models import Sum, Q
 from django.utils import timezone
 import re
 
@@ -30,6 +30,15 @@ from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal
 class TicketSaleListView(ListView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_list.html'
+    context_object_name = 'object_list'
+    paginate_by = 10  # Пагинация по 20 записей
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(Q(id__icontains=query))
+        return queryset
 
 
 class TicketSaleCreateView(CreateView):
