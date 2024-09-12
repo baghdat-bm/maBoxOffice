@@ -31,15 +31,7 @@
 
         <p>
             <em>
-                {% if form.instance.sale_type=="CS" %}
-                    Касса
-                {% elif form.instance.sale_type=="TS" %}
-                    Киоск
-                {% elif form.instance.sale_type=="SM" %}
-                    Сайт muzaidyny.kz
-                {% elif form.instance.sale_type=="KP" %}
-                    Kaspi платежи
-                {% endif %}
+                {{ object.get_sale_type_display }}
             </em>
         </p>
         <!-- Сетка для первой строки -->
@@ -73,18 +65,7 @@
         <div class="row mt-1">
             <div class="col-md-3">
                 <div class="form-group">
-                    <strong>Статус:</strong>
-                    {% if object.status=="NP" %}
-                        Не оплачен
-                    {% elif object.status=="PD" %}
-                        Оплачен
-                    {% elif object.status=="PP" %}
-                        Частично оплачен
-                    {% elif object.status=="RT" %}
-                        Возврат
-                    {% elif object.status=="CN" %}
-                        Отменен
-                    {% endif %}
+                    <strong>Статус:</strong> {{ object.get_status_display }}
                 </div>
             </div>
 

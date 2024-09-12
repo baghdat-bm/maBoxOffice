@@ -1,27 +1,46 @@
 <div class="list-group bg-light"
      style="position: fixed; top: 0; left: 0; height: 100%; width: 250px; padding-top: 60px;">
+
+    {% if perms.ticket_sales.add_ticketsale %}
     <a href="{% url 'ticket_sales:ticket-sale-list' %}"
-       class="list-group-item list-group-item-action {% if 'ticket-sales' in request.path and not 'terminal' in request.path%}active{% endif %}">
+       class="list-group-item list-group-item-action {% if 'ticket-sales' in request.path and not 'terminal' in request.path %}active{% endif %}">
         <i class="bi bi-ticket-perforated-fill me-2"></i> Заказы
     </a>
+    {% endif %}
+
+    {% if perms.references.add_eventtemplate %}
     <a href="{% url 'references:event_template_list' %}"
        class="list-group-item list-group-item-action {% if 'event-template' in request.path %}active{% endif %}">
         <i class="bi bi-file-earmark-text-fill me-2"></i> Шаблоны мероприятий
     </a>
+    {% endif %}
+
+    {% if perms.references.add_event %}
     <a href="{% url 'references:event-list' %}"
        class="list-group-item list-group-item-action {% if 'event' in request.path and not 'event-template' in request.path %}active{% endif %}">
         <i class="bi bi-calendar-event me-2"></i> Мероприятия
     </a>
+    {% endif %}
+
+    {% if perms.references.add_inventory %}
     <a href="{% url 'references:inventory-list' %}"
        class="list-group-item list-group-item-action {% if 'inventory' in request.path %}active{% endif %}">
         <i class="bi bi-box-seam-fill me-2"></i> Инвентарь
     </a>
+    {% endif %}
+
+    {% if perms.references.add_service %}
     <a href="{% url 'references:service-list' %}"
        class="list-group-item list-group-item-action {% if 'service' in request.path %}active{% endif %}">
         <i class="bi bi-wrench me-2"></i> Услуги
     </a>
+    {% endif %}
+
+    {% if perms.ticket_sales.change_terminalsettings %}
     <a href="{% url 'ticket_sales:terminal-settings' %}"
        class="list-group-item list-group-item-action {% if 'terminal' in request.path %}active{% endif %}">
         <i class="bi bi-gear-wide-connected"></i> Настройки терминала
     </a>
+    {% endif %}
+
 </div>
