@@ -6,22 +6,23 @@ from references.models import Event, EventTimes, EventTemplateServices
 from ticket_sales.models import TicketSalesService
 
 
+# Функция для проверки, включен ли день недели для данного мероприятия
+def is_day_included(event, date):
+    day_of_week = date.weekday()  # Получаем день недели (0 - понедельник, 6 - воскресенье)
+    return (
+            (day_of_week == 0 and event.on_monday) or
+            (day_of_week == 1 and event.on_tuesday) or
+            (day_of_week == 2 and event.on_wednesday) or
+            (day_of_week == 3 and event.on_thursday) or
+            (day_of_week == 4 and event.on_friday) or
+            (day_of_week == 5 and event.on_saturday) or
+            (day_of_week == 6 and event.on_sunday)
+    )
+
+
 def get_available_events_dates(include_tickets=False):
     events = Event.objects.all()
     available_dates = []
-
-    # Функция для проверки, включен ли день недели для данного мероприятия
-    def is_day_included(event, date):
-        day_of_week = date.weekday()  # Получаем день недели (0 - понедельник, 6 - воскресенье)
-        return (
-                (day_of_week == 0 and event.on_monday) or
-                (day_of_week == 1 and event.on_tuesday) or
-                (day_of_week == 2 and event.on_wednesday) or
-                (day_of_week == 3 and event.on_thursday) or
-                (day_of_week == 4 and event.on_friday) or
-                (day_of_week == 5 and event.on_saturday) or
-                (day_of_week == 6 and event.on_sunday)
-        )
 
     # Определяем диапазон дат: сегодня и +30 дней
     today = timezone.now().date()
@@ -85,21 +86,25 @@ def get_events_data(date):
     data = []
 
     for event in events:
+        if not is_day_included(event, selected_date):
+            continue
+
         times = EventTimes.objects.filter(event=event)
         event_data = {
             'id': event.id,
             'name': event.name,
-            # 'quantity': event.quantity,
+            'quantity': event.quantity,
             'times': []
         }
 
         for time in times:
-            # Получаем записи TicketSalesService для текущего мероприятия и времени
+            # Получаем записи TicketSalesService для текущего мероприятия и времени, и только на указанную дату
             sold_tickets = TicketSalesService.objects.filter(
                 event=event,
                 event_time=time.begin_date,
                 event_time_end=time.end_date,
-                service__on_calculation=True
+                service__on_calculation=True,
+                event_date=date_naive  # Фильтрация по указанной дате
             ).aggregate(total_sold_tickets=Sum('tickets_count'))
 
             # Извлекаем сумму проданных билетов
