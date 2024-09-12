@@ -4,8 +4,32 @@ from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 import uuid
+import enum
 
 from references.models import Service, Event, Inventory
+
+
+class SaleTypeEnum(enum.Enum):
+    CS = "CS", "Касса"
+    TS = "TS", "Киоск"
+    SM = "SM", "Сайт muzaidyny.kz"
+    KP = "KP", "Kaspi платежи"
+
+    @classmethod
+    def choices(cls):
+        return [(key.value[0], key.value[1]) for key in cls]
+
+
+class SaleStatusEnum(enum.Enum):
+    NP = "NP", "Не оплачен"
+    PD = "PD", "Оплачен"
+    PP = "PP", "Частично оплачен"
+    RT = "RT", "Возврат"
+    CN = "CN", "Отменен"
+
+    @classmethod
+    def choices(cls):
+        return [(key.value[0], key.value[1]) for key in cls]
 
 
 class TicketSale(models.Model):
@@ -16,10 +40,18 @@ class TicketSale(models.Model):
     paid_cash = models.IntegerField(verbose_name="Оплачено наличкой", blank=True, default=0)
     paid_card = models.IntegerField(verbose_name="Оплачено картой", blank=True, default=0)
     paid_qr = models.IntegerField(verbose_name="Оплачено QR", blank=True, default=0)
-    status = models.CharField(max_length=25, verbose_name='Статус', null=True, blank=True, default='Новый заказ')
+    status = models.CharField(max_length=2, verbose_name='Статус',
+                              choices=SaleStatusEnum.choices(),
+                              null=True,
+                              blank=True,
+                              default=SaleStatusEnum.NP.value[0])
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Всего билетов", blank=True, default=0)
     tickets_made = models.BooleanField(verbose_name="Билеты сформированы", blank=True, default=False)
-    terminal = models.BooleanField(verbose_name="Куплен в терминале", blank=True, default=False)
+    sale_type = models.CharField(max_length=2,
+                                 verbose_name="Тип продажи",
+                                 choices=SaleTypeEnum.choices(),
+                                 default=SaleTypeEnum.CS.value[0],
+                                 blank=True)
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'

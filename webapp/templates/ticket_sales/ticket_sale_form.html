@@ -99,6 +99,11 @@
 
     <div class="container mt-4">
         <h3>{% if form.instance.id %}Заказ №{{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
+        <p>
+            <em>
+                {{ form.instance.get_sale_type_display }}
+            </em>
+        </p>
 
         <form id="ticket-sale-form" method="post">
             {% csrf_token %}
@@ -142,8 +147,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         {{ form.status.label_tag }}
-                        <input type="text" class="form-control" name="{{ form.status.name }}"
-                               id="id_{{ form.status.name }}" value="{{ form.status.value }}" disabled>
+                        <input type="text" class="form-control" 
+                               name="{{ form.status.name }}"
+                               id="id_{{ form.status.name }}" 
+                               value="{{ form.instance.get_status_display }}" disabled>
                     </div>
                 </div>
 
@@ -241,7 +248,7 @@
 {% block scripts %}
 
     <!-- Проверяем статус -->
-    {% if form.instance.status == "Оплачен" %}
+    {% if form.instance.status == "PD" %}
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 // Делаем все элементы формы неактивными

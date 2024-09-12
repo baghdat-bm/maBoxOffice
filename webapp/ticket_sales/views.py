@@ -16,7 +16,8 @@ from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
-from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, \
+    SaleTypeEnum
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
@@ -40,7 +41,7 @@ class TicketSaleCreateView(CreateView):
 
 def create_ticket_sale_cashier(request):
     # Создаем новую запись TicketSale
-    ticket_sale = TicketSale.objects.create(terminal=True)
+    ticket_sale = TicketSale.objects.create(sale_type=SaleTypeEnum.CS.value[0])
 
     # Перенаправляем на страницу редактирования
     return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))
@@ -60,7 +61,7 @@ def home_page_terminal(request):
 @csrf_exempt
 def create_ticket_sale_terminal(request):
     # Создаем новую запись TicketSale
-    ticket_sale = TicketSale.objects.create(terminal=True)
+    ticket_sale = TicketSale.objects.create(sale_type=SaleTypeEnum.TS.value[0])
 
     # Перенаправляем на страницу редактирования
     return redirect(reverse('ticket_sales:ticket-sale-update-t', kwargs={'pk': ticket_sale.pk}))

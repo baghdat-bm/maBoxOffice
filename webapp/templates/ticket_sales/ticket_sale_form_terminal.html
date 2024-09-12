@@ -141,8 +141,12 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         {{ form.status.label_tag }}
-                        <input type="text" class="form-control" name="{{ form.status.name }}"
-                               id="id_{{ form.status.name }}" value="{{ form.status.value }}" disabled>
+                        <input type="text"
+                               class="form-control"
+                               name="{{ form.status.name }}"
+                               id="id_{{ form.status.name }}"
+                               value="{{ form.instance.get_status_display }}"
+                               disabled>
                     </div>
                 </div>
 
@@ -232,7 +236,7 @@
 {% block scripts %}
 
     <!-- Проверяем статус -->
-    {% if form.instance.status == "Оплачен" %}
+    {% if form.instance.status == "PD" %}
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 // Делаем все элементы формы неактивными

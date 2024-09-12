@@ -29,6 +29,19 @@
         <h3>Заказ №{{ object.id }}</h3>
         <hr class="my-3">
 
+        <p>
+            <em>
+                {% if form.instance.sale_type=="CS" %}
+                    Касса
+                {% elif form.instance.sale_type=="TS" %}
+                    Киоск
+                {% elif form.instance.sale_type=="SM" %}
+                    Сайт muzaidyny.kz
+                {% elif form.instance.sale_type=="KP" %}
+                    Kaspi платежи
+                {% endif %}
+            </em>
+        </p>
         <!-- Сетка для первой строки -->
         <div class="row">
             <div class="col-md-3">
@@ -60,7 +73,18 @@
         <div class="row mt-1">
             <div class="col-md-3">
                 <div class="form-group">
-                    <strong>Статус:</strong> {{ object.status }}
+                    <strong>Статус:</strong>
+                    {% if object.status=="NP" %}
+                        Не оплачен
+                    {% elif object.status=="PD" %}
+                        Оплачен
+                    {% elif object.status=="PP" %}
+                        Частично оплачен
+                    {% elif object.status=="RT" %}
+                        Возврат
+                    {% elif object.status=="CN" %}
+                        Отменен
+                    {% endif %}
                 </div>
             </div>
 
@@ -93,7 +117,7 @@
                     data-ticket-sale-id="{{ object.id }}">
                 Печать
             </button>
-            {% if object.status != "Оплачен" %}
+            {% if object.status != "PD" and object.status != "RT" %}
                 <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-primary">Изменить</a>
             {% endif %}
             <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Закрыть</a>
@@ -110,7 +134,7 @@
 
             // Запрос на получение данных для печати (TicketSalesService)
             fetch("{% url 'ticket_sales:ticket-print-data' object.id %}", {
-                method: 'GET'                
+                method: 'GET'
             })
                 .then(response => response.json())
                 .then(data => {
@@ -150,7 +174,7 @@
                             `;
                         }
                     });
-                    
+
                     if (!data.services || data.services.length === 0) {
                         printContent.innerHTML = "<p>Нет данных для печати</p>"
                     }

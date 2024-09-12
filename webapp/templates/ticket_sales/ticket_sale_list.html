@@ -19,7 +19,7 @@
                 <th>Оплачено</th>
                 <th>Кол-во билетов</th>
                 <th>Статус</th>
-                <th>Куплен в терминале</th>
+                <th>Тип продажи</th>
                 <th></th>
             </tr>
         </thead>
@@ -34,12 +34,8 @@
                 <td>{{ sale.amount }} ₸</td>
                 <td>{{ sale.paid_amount }} ₸</td>
                 <td>{{ sale.tickets_count }}</td>
-                <td>{{ sale.status }}</td>
-                <td>
-                    {% if sale.terminal %}
-                        <i class="bi bi-check-circle-fill"></i>                        
-                    {% endif %}
-                </td>
+                <td>{{ sale.get_status_display }}</td>
+                <td>{{ sale.get_sale_type_display }}</td>
                 <td>
                     <a href="{% url 'ticket_sales:ticket-sale-update' sale.id %}" class="btn btn-sm btn-primary">
                         <i class="bi bi-pencil-square"></i>
