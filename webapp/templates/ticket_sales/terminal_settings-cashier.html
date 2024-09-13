@@ -5,7 +5,7 @@
     <div class="container mt-4">
         <h3>Настройки терминала</h3>
 
-        <form id="terminal-settings-form" method="post" action="{% url 'ticket_sales:terminal-settings' %}">
+        <form id="terminal-settings-form" method="post" action="{% url 'ticket_sales:terminal-settings-cashier' %}">
             {% csrf_token %}
 
             <div class="mb-3">
@@ -145,7 +145,7 @@
             formData.append('refresh_token', refresh_token);
             formData.append('expiration_date', expiration_date);
 
-            fetch("{% url 'ticket_sales:terminal-settings' %}", {
+            fetch("{% url 'ticket_sales:terminal-settings-cashier' %}", {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrftoken

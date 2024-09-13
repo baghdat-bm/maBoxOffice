@@ -4,9 +4,9 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sale_update_view, cash_payment_process, print_ticket_view, filtered_events, filtered_event_times, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
-    filtered_services, get_service_cost, terminal_settings_view, register_terminal, refresh_terminal_token, \
+    filtered_services, get_service_cost, terminal_settings_cashier, register_terminal, refresh_terminal_token, \
     get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
-    create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal
+    create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal
 
 app_name = 'ticket_sales'
 
@@ -59,7 +59,8 @@ urlpatterns = [
     path('get-events/', get_events, name='get-events'),
 
     # Terminal settings
-    path('terminal-settings/', terminal_settings_view, name='terminal-settings'),
+    path('terminal-settings-cashier/', terminal_settings_cashier, name='terminal-settings-cashier'),
+    path('terminal-settings-terminal/', terminal_settings_terminal, name='terminal-settings-terminal'),
     path('register-terminal/', register_terminal, name='register-terminal'),
     path('refresh-terminal-token/', refresh_terminal_token, name='refresh-terminal-token'),
 ]

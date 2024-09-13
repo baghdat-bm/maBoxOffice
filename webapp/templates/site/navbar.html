@@ -37,10 +37,15 @@
     {% endif %}
 
     {% if perms.ticket_sales.change_terminalsettings %}
-    <a href="{% url 'ticket_sales:terminal-settings' %}"
-       class="list-group-item list-group-item-action {% if 'terminal' in request.path %}active{% endif %}">
-        <i class="bi bi-gear-wide-connected"></i> Настройки терминала
+    <a href="{% url 'ticket_sales:terminal-settings-cashier' %}"
+       class="list-group-item list-group-item-action {% if 'terminal-settings-cashier' in request.path %}active{% endif %}">
+        <i class="bi bi-gear-wide-connected"></i> Настройки терминала для кассира
     </a>
+        
+    <a href="{% url 'ticket_sales:terminal-settings-terminal' %}"
+       class="list-group-item list-group-item-action {% if 'terminal-settings-terminal' in request.path %}active{% endif %}">
+        <i class="bi bi-gear-wide-connected"></i> Настройки терминала для киоска
+    </a>        
     {% endif %}
 
 </div>

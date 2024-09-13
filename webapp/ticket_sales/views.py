@@ -473,8 +473,8 @@ def get_service_cost(request):
     return JsonResponse({'cost': 0})
 
 
-def terminal_settings_view(request):
-    settings = TerminalSettings.objects.first()
+def terminal_settings_cashier(request):
+    settings = TerminalSettings.objects.filter(app_type='CS').first()
 
     if request.method == 'POST':
         ip_address = request.POST.get('ip_address')
@@ -493,7 +493,8 @@ def terminal_settings_view(request):
                 username=username,
                 access_token=access_token,
                 refresh_token=refresh_token,
-                expiration_date=expiration_date
+                expiration_date=expiration_date,
+                app_type='CS'
             )
         else:
             settings.ip_address = ip_address
@@ -510,7 +511,48 @@ def terminal_settings_view(request):
     context = {
         'settings': settings,
     }
-    return render(request, 'ticket_sales/terminal_settings.html', context)
+    return render(request, 'ticket_sales/terminal_settings-cashier.html', context)
+
+
+def terminal_settings_terminal(request):
+    settings = TerminalSettings.objects.filter(app_type='TS').first()
+
+    if request.method == 'POST':
+        ip_address = request.POST.get('ip_address')
+        username = request.POST.get('username')
+        access_token = request.POST.get('access_token')
+        refresh_token = request.POST.get('refresh_token')
+        expiration_date = request.POST.get('expiration_date')
+
+        if not ip_address or not username:
+            messages.error(request, "Необходимо заполнить поля IP Address и Username.")
+            return redirect('ticket_sales:terminal-settings')
+
+        if settings is None:
+            settings = TerminalSettings(
+                ip_address=ip_address,
+                username=username,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expiration_date=expiration_date,
+                app_type='TS'
+            )
+        else:
+            settings.ip_address = ip_address
+            settings.username = username
+            settings.access_token = access_token
+            settings.refresh_token = refresh_token
+            settings.expiration_date = expiration_date
+
+        settings.save()
+        messages.success(request, "Настройки сохранены.")
+
+        return redirect('ticket_sales:terminal-settings')
+
+    context = {
+        'settings': settings,
+    }
+    return render(request, 'ticket_sales/terminal_settings-terminal.html', context)
 
 
 def register_terminal(request):
