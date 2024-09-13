@@ -209,20 +209,33 @@ class TerminalSettings(models.Model):
     access_token = models.TextField(verbose_name="Access Token")
     refresh_token = models.TextField(verbose_name="Refresh Token")
     expiration_date = models.DateTimeField(verbose_name="Expiration date", blank=True, null=True)
+    app_type = models.CharField(max_length=2,
+                                verbose_name="Тип приложения",
+                                choices=SaleTypeEnum.choices(),
+                                default=SaleTypeEnum.CS.value[0],
+                                blank=True,
+                                null=True,
+                                unique=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
+
+    @staticmethod
+    def get_app_type_display_choices():
+        # Возвращаем только "Касса" и "Киоск"
+        limited_choices = [choice for choice in SaleTypeEnum.choices() if choice[0] in ["CS", "TS"]]
+        return limited_choices
 
     class Meta:
         verbose_name = 'Настройки терминала'
         verbose_name_plural = 'Настройки терминала'
 
-    def clean(self):
-        if TerminalSettings.objects.exists() and not self.pk:
-            raise ValidationError("Можно создать только одну запись TerminalSettings.")
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super(TerminalSettings, self).save(*args, **kwargs)
+    # def clean(self):
+    #     if TerminalSettings.objects.exists() and not self.pk:
+    #         raise ValidationError("Можно создать только одну запись TerminalSettings.")
+    #
+    # def save(self, *args, **kwargs):
+    #     self.clean()
+    #     super(TerminalSettings, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"Terminal settings for {self.username} to {self.ip_address}"
+        return f"Terminal settings for {self.username} to {self.ip_address} for {self.get_app_type_display()}"

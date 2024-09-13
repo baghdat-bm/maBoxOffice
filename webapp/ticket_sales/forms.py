@@ -10,7 +10,7 @@ class TicketSaleForm(forms.ModelForm):
     class Meta:
         model = TicketSale
         fields = ['date', 'amount', 'tickets_count', 'status', 'paid_amount', 'refund_amount', 'paid_cash',
-                  'paid_card', 'paid_qr']
+                  'paid_card', 'paid_qr', 'sale_type']
         widgets = {
             'date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }

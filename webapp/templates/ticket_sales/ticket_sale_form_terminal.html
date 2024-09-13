@@ -357,7 +357,7 @@
                 // Получаем значения из атрибутов данных
                 const ticketSaleId = this.getAttribute('data-ticket-sale-id');
 
-                fetch(`/ticket-sales/payment-process/${ticketSaleId}/`, {
+                fetch(`/ticket-sales/payment-process-terminal/${ticketSaleId}/`, {
                     method: 'POST',
                     body: paymentFormData
                 })
@@ -384,7 +384,7 @@
             const progressBar = document.getElementById('main-progress-bar');
             const progressText = document.getElementById('progress-bar-text');
 
-            fetch(`{% url 'ticket_sales:check-payment-status' process_id='$1' ticket_sale_id='$2' %}`
+            fetch(`{% url 'ticket_sales:check-payment-status-terminal' process_id='$1' ticket_sale_id='$2' %}`
                 .replace('$1', processId)
                 .replace('$2', ticketSaleId))
                 .then(response => response.json())

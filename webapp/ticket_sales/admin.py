@@ -39,16 +39,16 @@ class TicketSaleAdmin(admin.ModelAdmin):
 
 class TerminalSettingsAdmin(admin.ModelAdmin):
     model = TerminalSettings
-    list_display = ('username', 'ip_address', 'refresh_token', 'expiration_date')
+    list_display = ('username', 'ip_address', 'refresh_token', 'expiration_date', 'app_type')
     search_fields = ('username', 'ip_address')
 
-    def has_add_permission(self, request):
-        # Разрешить добавление записи, только если её еще нет
-        return not TerminalSettings.objects.exists()
+    # def has_add_permission(self, request):
+    #     # Разрешить добавление записи, только если её еще нет
+    #     return not TerminalSettings.objects.exists()
 
-    def has_delete_permission(self, request, obj=None):
-        # Запретить удаление записи
-        return False
+    # def has_delete_permission(self, request, obj=None):
+    #     # Запретить удаление записи
+    #     return False
 
 
 admin.site.register(TicketSale, TicketSaleAdmin)

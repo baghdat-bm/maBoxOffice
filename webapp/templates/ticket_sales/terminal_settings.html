@@ -38,6 +38,16 @@
                        value="{{ settings.expiration_date|date:'Y-m-d H:i:s' }}" readonly>
             </div>
 
+            <!-- Новое поле app_type -->
+            <div class="mb-3">
+                <label for="app_type" class="form-label">Тип приложения</label>
+                <select id="app_type" name="app_type" class="form-select">
+                    {% for key, value in settings.get_app_type_display_choices %}
+                    <option value="{{ key }}" {% if key == settings.app_type %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <button type="button" class="btn btn-primary" id="register-button" onclick="registerTerminal()">
                 Регистрация
             </button>
@@ -48,7 +58,6 @@
         </form>
     </div>
 {% endblock %}
-
 
 {% block scripts %}
     <script>       

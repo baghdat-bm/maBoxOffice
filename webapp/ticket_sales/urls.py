@@ -6,7 +6,7 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
     filtered_services, get_service_cost, terminal_settings_view, register_terminal, refresh_terminal_token, \
     get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
-    create_ticket_sale_cashier
+    create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal
 
 app_name = 'ticket_sales'
 
@@ -40,8 +40,11 @@ urlpatterns = [
 
     # Payment process
     path('payment-process/<int:ticket_sale_id>/', payment_process, name='payment-process'),
+    path('payment-process-terminal/<int:ticket_sale_id>/', payment_process_terminal, name='payment-process-terminal'),
     path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status,
          name='check-payment-status'),
+    path('check-payment-status-terminal/<str:process_id>/<str:ticket_sale_id>/', check_payment_status_terminal,
+         name='check-payment-status-terminal'),
     path('cash-payment-process/<int:ticket_sale_id>/', cash_payment_process, name='cash-payment-process'),
 
     # Print ticket

@@ -26,10 +26,10 @@ def update_ticket_paid_amount(ticket_sale):
     ticket_sale.save()
 
 
-def get_terminal_settings():
+def get_terminal_settings(app_type='CS'):
     data = cache.get("terminal_settings")
     if data is None:
-        first_item = TerminalSettings.objects.first()
+        first_item = TerminalSettings.objects.filter(app_type=app_type).first()
         if first_item:
             data = {
                 'ip_address': first_item.ip_address,
