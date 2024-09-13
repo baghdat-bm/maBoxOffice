@@ -28,7 +28,21 @@ class EventAdmin(admin.ModelAdmin):
     inlines = (EventTimesInline,)
 
 
+class ServiceAdmin(admin.ModelAdmin):
+    model = Service
+    list_display = ('id', 'name', 'on_calculation', 'cost')
+    list_display_links = ('id', 'name')
+    search_fields = ('name',)
+
+
+class InventoryAdmin(admin.ModelAdmin):
+    model = Inventory
+    list_display = ('id', 'name', 'size', 'quantity')
+    list_display_links = ('id', 'name')
+    search_fields = ('name',)
+
+
 admin.site.register(EventTemplate, EventTemplateAdmin)
 admin.site.register(Event, EventAdmin)
-admin.site.register(Inventory)
-admin.site.register(Service)
+admin.site.register(Inventory, InventoryAdmin)
+admin.site.register(Service, ServiceAdmin)

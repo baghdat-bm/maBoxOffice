@@ -22,8 +22,40 @@ services:
       - logs_volume:/code/logs
     depends_on:
       - db
+      - redis  # Webapp зависит от Redis
     expose:
       - 8000
+
+  celery:
+    build: ./webapp
+    command: celery -A webapp worker --loglevel=info
+    env_file:
+      - ./.prod.env
+    volumes:
+      - ./webapp:/code
+    depends_on:
+      - webapp
+      - redis  # Celery зависит от Redis
+    expose:
+      - 8000
+
+  celery_beat:
+    build: ./webapp
+    command: celery -A webapp beat --loglevel=info
+    env_file:
+      - ./.prod.env
+    volumes:
+      - ./webapp:/code
+    depends_on:
+      - webapp
+      - redis
+    expose:
+      - 8000
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
 
   nginx:
     image: nginx:latest

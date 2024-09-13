@@ -185,7 +185,8 @@ LANG_INFO = dict(EXTRA_LANG_INFO.items())
 try:
     django.conf.locale.LANG_INFO = LANG_INFO  # celery ругается
 except Exception as e:
-    print(e.__str__())
+    # print(e.__str__())
+    pass
 
 LANGUAGES = [
     ('kz', _('Kazakh')),
@@ -233,3 +234,8 @@ SWAGGER_SETTINGS = {
 }
 
 CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost']
+
+# Настройки для Celery
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

@@ -9,7 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import TicketSalesTicket
-from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer
+from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer, TicketSaleSerializer
 from .ticket_sale_utils import get_available_events_dates, get_events_data, get_available_services
 
 
@@ -132,4 +132,21 @@ class ServicesListView(APIView):
             data = get_available_services(event_id, date)
             return Response({'services': data}, status=status.HTTP_200_OK)
 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CreateTicketSaleAPIView(APIView):
+
+    @swagger_auto_schema(
+        request_body=TicketSaleSerializer,
+        responses={
+            201: openapi.Response('Заказ успешно создан', TicketSaleSerializer),
+            400: 'Неверные параметры запроса'
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = TicketSaleSerializer(data=request.data)
+        if serializer.is_valid():
+            result = serializer.save()
+            return Response(result, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
