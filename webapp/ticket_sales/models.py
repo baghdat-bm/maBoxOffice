@@ -25,6 +25,7 @@ class SaleStatusEnum(enum.Enum):
     PD = "PD", "Оплачен"
     PP = "PP", "Частично оплачен"
     RT = "RT", "Возврат"
+    PT = "PT", "Частичный возврат"
     CN = "CN", "Отменен"
 
     @classmethod
@@ -67,17 +68,17 @@ class TicketSale(models.Model):
 
         # Обновляем статус заказа в зависимости от суммы оплаты и возврата
         if self.paid_amount == 0:
-            self.status = 'Не оплачен'
+            self.status = SaleStatusEnum.NP.value[0]
         elif self.paid_amount >= self.amount:
             if self.refund_amount > 0:
                 if self.paid_amount > self.refund_amount:
-                    self.status = 'Частичный возврат'
+                    self.status = SaleStatusEnum.PT.value[0]
                 else:
-                    self.status = 'Оплата возвращена'
+                    self.status = SaleStatusEnum.RT.value[0]
             else:
-                self.status = 'Оплачен'
+                self.status = SaleStatusEnum.PD.value[0]
         elif self.paid_amount < self.amount:
-            self.status = 'Частично оплачен'
+            self.status = SaleStatusEnum.PP.value[0]
 
         if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
             # Получаем все связанные записи TicketSalesService
