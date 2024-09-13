@@ -506,7 +506,7 @@ def terminal_settings_cashier(request):
         settings.save()
         messages.success(request, "Настройки сохранены.")
 
-        return redirect('ticket_sales:terminal-settings')
+        return redirect('ticket_sales:terminal-settings-cashier')
 
     context = {
         'settings': settings,
@@ -547,7 +547,7 @@ def terminal_settings_terminal(request):
         settings.save()
         messages.success(request, "Настройки сохранены.")
 
-        return redirect('ticket_sales:terminal-settings')
+        return redirect('ticket_sales:terminal-settings-terminal')
 
     context = {
         'settings': settings,

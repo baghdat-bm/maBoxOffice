@@ -32,7 +32,7 @@ class TicketSalesTicketInline(admin.StackedInline):
 
 class TicketSaleAdmin(admin.ModelAdmin):
     model = TicketSale
-    list_display = ('id', 'date', 'amount', 'tickets_count', 'status')
+    list_display = ('id', 'date', 'amount', 'tickets_count', 'status', 'sale_type')
     list_display_links = ('id', 'date')
     inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketSalesTicketInline)
 

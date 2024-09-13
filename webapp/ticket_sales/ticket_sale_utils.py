@@ -53,7 +53,8 @@ def get_available_events_dates(include_tickets=False):
                     sold_tickets = TicketSalesService.objects.filter(
                         event=event,
                         event_date=current_date_str,  # Преобразование текущей даты в строку, если это необходимо
-                        service__on_calculation=True
+                        service__on_calculation=True,
+                        ticket_sale__status__in=['NP', 'PD', 'PP', 'PT']  # Исключаем "CN" и "RT"
                     ).aggregate(total_sold_tickets=Sum('tickets_count'))
 
                     # Извлекаем сумму проданных билетов или используем 0, если билеты не продавались
@@ -104,7 +105,8 @@ def get_events_data(date):
                 event_time=time.begin_date,
                 event_time_end=time.end_date,
                 service__on_calculation=True,
-                event_date=date_naive  # Фильтрация по указанной дате
+                event_date=date_naive,  # Фильтрация по указанной дате
+                ticket_sale__status__in=['NP', 'PD', 'PP', 'PT']  # Исключаем "CN" и "RT"
             ).aggregate(total_sold_tickets=Sum('tickets_count'))
 
             # Извлекаем сумму проданных билетов
@@ -192,7 +194,8 @@ def get_available_services(event_id, date):
                         event_time=time.begin_date,
                         event_time_end=time.end_date,
                         service=service_item,  # Фильтруем по сервису
-                        service__on_calculation=True
+                        service__on_calculation=True,
+                        ticket_sale__status__in=['NP', 'PD', 'PP', 'PT']  # Исключаем "CN" и "RT"
                     ).aggregate(total_sold_tickets=Sum('tickets_count'))
 
                     # Извлекаем сумму проданных билетов для этого сервиса и времени

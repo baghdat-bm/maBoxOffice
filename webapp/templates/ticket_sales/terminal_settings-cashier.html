@@ -3,7 +3,7 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h3>Настройки терминала</h3>
+        <h3>Настройки терминала для кассира</h3>
 
         <form id="terminal-settings-form" method="post" action="{% url 'ticket_sales:terminal-settings-cashier' %}">
             {% csrf_token %}
@@ -36,16 +36,6 @@
                 <label for="expiration_date" class="form-label">Expiration Date</label>
                 <input type="datetime" id="expiration_date" name="expiration_date" class="form-control"
                        value="{{ settings.expiration_date|date:'Y-m-d H:i:s' }}" readonly>
-            </div>
-
-            <!-- Новое поле app_type -->
-            <div class="mb-3">
-                <label for="app_type" class="form-label">Тип приложения</label>
-                <select id="app_type" name="app_type" class="form-select">
-                    {% for key, value in settings.get_app_type_display_choices %}
-                    <option value="{{ key }}" {% if key == settings.app_type %}selected{% endif %}>{{ value }}</option>
-                    {% endfor %}
-                </select>
             </div>
 
             <button type="button" class="btn btn-primary" id="register-button" onclick="registerTerminal()">

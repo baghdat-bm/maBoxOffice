@@ -9,6 +9,10 @@ import enum
 from references.models import Service, Event, Inventory
 
 
+def default_datetime():
+    return datetime.now().date()
+
+
 class SaleTypeEnum(enum.Enum):
     CS = "CS", "Касса"
     TS = "TS", "Киоск"
@@ -53,6 +57,10 @@ class TicketSale(models.Model):
                                  choices=SaleTypeEnum.choices(),
                                  default=SaleTypeEnum.CS.value[0],
                                  blank=True)
+    email = models.CharField(max_length=50, verbose_name='Email', null=True, blank=True)
+    phone = models.CharField(max_length=50, verbose_name='Телефон', null=True, blank=True)
+    booking_begin_date = models.DateTimeField(verbose_name="Дата время бронирования", null=True, blank=True)
+    booking_end_date = models.DateTimeField(verbose_name="Дата время окончания бронирования", null=True, blank=True)
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'
@@ -107,10 +115,6 @@ class TicketSale(models.Model):
             self.tickets_made = True
 
         super(TicketSale, self).save(*args, **kwargs)
-
-
-def default_datetime():
-    return datetime.now().date()
 
 
 class TicketSalesService(models.Model):
