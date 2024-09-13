@@ -75,44 +75,45 @@ class TicketSale(models.Model):
         self.paid_amount = self.paid_cash + self.paid_card + self.paid_qr
 
         # Обновляем статус заказа в зависимости от суммы оплаты и возврата
-        if self.paid_amount == 0:
-            self.status = SaleStatusEnum.NP.value[0]
-        elif self.paid_amount >= self.amount:
-            if self.refund_amount > 0:
-                if self.paid_amount > self.refund_amount:
-                    self.status = SaleStatusEnum.PT.value[0]
+        if self.status != SaleStatusEnum.CN.value[0]:
+            if self.paid_amount == 0:
+                self.status = SaleStatusEnum.NP.value[0]
+            elif self.paid_amount >= self.amount:
+                if self.refund_amount > 0:
+                    if self.paid_amount > self.refund_amount:
+                        self.status = SaleStatusEnum.PT.value[0]
+                    else:
+                        self.status = SaleStatusEnum.RT.value[0]
                 else:
-                    self.status = SaleStatusEnum.RT.value[0]
-            else:
-                self.status = SaleStatusEnum.PD.value[0]
-        elif self.paid_amount < self.amount:
-            self.status = SaleStatusEnum.PP.value[0]
+                    self.status = SaleStatusEnum.PD.value[0]
+            elif self.paid_amount < self.amount:
+                self.status = SaleStatusEnum.PP.value[0]
 
-        if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
-            # Получаем все связанные записи TicketSalesService
-            services = TicketSalesService.objects.filter(ticket_sale=self)
+            if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
+                # Получаем все связанные записи TicketSalesService
+                services = TicketSalesService.objects.filter(ticket_sale=self)
 
-            # Переменная для нумерации билетов
-            curr_num = 1
+                # Переменная для нумерации билетов
+                curr_num = 1
 
-            for service in services:
-                for _ in range(service.tickets_count):
-                    ticket = TicketSalesTicket.objects.create(
-                        ticket_sale=self,
-                        service=service.service,
-                        event=service.event,
-                        event_date=service.event_date,
-                        event_time=service.event_time,
-                        event_time_end=service.event_time_end,
-                        amount=service.tickets_amount // service.tickets_count,
-                        ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
-                        number=curr_num
-                    )
-                    ticket.save()
-                    curr_num += 1
+                for service in services:
+                    for _ in range(service.tickets_count):
+                        ticket = TicketSalesTicket.objects.create(
+                            ticket_sale=self,
+                            service=service.service,
+                            event=service.event,
+                            event_date=service.event_date,
+                            event_time=service.event_time,
+                            event_time_end=service.event_time_end,
+                            amount=service.tickets_amount // service.tickets_count,
+                            ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
+                            number=curr_num
+                        )
+                        ticket.save()
+                        curr_num += 1
 
-            # Вызов метода super() для завершения стандартного сохранения модели
-            self.tickets_made = True
+                # Вызов метода super() для завершения стандартного сохранения модели
+                self.tickets_made = True
 
         super(TicketSale, self).save(*args, **kwargs)
 

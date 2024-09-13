@@ -101,7 +101,7 @@ class TicketSaleSerializer(serializers.Serializer):
 
         # Создаем новый заказ
         booking_begin_date = timezone.now()
-        booking_end_date = booking_begin_date + timedelta(minutes=5)
+        booking_end_date = booking_begin_date + timedelta(minutes=20)
 
         ticket_sale = TicketSale.objects.create(
             email=email,
@@ -139,7 +139,7 @@ class TicketSaleSerializer(serializers.Serializer):
         ticket_sale.save()
 
         # Запуск фоновой задачи через 20 минут
-        check_booking_expiration.apply_async((ticket_sale.id,), countdown=301)  # 1200 секунд = 20 минут
+        check_booking_expiration.apply_async((ticket_sale.id,), countdown=1200)  # 1200 секунд = 20 минут
 
         return {
             'id': ticket_sale.id,
