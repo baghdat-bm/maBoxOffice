@@ -31,7 +31,7 @@ class TicketSaleListView(ListView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_list.html'
     context_object_name = 'object_list'
-    paginate_by = 10  # Пагинация по 20 записей
+    paginate_by = 20  # Пагинация по 20 записей
 
     def get_queryset(self):
         queryset = super().get_queryset()
