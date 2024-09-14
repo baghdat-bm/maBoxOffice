@@ -233,7 +233,7 @@ SWAGGER_SETTINGS = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost']
+CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost', 'https://kassa.muzaidyny.kz']
 
 # Настройки для Celery
 CELERY_BROKER_URL = 'redis://redis:6379/0'

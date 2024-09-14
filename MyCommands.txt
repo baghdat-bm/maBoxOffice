@@ -34,7 +34,8 @@ docker compose -f docker-compose.stage.yml down --remove-orphans
 docker compose -f docker-compose.stage.yml exec webapp python manage.py migrate
 docker compose -f docker-compose.stage.yml exec webapp python manage.py createsuperuser
 docker compose -f docker-compose.stage.yml exec webapp python manage.py collectstatic --no-input --clear
-docker compose -f docker-compose.stage.yml exec webapp python -Xutf8 manage.py dumpdata --indent=2 --exclude auth.permission --exclude contenttypes -o db.json --settings=webapp.dev-loc-settings
+docker compose -f docker-compose.stage.yml exec webapp python -Xutf8 manage.py dumpdata --indent=2 --exclude auth.permission --exclude contenttypes -o db.json
+docker compose -f docker-compose.stage.yml exec webapp python manage.py loaddata db.json
 docker exec -it maboxoffice-webapp-1 /bin/bash
 docker exec -it maboxoffice-nginx-1 /bin/bash
 
@@ -44,3 +45,18 @@ docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --
 docker compose -f docker-compose.prod.yml logs -f
 # Then, start the production environment.
 docker compose -f docker-compose.prod.yml up --build
+
+
+### PGRE backup data
+docker exec -it maboxoffice-db-1 /bin/bash
+pg_dump -U your_username -h localhost -d your_database_name > backup.sql
+-U — имя пользователя PostgreSQL.
+-h — адрес сервера (например, localhost или IP-адрес).
+-d — имя базы данных.
+backup.sql — файл, в который будет сохранён бэкап.
+
+pg_dump -U MaDbUser -h localhost -d madb > backup.sql
+
+
+### PGRE restore data
+psql -U MaDbUser -h db -d madb < backup.sql
