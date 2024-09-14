@@ -131,7 +131,8 @@
                 .then(response => response.json())
                 .then(data => {
                     const availableDates = data.available_dates;
-
+                    console.log('availableDates >>>>');
+                    console.log(availableDates);
                     // Установка первой доступной даты
                     if (availableDates.length > 0) {
                         $('#id_event_date').val(availableDates[0]);
@@ -158,13 +159,20 @@
                         weekStart: 1,    // Первый день недели - понедельник
                         autoclose: true, // Автоматическое закрытие после выбора даты
                         beforeShowDay: function (date) {
-                            const formattedDate = $.fn.datepicker.DPGlobal.formatDate(date, 'yyyy-mm-dd', 'en');
+                            // Преобразование даты в строку в формате yyyy-mm-dd, используя локальное время
+                            const formattedDate = [
+                                date.getFullYear(),
+                                ('0' + (date.getMonth() + 1)).slice(-2), // Месяцы идут с 0, поэтому добавляем 1
+                                ('0' + date.getDate()).slice(-2) // Добавляем ведущий ноль для дней
+                            ].join('-');
+                    
                             if (availableDates.includes(formattedDate)) {
                                 return {classes: 'available-date', tooltip: 'Available'};
                             }
-                            return false; // Disable all other dates
+                            return false; // Отключить все остальные даты
                         }
                     });
+
                 });
             
             // Изначально кнопка "Добавить" должна быть отключена

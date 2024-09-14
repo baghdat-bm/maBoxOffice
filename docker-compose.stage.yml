@@ -20,7 +20,7 @@ services:
       - logs_volume:/code/logs
     depends_on:
       - db
-      - redis  # Webapp зависит от Redis
+      - redis
     expose:
       - 8000
 

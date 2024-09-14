@@ -37,6 +37,11 @@ def get_available_events_dates(include_tickets=False):
         if end_date > date_limit:
             end_date = date_limit
 
+        # Получаем количество записей EventTimes, связанных с этим event
+        event_times_count = EventTimes.objects.filter(event=event).count()
+        if event_times_count == 0:
+            continue
+
         # Проходим по всем датам от начала до конца мероприятия
         for day in range((end_date - start_date).days + 1):
             current_date = start_date + timedelta(days=day)
@@ -61,12 +66,12 @@ def get_available_events_dates(include_tickets=False):
                     sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
 
                     # Вычисляем доступное количество билетов
-                    available_quantity = event.quantity - sold_tickets_count
+                    available_quantity = event.quantity * event_times_count - sold_tickets_count
 
                     # Добавляем дату и количество доступных билетов в список
                     available_dates.append({
                         'date': current_date,
-                        'available_tickets': available_quantity
+                        'quantity': available_quantity
                     })
                 else:
                     available_dates.append(current_date)
@@ -97,6 +102,7 @@ def get_events_data(date):
             'quantity': event.quantity,
             'times': []
         }
+        quantity_total = 0
 
         for time in times:
             # Получаем записи TicketSalesService для текущего мероприятия и времени, и только на указанную дату
@@ -122,7 +128,9 @@ def get_events_data(date):
                     'end_date': time.end_date.strftime('%H:%M'),
                     'quantity': available_quantity
                 })
+                quantity_total += available_quantity
 
+        event_data['quantity'] = quantity_total
         if len(event_data['times']) > 0:
             data.append(event_data)
 
@@ -201,17 +209,12 @@ def get_available_services(event_id, date):
                     # Извлекаем сумму проданных билетов для этого сервиса и времени
                     sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
 
-                    # Вычисляем доступное количество билетов для этого сервиса
-                    available_quantity = event.quantity - sold_tickets_count
-
-                    if available_quantity > 0:
-                        # Добавляем время мероприятия с количеством доступных билетов
+                    if event.quantity > sold_tickets_count:
+                        # Добавляем время мероприятия если не все билеты проданы
                         service_data['times'].append({
                             'begin_date': time.begin_date.strftime('%H:%M'),
-                            'end_date': time.end_date.strftime('%H:%M'),
-                            'quantity': available_quantity
+                            'end_date': time.end_date.strftime('%H:%M')
                         })
-
                 if len(service_data['times']) > 0:
                     services_data.append(service_data)
 

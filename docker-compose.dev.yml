@@ -5,22 +5,68 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.dev.env
+    expose:
+      - 5432
 
-  web:
+  webapp:
     build: ./webapp
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./webapp:/code
-      - static_volume:/code/static
-      - media_volume:/code/media
-      - locale_volume:/code/locale
-      - logs_volume:/code/logs
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
     env_file:
       - ./.dev.env
+    volumes:
+      - ./webapp:/code
+      - static_volume:/code/staticfiles
+      - media_volume:/code/media
+      - logs_volume:/code/logs
+    depends_on:
+      - db
+      - redis
+    expose:
+      - 8000
+
+  celery:
+    build: ./webapp
+    command: celery -A webapp worker --loglevel=info
+    env_file:
+      - ./.dev.env
+    volumes:
+      - ./webapp:/code
+    depends_on:
+      - webapp
+      - redis  # Celery зависит от Redis
+    expose:
+      - 8000
+
+  celery_beat:
+    build: ./webapp
+    command: celery -A webapp beat --loglevel=info
+    env_file:
+      - ./.dev.env
+    volumes:
+      - ./webapp:/code
+    depends_on:
+      - webapp
+      - redis
+    expose:
+      - 8000
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certs:/etc/nginx/certs
+      - static_volume:/staticfiles
+      - media_volume:/media
+    depends_on:
+      - webapp
 
 volumes:
   postgres_data:
@@ -28,3 +74,4 @@ volumes:
   media_volume:
   locale_volume:
   logs_volume:
+  certs:
