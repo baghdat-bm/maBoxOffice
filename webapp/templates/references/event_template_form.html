@@ -2,11 +2,11 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-{% block title %}{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий{% endblock %}
+{% block title %}Мероприятие{% endblock %}
 
 {% block content %}
     <div class="container">
-        <h3>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шаблона мероприятий</h3>
+        <h3>{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} мероприятия</h3>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -36,7 +36,7 @@
                     Добавить услугу
                 </button>
             {% else %}
-                Для добавления услуги необходимо сохранить шаблон мероприятий
+                Для добавления услуги необходимо сохранить мероприятие
             {% endif %}
 
             <hr class="my-3">

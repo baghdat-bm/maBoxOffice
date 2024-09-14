@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Event{% endblock %}
+{% block title %}Сеанс мероприятий{% endblock %}
 
 {% block header %}
     <style>
@@ -15,7 +15,7 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h3>{% if object %}Редактирование{% else %}Создание{% endif %} мероприятия</h3>
+        <h3>{% if object %}Редактирование{% else %}Создание{% endif %} сеанса мероприятия</h3>
         <form method="post" hx-post="
                 {% if object %}{{ object.get_update_url }}{% else %}{% url 'references:event-create' %}{% endif %}"
               hx-target="body" hx-swap="outerHTML">

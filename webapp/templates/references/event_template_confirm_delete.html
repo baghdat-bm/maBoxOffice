@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Шаблон мероприятия{% endblock %}
+{% block title %}Мероприятие{% endblock %}
 {% block content %}
     <div class="container">
-        <h3>Вы уверены что хотите уадлить шаблон мероприятия "{{ event_template.name }}"?</h3>
+        <h3>Вы уверены, что хотите удалить мероприятие "{{ event_template.name }}"?</h3>
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Да, удалить</button>

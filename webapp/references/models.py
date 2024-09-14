@@ -10,8 +10,8 @@ class EventTemplate(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Шаблон мероприятий'
-        verbose_name_plural = 'Шаблоны мероприятии'
+        verbose_name = 'Мероприятие'
+        verbose_name_plural = 'Мероприятия'
         ordering = ['name']
 
 
@@ -33,8 +33,8 @@ class Event(models.Model):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Мероприятие'
-        verbose_name_plural = 'Мероприятия'
+        verbose_name = 'Сеанс мероприятия'
+        verbose_name_plural = 'Сеансы мероприятий'
         ordering = ['-begin_date']
 
 

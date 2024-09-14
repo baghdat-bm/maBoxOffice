@@ -11,14 +11,14 @@
     {% if perms.references.add_eventtemplate %}
     <a href="{% url 'references:event_template_list' %}"
        class="list-group-item list-group-item-action {% if 'event-template' in request.path %}active{% endif %}">
-        <i class="bi bi-file-earmark-text-fill me-2"></i> Шаблоны мероприятий
+        <i class="bi bi-file-earmark-text-fill me-2"></i> Мероприятия
     </a>
     {% endif %}
 
     {% if perms.references.add_event %}
     <a href="{% url 'references:event-list' %}"
        class="list-group-item list-group-item-action {% if 'event' in request.path and not 'event-template' in request.path %}active{% endif %}">
-        <i class="bi bi-calendar-event me-2"></i> Мероприятия
+        <i class="bi bi-calendar-event me-2"></i> Сеансы мероприятий
     </a>
     {% endif %}
 
