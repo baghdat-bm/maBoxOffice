@@ -1,0 +1,18 @@
+{% load static %}
+
+<header class="border-bottom bg-dark pt-2 d-flex justify-content-center align-items-center" 
+        style="position: fixed; top: 0; width: 100%; height: 140px;">
+
+    <div class="text-center">
+        <img src="{% static '/images/logo_terminal.png' %}" alt="МУЗ Айдыны" class="logo" 
+             style="max-height: 80px; display: block; margin: 0 auto;">
+
+        <div id="main-progress-bar" class="progress d-none mt-3" style="height: 45px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                 role="progressbar"
+                 style="width: 100%;">
+                <span id="progress-bar-text">Соединение с терминалом...</span>
+            </div>
+        </div>
+    </div>
+</header>

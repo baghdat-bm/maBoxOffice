@@ -1,5 +1,6 @@
-<table class="table table-striped">
-    <thead>
+{% if ticket_sale.ticketsalesservice_set.exists %}
+    <table class="table table-striped">
+        <thead>
         <tr>
             <th>Услуга</th>
             <th>Кол-во билетов</th>
@@ -7,24 +8,23 @@
             <th>Время сеанса</th>
             <th>Сумма билетов</th>
             <th>Скидка</th>
-            <th>Итого</th>            
+            <th>Итого</th>
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         {% for service in ticket_sale.ticketsalesservice_set.all %}
-        <tr>
-            <td>{{ service.service.name }}</td>
-            <td>{{ service.tickets_count }}</td>
-            <td>{{ service.event_date }}</td>
-            <td>{{ service.event_time }} - {{ service.event_time_end }}</td>
-            <td>{{ service.tickets_amount }} ₸</td>
-            <td>{{ service.discount }} ₸</td>
-            <td>{{ service.total_amount }} ₸</td>            
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="8" class="text-center">Нет данных для отображения.</td>
-        </tr>
+            <tr>
+                <td>{{ service.service.name }}</td>
+                <td>{{ service.tickets_count }}</td>
+                <td>{{ service.event_date }}</td>
+                <td>{{ service.event_time }} - {{ service.event_time_end }}</td>
+                <td>{{ service.tickets_amount }} ₸</td>
+                <td>{{ service.discount }} ₸</td>
+                <td>{{ service.total_amount }} ₸</td>
+            </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+{% else %}
+    <p class="text-center">Сеанс мероприятий не выбран</p>
+{% endif %}

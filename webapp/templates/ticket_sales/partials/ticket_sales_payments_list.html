@@ -1,43 +1,33 @@
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Дата платежа</th>
-            <th>Метод оплаты</th>            
-            <th>ID процесса</th>
-            <th>ID транзакции</th>
-            <th>Сумма</th>
-{#            <th></th>#}
-        </tr>
-    </thead>
-    <tbody>
-        {% for payment in ticket_sale.ticketsalespayments_set.all %}
-        <tr>
-            <td>{{ payment.payment_date }}</td>
-            <td>
-                {% if payment.payment_method == "QR" %}
-                    Оплата по QR
-                {% elif payment.payment_method == "CD" %}
-                    Оплата картой
-                {% elif payment.payment_method == "CH" %}
-                    Наличка
-                {% endif %}
-            </td>            
-            <td>{{ payment.process_id|default:"---" }}</td>
-            <td>{{ payment.transaction_id|default:"---" }}</td>
-            <td>{{ payment.amount }} ₸</td>
-{#            <td>#}
-{#                <button class="btn btn-sm btn-danger"#}
-{#                        hx-get="{% url 'ticket_sales:payment-delete' ticket_sale.id payment.id %}"#}
-{#                        hx-target="#modal-payment-body-content"#}
-{#                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editPaymentModal">#}
-{#                    <i class="bi bi-x-circle"></i>#}
-{#                </button>#}
-{#            </td>#}
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="6" class="text-center">Нет данных для отображения.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% if ticket_sale.ticketsalespayments_set.exists %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Дата платежа</th>
+                <th>Метод оплаты</th>
+                <th>ID процесса</th>
+                <th>ID транзакции</th>
+                <th>Сумма</th>
+    {#            <th></th>#}
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in ticket_sale.ticketsalespayments_set.all %}
+            <tr>
+                <td>{{ payment.payment_date }}</td>
+                <td>
+                    {% if payment.payment_method == "QR" %}
+                        Оплата по QR
+                    {% elif payment.payment_method == "CD" %}
+                        Оплата картой
+                    {% elif payment.payment_method == "CH" %}
+                        Наличка
+                    {% endif %}
+                </td>
+                <td>{{ payment.process_id|default:"---" }}</td>
+                <td>{{ payment.transaction_id|default:"---" }}</td>
+                <td>{{ payment.amount }} ₸</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}

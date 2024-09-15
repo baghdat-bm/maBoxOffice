@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% load form_filters %}
 
-{% block title %}Продажа билета{% endblock %}
+{% block title %}Покупка билета{% endblock %}
 
 {% block content %}
     <!-- Модальное окно Добавление услуги -->
@@ -11,7 +11,7 @@
         <div class="modal-dialog modal-xl"> <!-- Изменено на modal-xl для более широкого окна -->
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editServiceModalLabel">Добавление услуги</h5>
+                    <h5 class="modal-title" id="editServiceModalLabel">Выбор сеанса</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                             onclick="hideServiceModal();"></button>
                 </div>
@@ -41,41 +41,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно для оплаты наличными -->
-    <div class="modal fade" id="cashPaymentModal" tabindex="-1" aria-labelledby="cashPaymentModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cashPaymentModalLabel">Оплата наличными</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                            id="cancel-cash-payment"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="cash-amount" class="form-label">Сумма к оплате</label>
-                        <input type="text" id="cash-amount" class="form-control"
-                               value="{{ form.amount.value }}" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="cash-received" class="form-label">Сумма наличкой</label>
-                        <input type="number" id="cash-received" class="form-control" min="0" step="0.01">
-                    </div>
-                    <div class="mb-3">
-                        <label for="change-amount" class="form-label">Сдача</label>
-                        <input type="text" id="change-amount" class="form-control" disabled>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="submit-cash-payment">Принять к оплате</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancel-cash-payment">
-                        Отмена
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Модальное окно для печати -->
     <div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel"
          aria-hidden="true">
@@ -97,13 +62,13 @@
         </div>
     </div>
 
-    <div class="container mt-4">
-        <h3>Продажа билета</h3>
+    <div class="container" style="padding-top: 110px;">
+        <h3>Покупка билета</h3>
 
         <form id="ticket-sale-form" method="post">
             {% csrf_token %}
             <!-- Сетка для первой строки -->
-            <div class="row">
+            <div class="row d-none">
                 <div class="col-md-3">
                     <div class="form-group">
                         {{ form.date.label_tag }}
@@ -137,7 +102,7 @@
             </div>
 
             <!-- Сетка для новой строки -->
-            <div class="row mt-3">
+            <div class="row mt-3 d-none">
                 <div class="col-md-3">
                     <div class="form-group">
                         {{ form.status.label_tag }}
@@ -182,12 +147,16 @@
                 {% endif %}
             </div>
             
-            <button type="button" class="btn btn-outline-primary"
+            <button type="button" class="btn btn-primary btn-lg"
                     hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
                     hx-target="#modal-body-content"
                     hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
             >
-                Добавить услугу
+                {% if form.instance.ticketsalesservice_set.exists %}
+                    Добавить сеанс
+                {% else %}
+                    Выбрать сеанс
+                {% endif %}
             </button>
             
             <hr class="my-3">
@@ -199,12 +168,12 @@
 
             <!-- Кнопки для оплаты -->
             {% if form.instance.amount > 0 %}
-                <button type="button" class="btn btn-success mt-2" id="start-payment"
+                <button type="button" class="btn btn-success btn-lg mt-2" id="start-payment"
                         data-ticket-sale-id="{{ form.instance.id }}">
                     Оплата
                 </button>                
             {% else %}
-                <button type="button" class="btn btn-success mt-2" id="start-payment" disabled>
+                <button type="button" class="btn btn-success btn-lg mt-2" id="start-payment" disabled>
                     Оплата
                 </button>
             {% endif %}
@@ -212,21 +181,14 @@
 
             <div class="mt-2">
                 {% if form.instance.id %}
-                    <button type="button" class="btn btn-outline-secondary" id="print-ticket-button"
+                    <button type="button" class="btn btn-outline-secondary btn-lg" id="print-ticket-button"
                             data-ticket-sale-id="{{ form.instance.id }}" onclick="printTicket()">
                         Печать
                     </button>
                 {% endif %}
-                
-                <!--
-                <button type="submit" class="btn btn-primary">Сохранить и закрыть</button>
-                <button type="button" class="btn btn-primary" id="save-not-close">
-                    Сохранить
-                </button>
-                -->
-            
+
                 <a href="{% url 'ticket_sales:home-terminal' %}" id="back-to-list"
-                   class="btn btn-secondary">Отмена</a>
+                   class="btn btn-secondary btn-lg">Отмена</a>
             </div>
         </form>
     </div>

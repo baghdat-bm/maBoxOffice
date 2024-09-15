@@ -1,0 +1,14 @@
+{% extends 'base_terminal.html' %}
+
+{% block header %}
+	Главная
+{% endblock %}
+
+{% block content %}
+	<div class="d-flex justify-content-center align-items-center" style="padding-top: 250px;">        
+        <form action="{% url 'ticket_sales:create-sale-terminal' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-lg">Купить билет</button>
+        </form>
+    </div>
+{% endblock %}

@@ -64,7 +64,7 @@ class TicketSaleUpdateView(UpdateView):
 
 
 def home_page_terminal(request):
-    return render(request, 'ticket_sales/home_page_terminal.html')
+    return render(request, 'terminal/home.html')
 
 
 @csrf_exempt
@@ -138,7 +138,7 @@ def ticket_sale_update_view(request, pk):
 
 
 # TicketSalesService HTMX Views
-
+@csrf_exempt
 def ticket_sales_service_create(request, ticket_sale_id):
     ticket_sale = get_object_or_404(TicketSale, id=ticket_sale_id)
     if request.method == "POST":
@@ -156,6 +156,7 @@ def ticket_sales_service_create(request, ticket_sale_id):
                   {'form': form, 'ticket_sale': ticket_sale})
 
 
+@csrf_exempt
 def ticket_sales_service_update(request, ticket_sale_id, pk):
     service = get_object_or_404(TicketSalesService, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
@@ -186,6 +187,7 @@ def ticket_sales_service_delete(request, ticket_sale_id, pk):
 
 # TicketSalesPayments HTMX Views
 
+@csrf_exempt
 def ticket_sales_payments_create(request, ticket_sale_id):
     ticket_sale = get_object_or_404(TicketSale, id=ticket_sale_id)
     if request.method == "POST":
@@ -203,6 +205,7 @@ def ticket_sales_payments_create(request, ticket_sale_id):
                   {'form': form, 'ticket_sale': ticket_sale})
 
 
+@csrf_exempt
 def ticket_sales_payments_update(request, ticket_sale_id, pk):
     payment = get_object_or_404(TicketSalesPayments, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
@@ -267,6 +270,7 @@ def payment_process(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'error': error}, status=500)
 
 
+@csrf_exempt
 def payment_process_terminal(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
     terminal = get_terminal_settings(app_type='TS')
@@ -338,6 +342,7 @@ def check_payment_status(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'wait', 'error': e.__str__()})
 
 
+@csrf_exempt
 def check_payment_status_terminal(request, process_id, ticket_sale_id):
     terminal = get_terminal_settings(app_type='TS')
     if not terminal:
@@ -410,6 +415,7 @@ def cash_payment_process(request, ticket_sale_id):
 
 
 # печать заказа
+@csrf_exempt
 def print_ticket_view(request, ticket_sale_id):
     tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
     data = {
@@ -431,6 +437,7 @@ def print_ticket_view(request, ticket_sale_id):
     return JsonResponse(data)
 
 
+@csrf_exempt
 def filtered_events(request):
     date = request.GET.get('date')
     events = []
@@ -441,6 +448,7 @@ def filtered_events(request):
     return JsonResponse({"events": [{"id": event.id, "name": event.name} for event in events]})
 
 
+@csrf_exempt
 def filtered_event_times(request):
     event_id = request.GET.get('event')
     if event_id:
@@ -450,18 +458,21 @@ def filtered_event_times(request):
     return JsonResponse({'times': []})
 
 
+@csrf_exempt
 def get_events(request):
     date = request.GET.get('date')
     data = get_events_data(date)
     return JsonResponse({'events': data})
 
 
+@csrf_exempt
 def filtered_services(request):
     event_id = request.GET.get('event_id')
     data = get_filtered_services(event_id)
     return JsonResponse(data, safe=False)
 
 
+@csrf_exempt
 def get_service_cost(request):
     service_id = request.GET.get('service_id')
     if service_id:
@@ -621,6 +632,7 @@ def refresh_terminal_token(request):
         return JsonResponse({'status': 'fail', 'error': result['error']}, status=400)
 
 
+@csrf_exempt
 def get_events_dates(request):
     available_dates = get_available_events_dates()
     return JsonResponse({"available_dates": available_dates})

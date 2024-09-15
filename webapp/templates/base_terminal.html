@@ -47,7 +47,10 @@
 {% get_language_info_list for LANGUAGES as languages %}
 
 <div>
-    <div class="content" style="margin-left: 250px; padding-top: 60px;">
+    <!-- HEADER -->
+    {% include 'terminal/header.html' %}
+
+    <div class="content" style="padding-top: 60px;">
 
         {% if messages %}
             {% for message in messages %}

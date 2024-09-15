@@ -1,3 +1,4 @@
+{% if ticket_sale.ticketsalespayments_set.exists %}
 <table class="table table-striped">
     <thead>
         <tr>
@@ -24,11 +25,8 @@
             <td>{{ payment.amount }} ₸</td>
             <td>{{ payment.process_id|default:"---" }}</td>
             <td>{{ payment.transaction_id|default:"---" }}</td>            
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="6" class="text-center">Нет данных для отображения.</td>
-        </tr>
+        </tr>        
         {% endfor %}
     </tbody>
 </table>
+{% endif %}

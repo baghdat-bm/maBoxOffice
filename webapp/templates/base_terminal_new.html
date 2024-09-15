@@ -1,0 +1,299 @@
+{% load i18n %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block header %}
+        <title>Купить билет</title>
+    {% endblock %}
+
+    <style>
+        /* Основные стили */
+        body {
+            background-color: #f0f2f5;
+            color: #000;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            font-size: 22px;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #2c2c2c;
+            color: white;
+            padding: 20px 0;
+            height: 100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .container-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .current-time {
+            font-size: 20px;
+            font-weight: 500;
+            color: #e0e7ff;
+            text-align: left;
+        }
+
+        .logo {
+            width: 150px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .language-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+
+        .language-buttons .btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: transparent;
+            color: #e0e7ff;
+            border: 1px solid #e0e7ff;
+            border-radius: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .language-buttons .btn:hover {
+            background-color: #e0e7ff;
+            color: #2c2c2c;
+        }
+
+        /* Хедер */
+        .header {
+            background-color: #2c2c2c;
+            color: white;
+            padding: 20px 0;
+            height: 100px;
+            display: flex;
+            justify-content: center; /* Центрируем по горизонтали */
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Логотип по центру */
+        .logo {
+            width: 150px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Стили для времени и выбора языка */
+        .container-header {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Элементы по бокам */
+        .current-time,
+        .language-buttons {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .current-time {
+            left: 20px; /* Слева */
+        }
+
+        .language-buttons {
+            right: 20px; /* Справа */
+            display: flex;
+            gap: 20px;
+        }
+
+        .language-buttons .btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: transparent;
+            color: #e0e7ff;
+            border: 1px solid #e0e7ff;
+            border-radius: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .language-buttons .btn:hover {
+            background-color: #e0e7ff;
+            color: #2c2c2c;
+        }
+
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 120px; /* Отступ для фиксации хедера */
+        }
+
+        /* Кнопка "Купить билет" */
+        .buy-ticket-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 20px 40px;
+            font-size: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .buy-ticket-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Футер */
+        .footer {
+            background-color: #2c2c2c;
+            color: white;
+            padding: 15px 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .footer-content {
+            max-width: 1080px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .footer-content .btn {
+            padding: 10px 30px;
+            font-size: 22px;
+        }
+
+        .footer .btn-primary {
+            background-color: #28a745;
+            border: none;
+            color: white;
+            width: 20%;
+            height: 60px;
+        }
+
+        .footer .btn-danger {
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            width: 15%;
+        }
+
+        /* Ссылка на правила */
+        .rules-link {
+            font-size: 18px;
+            color: #1877f2;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .rules-link:hover {
+            color: #0c5ab9;
+        }
+
+        /* Стили для модального окна */
+        .modal {
+            display: none; /* Скрываем модальное окно по умолчанию */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Шапка -->
+<div class="header">
+    <div class="container-header">
+        <div class="current-time">
+            <span id="currentDate"></span><br/>
+            <span id="currentTime"></span>
+        </div>
+
+        <img src="{% static '/images/logo_terminal.png' %}" alt="МУЗ Айдыны" class="logo">
+
+        {#		<div class="language-buttons">#}
+        {#		  <button class="btn btn-light">Қазақша</button>#}
+        {#		  <button class="btn btn-light">Русский</button>#}
+        {#		</div>#}
+    </div>
+</div>
+
+<!-- Основной контент -->
+{% block content %}
+{% endblock %}
+
+<!-- JavaScript для вывода текущего времени -->
+<script>
+
+    // Установка текущей даты и времени в шапку
+    function updateDateTime() {
+        const now = new Date();
+        const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('ru-RU', options);
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    setInterval(updateDateTime, 1000); // Обновляем время каждую минуту    
+</script>
+
+</body>
+</html>
