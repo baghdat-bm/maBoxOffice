@@ -93,7 +93,7 @@
             <div class="col-md-12">
                 <div style="max-height: 200px; min-height: 200px; overflow-y: auto; border: 1px solid #d3d3d3;">
                     <table class="table table-hover" id="event-selection-table"
-                           style="border: 1px solid #d3d3d3; table-layout: fixed; width: 100%;">
+                           style="border: 3px solid #d3d3d3; table-layout: fixed; width: 100%;">
                         <thead>
                         <tr>
                             <th style="width: 40%;">Сеанс</th>
@@ -269,14 +269,8 @@
 
 
         function onServiceChange() {
-            updateTicketsAmount(true);
-            // Добавить класс для запуска анимации
-            document.getElementById("id_tickets_count").classList.add("background-flash");
-            
-            // Опционально можно удалить класс после окончания анимации, чтобы повторно запустить при необходимости
-            setTimeout(function() {
-                document.getElementById("id_tickets_count").classList.remove("background-flash");
-            }, 700); // Удаляем класс через 0.7 секунды (длительность анимации)
+            updateTicketsAmount(true);            
+            document.getElementById("id_tickets_count").focus();            
         }
 
         function onTicketsCountChange() {
@@ -431,16 +425,9 @@
                         const ticketsCountInput = document.getElementById('id_tickets_count');
                         ticketsCountInput.max = time.quantity;
 
-                        // Добавить класс для запуска анимации
-                        document.getElementById("id_service").classList.add("background-flash");
+                        document.getElementById("id_service").focus();
 
                         fadeInText(); // Появление текста
-
-                        // Опционально можно удалить класс после окончания анимации, чтобы повторно запустить при необходимости
-                        setTimeout(function() {
-                            document.getElementById("id_service").classList.remove("background-flash");
-                        }, 700); // Удаляем класс через 0.7 секунды (длительность анимации)
-
                     });
                     tableBody.appendChild(row);
                 });
@@ -496,6 +483,14 @@
                         console.error('Error fetching events:', error);
                         updateTicketsAmount(true);
                     });
+                
+                // Добавить класс для запуска анимации
+                document.getElementById("event-selection-table").classList.add("border-pulse");
+                
+                // Опционально можно удалить класс после окончания анимации, чтобы повторно запустить при необходимости
+                setTimeout(function() {
+                    document.getElementById("event-selection-table").classList.remove("border-pulse");
+                }, 700); // Удаляем класс через 0.7 секунды (длительность анимации)
             } else {
                 populateEventSelect([]);
             }

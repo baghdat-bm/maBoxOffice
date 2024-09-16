@@ -148,3 +148,36 @@ class TicketSaleSerializer(serializers.Serializer):
             'booking_end_date': ticket_sale.booking_end_date,
             'ticket_guids': ticket_guids
         }
+
+
+class PaymentDataSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    dateTime = serializers.DateTimeField()  # Поле автоматически преобразует строку в DateTime
+    invoiceId = serializers.CharField(max_length=100)
+    invoiceIdAlt = serializers.CharField(max_length=100)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    currency = serializers.CharField(max_length=3)
+    terminal = serializers.UUIDField()
+    accountId = serializers.CharField(max_length=100)
+    description = serializers.CharField(max_length=255)
+    language = serializers.CharField(max_length=2)
+    cardMask = serializers.CharField(max_length=50)
+    cardType = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    issuer = serializers.CharField(max_length=100)
+    reference = serializers.CharField(max_length=50)
+    secure = serializers.CharField(max_length=10)
+    tokenRecipient = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    code = serializers.CharField(max_length=10)
+    reason = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    reasonCode = serializers.IntegerField()
+    name = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    phone = serializers.CharField(max_length=15)
+    ip = serializers.IPAddressField()
+    ipCountry = serializers.CharField(max_length=100)
+    ipCity = serializers.CharField(max_length=100)
+    ipRegion = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    ipDistrict = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    ipLongitude = serializers.FloatField()
+    ipLatitude = serializers.FloatField()
+    cardId = serializers.UUIDField()

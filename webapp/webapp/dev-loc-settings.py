@@ -15,8 +15,7 @@ ALLOWED_HOSTS = ["*"]
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000",
                         "http://127.0.0.1:8000",
-                        'http://bakeminmen.com',
-                        'https://bakeminmen.com']
+                        'https://kassa.muzaidyny.kz']
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

@@ -3,6 +3,7 @@ webapp/media
 webapp/media/*
 webapp/logs
 webapp/staticfiles
+webapp/webapp/drf_yasg_schema.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
