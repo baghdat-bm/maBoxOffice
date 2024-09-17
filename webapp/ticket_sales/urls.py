@@ -6,7 +6,8 @@ from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateVie
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
     filtered_services, get_service_cost, terminal_settings_cashier, register_terminal, refresh_terminal_token, \
     get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
-    create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal
+    create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal, \
+    get_refund_tickets, refund_tickets
 
 app_name = 'ticket_sales'
 
@@ -63,4 +64,8 @@ urlpatterns = [
     path('terminal-settings-terminal/', terminal_settings_terminal, name='terminal-settings-terminal'),
     path('register-terminal/', register_terminal, name='register-terminal'),
     path('refresh-terminal-token/', refresh_terminal_token, name='refresh-terminal-token'),
+
+    # Возврат билетов
+    path('<int:sale_id>/refund-tickets/', get_refund_tickets, name='refund_tickets_list'),
+    path('<int:sale_id>/refund-tickets/confirm/', refund_tickets, name='refund_tickets'),
 ]

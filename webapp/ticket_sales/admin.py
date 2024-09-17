@@ -25,9 +25,9 @@ class TicketSalesPaymentsInline(admin.StackedInline):
 class TicketSalesTicketInline(admin.StackedInline):
     model = TicketSalesTicket
     extra = 0
-    readonly_fields = ('ticket_guid', 'amount')
+    readonly_fields = ('ticket_guid', 'amount', 'is_refund')
     fields = ('service', 'event', 'event_date', 'event_time', 'event_time_end', 'amount', 'ticket_guid',
-              'last_event_code')
+              'last_event_code', 'is_refund')
 
 
 class TicketSaleAdmin(admin.ModelAdmin):

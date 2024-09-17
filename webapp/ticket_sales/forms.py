@@ -37,5 +37,5 @@ class TicketSalesServiceForm(forms.ModelForm):
 class TicketSalesPaymentsForm(forms.ModelForm):
     class Meta:
         model = TicketSalesPayments
-        fields = ['payment_date', 'payment_method', 'amount', 'process_id', 'last_status', 'error_text',
-                  'transaction_id', 'response_data']
+        fields = ['payment_date', 'payment_method', 'amount', 'refund_amount', 'process_id', 'last_status',
+                  'error_text', 'transaction_id', 'response_data']

@@ -636,3 +636,54 @@ def refresh_terminal_token(request):
 def get_events_dates(request):
     available_dates = get_available_events_dates()
     return JsonResponse({"available_dates": available_dates})
+
+
+def get_refund_tickets(request, sale_id):
+    ticket_sale = get_object_or_404(TicketSale, pk=sale_id)
+    tickets = TicketSalesTicket.objects.filter(ticket_sale=ticket_sale, is_refund=False).filter(
+        Q(last_event_code="") | Q(last_event_code=None)
+    )
+
+    refund_text = ''
+    if ticket_sale.paid_cash > 0:
+        refund_text = 'Итого к возврату наличными'
+    elif ticket_sale.paid_card > 0:
+        refund_text = 'Итого к возврату банковской картой'
+    elif ticket_sale.paid_qr > 0:
+        refund_text = 'Итого к возврату по QR коду'
+    context = {'tickets': tickets, 'sale_id': sale_id, 'refund_text': refund_text}
+    return render(request, 'ticket_sales/partials/refund_ticket_list.html', context=context)
+
+
+def refund_tickets(request, sale_id):
+    if request.method == "POST":
+        # Получаем заказ
+        ticket_sale = get_object_or_404(TicketSale, pk=sale_id)
+
+        # Парсим JSON-данные из тела запроса
+        try:
+            data = json.loads(request.body)
+            ticket_ids = data.get('tickets', [])
+            print('>>>> ticket_ids', ticket_ids, 'ticket_sale', ticket_sale)
+
+            # Проверяем, что выбраны билеты
+            if not ticket_ids:
+                return JsonResponse({'success': False, 'message': 'No tickets selected'})
+
+            # Обрабатываем возврат билетов
+            tickets = TicketSalesTicket.objects.filter(id__in=ticket_ids, is_refund=False)
+            refund_sum = sum(ticket.amount for ticket in tickets)
+            print('>>>> refund_sum', refund_sum)
+
+            # Обновляем билеты
+            tickets.update(is_refund=True)
+
+            # Обновляем сумму возврата в заказе
+            ticket_sale.refund_amount += refund_sum
+            ticket_sale.save()
+
+            return JsonResponse({'success': True})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})

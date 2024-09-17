@@ -53,6 +53,9 @@ class TicketCheckView(APIView):
             if ticket.last_event_code == "1":
                 return Response({'result': False, 'error_code': '3', 'message': 'Билет уже использован для входа'},
                                 status=HTTP_400_BAD_REQUEST)
+            if ticket.is_refund:
+                return Response({'result': False, 'error_code': '4', 'message': 'Билет возвращен'},
+                                status=HTTP_400_BAD_REQUEST)
         elif event_code == "0":  # Выход
             if ticket.last_event_code == "0" or ticket.last_event_code is None:
                 return Response({'result': False, 'error_code': '3', 'message': 'Билет не был использован для входа'},

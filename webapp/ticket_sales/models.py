@@ -37,6 +37,16 @@ class SaleStatusEnum(enum.Enum):
         return [(key.value[0], key.value[1]) for key in cls]
 
 
+class PaymentMethods(enum.Enum):
+    QR = "QR", "Оплата по QR"
+    CD = "CD", "Оплата картой"
+    CH = "CH", "Наличка"
+
+    @classmethod
+    def choices(cls):
+        return [(key.value[0], key.value[1]) for key in cls]
+
+
 class TicketSale(models.Model):
     date = models.DateField(default=timezone.now, verbose_name="Дата")
     amount = models.IntegerField(verbose_name="Сумма итого", blank=True, default=0)
@@ -75,7 +85,7 @@ class TicketSale(models.Model):
         self.paid_amount = self.paid_cash + self.paid_card + self.paid_qr
 
         # Обновляем статус заказа в зависимости от суммы оплаты и возврата
-        if self.status != SaleStatusEnum.CN.value[0]:
+        if self.status != 'CN':  # если заказ не отменен
             if self.paid_amount == 0:
                 self.status = SaleStatusEnum.NP.value[0]
             elif self.paid_amount >= self.amount:
@@ -140,20 +150,15 @@ class TicketSalesService(models.Model):
 
 
 class TicketSalesPayments(models.Model):
-    PaymentMethods = (
-        ("QR", "Оплата по QR"),
-        ("CD", "Оплата картой"),
-        ("CH", "Наличка"),
-    )
-
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     payment_date = models.DateTimeField(verbose_name="Дата оплаты")
     payment_method = models.CharField(
         max_length=2,
-        choices=PaymentMethods,
+        choices=PaymentMethods.choices(),
         default="QR",
     )
     amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
+    refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
     process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
     last_status = models.CharField(max_length=15, verbose_name='Последний статус', null=True, blank=True)
     error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
@@ -181,7 +186,9 @@ class TicketSalesTicket(models.Model):
     event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
     event_time = models.TimeField(verbose_name="Время начала мероприятия")
     event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
-    last_event_code = models.CharField(max_length=1, verbose_name="Код последнего события", blank=True, null=True)
+    last_event_code = models.CharField(max_length=1, verbose_name="Код последнего события", blank=True, null=True,
+                                       default='')
+    is_refund = models.BooleanField(verbose_name='Возвратный', default=False)
 
     def __str__(self):
         return f'{self.number}'

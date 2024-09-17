@@ -96,7 +96,26 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Модальное окно для возврата билетов -->
+    <div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="refundModalLabel">Выберите билеты для возврата</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="refund-tickets-list">
+            <!-- Список билетов будет загружен через HTMX -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-warning" id="confirm-refund" onclick="submitRefund()">Возврат</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div class="container mt-4">
         <h3>{% if form.instance.id %}Заказ №{{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
         <p>
@@ -231,6 +250,13 @@
                     Оплата наличными
                 </button>
             {% endif %}
+        
+            <button type="button" class="btn btn-warning mt-2" id="refund-payment" data-bs-toggle="modal" 
+                    data-bs-target="#refundModal" hx-get="{% url 'ticket_sales:refund_tickets_list' form.instance.pk %}"
+                    hx-target="#refund-tickets-list" hx-swap="innerHTML"
+                    {% if form.instance.paid_amount <= form.instance.refund_amount %} disabled {% endif %}>
+                Возврат билета
+            </button>
             <hr class="my-3">
 
             <div class="mt-2">
@@ -251,8 +277,41 @@
 
 {% block scripts %}
 
+    <script>
+        // Функция для подтверждения возврата
+        function submitRefund() {
+            const selectedTickets = Array.from(document.querySelectorAll('input[name="tickets"]:checked'))
+                                         .map(el => el.value);
+    
+            if (selectedTickets.length === 0) {
+                alert('Пожалуйста, выберите хотя бы один билет для возврата.');
+                return;
+            }
+    
+            // Отправляем запрос на сервер для возврата выбранных билетов
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch("{% url 'ticket_sales:refund_tickets' form.instance.pk %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickets: selectedTickets
+                })
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    alert("Билеты возвращены");
+                    location.reload();
+                } else {
+                    alert("Ошибка возврата");
+                }
+            });
+        }
+    </script>
+    
     <!-- Проверяем статус -->
-    {% if form.instance.status == "PD" %}
+    {% if form.instance.status != "NP" %}
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 // Делаем все элементы формы неактивными
@@ -261,16 +320,26 @@
                     element.disabled = true;
                 });
 
-                // Оставляем активной только кнопку "Распечатать"
+                // Оставляем активной кнопку "Распечатать"
                 const printButton = document.getElementById('print-ticket-button');
                 if (printButton) {
                     printButton.disabled = false;
                 }
 
-                // Оставляем активной только кнопку "Распечатать"
+                // Оставляем активной кнопку "Закрыть"
                 const backToList = document.getElementById('back-to-list');
                 if (backToList) {
                     backToList.disabled = false;
+                }
+                
+                // Оставляем активной кнопку "Возврат билета"
+                const paidAmount = parseFloat('{{ form.paid_amount.value|default_if_none:0 }}');
+                const refundAmount = parseFloat('{{ form.refund_amount.value|default_if_none:0 }}');
+                if (paidAmount > refundAmount) {
+                    const refundPayment = document.getElementById('refund-payment');
+                    if (refundPayment) {
+                        refundPayment.disabled = false;
+                    }
                 }
             });
         </script>
@@ -364,6 +433,7 @@
 
             // Устанавливаем значение в поле "Сумма к оплате"
             document.getElementById('cash-amount').value = sumToPay.toFixed(2);
+            document.getElementById('cash-received').value = sumToPay.toFixed(2);
 
             // Открываем модальное окно
             const cashPaymentModal = new bootstrap.Modal(document.getElementById('cashPaymentModal'));
@@ -423,36 +493,6 @@
     </script>
 
     <script>
-        document.getElementById('save-not-close').addEventListener('click', function (event) {
-            event.preventDefault();
-
-            const form = document.getElementById('ticket-sale-form');
-            const formData = new FormData(form);
-
-            let url = '';
-            {% if form.instance.id %}
-                url = "{% url 'ticket_sales:ticket-sale-update-x' form.instance.id %}";
-            {% else %}
-                url = "{% url 'ticket_sales:ticket-sale-create-x' %}";
-            {% endif %};
-            
-            fetch(url,
-                {
-                    method: 'POST',
-                    headers:
-                        {
-                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                        },
-                    body: formData,
-                }
-            ).then(response => response.json())
-                .then(data => {
-                    if (data.redirect_url) {
-                        window.location.href = data.redirect_url;
-                    }
-                })
-                .catch(error => console.error('Ошибка:', error));
-        });
 
         function hideServiceModal() {
             //window.location.reload();
