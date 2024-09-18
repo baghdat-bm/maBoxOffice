@@ -139,7 +139,7 @@ class TicketSaleSerializer(serializers.Serializer):
         ticket_sale.save()
 
         # Запуск фоновой задачи через 20 минут
-        check_booking_expiration.apply_async((ticket_sale.id,), countdown=1200)  # 1200 секунд = 20 минут
+        # check_booking_expiration.apply_async((ticket_sale.id,), countdown=1200)  # 1200 секунд = 20 минут
 
         return {
             'id': ticket_sale.id,

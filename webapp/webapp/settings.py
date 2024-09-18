@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import django
 from django.utils.translation import gettext_lazy as _
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -239,3 +240,11 @@ CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://l
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+# Настройка Celery Beat для выполнения задачи каждые 60 секунд
+CELERY_BEAT_SCHEDULE = {
+    'cancel-expired-tickets-every-60-seconds': {
+        'task': 'ticket_sales.tasks.cancel_expired_tickets',  # Укажите путь к задаче
+        'schedule': 60.0,  # Запускать каждые 60 секунд
+    },
+}

@@ -60,3 +60,7 @@ pg_dump -U MaDbUser -h localhost -d madb > backup.sql
 
 ### PGRE restore data
 psql -U MaDbUser -h db -d madb < backup.sql
+
+
+### container
+apt-get update && apt-get install redis-tools
