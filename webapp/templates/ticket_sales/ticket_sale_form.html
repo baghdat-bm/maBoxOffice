@@ -4,6 +4,15 @@
 
 {% block title %}{% if form.instance.id %}Изменение{% else %}Создание{% endif %} заказа{% endblock %}
 
+{% block header %}
+	<style>
+        .small-spacing {
+            margin-top: 5px;  /* Задаем меньший отступ, вместо обычного 10-20px */
+            margin-bottom: 5px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
     <!-- Модальное окно Добавление услуги -->
     <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
@@ -348,7 +357,6 @@
     {#    JavaScript для печати #}
     <script>
         function printTicket() {
-            
             // Запрос на получение данных для печати (TicketSalesService)
             fetch("{% if form.instance.id %}{% url 'ticket_sales:ticket-print-data' form.instance.id %}{% endif %}", {
                 method: 'GET',
@@ -356,54 +364,55 @@
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
-                .then(response => response.json())
-                .then(data => {
-                    const printContent = document.getElementById('print-content');
-                    printContent.innerHTML = '';  // Очистить старый контент
-
-                    data.services.forEach(service => {
-                        for (let i = 0; i < service.tickets_count; i++) {
-                            printContent.innerHTML += `
-                                <div class="ticket" style="width: 302px; font-size: 12px; page-break-after: always;">
-                                    <!-- Центрируем QR-код -->
-                                    <div style="text-align: center;">
-                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${service.ticket_guid}" 
-                                            alt="QR Code" style="display: inline-block;">
-                                    </div>
-                                    Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
-                                    <br>
-                                    <div>Количество билетов: <strong>1</strong></div>
-                                    <br>
-                                    <strong>Дата и время сеанса:</strong>
-                                    <div>${service.event_date}    ${service.event_time}</div>
-                                    <br>
-                                    <strong>Услуга:</strong>
-                                    <div>${service.service_name}</div>
-                                    <br>
-                                    <strong>Мероприятие:</strong>
-                                    <div>${service.event_name}</div>
-                                    <br>
-                                    <strong>Стоимость билета:</strong>
-                                    <div>${service.amount}</div>
-                                    <br>
-                                    <strong>Подробная информация:</strong>
-                                    <div>www.muzaidyny.kz</div>
-                                    <div>8(7172) 242424</div>
-                                    <hr>
+            .then(response => response.json())
+            .then(data => {
+                const printContent = document.getElementById('print-content');
+                printContent.innerHTML = '';  // Очистить старый контент
+        
+                data.services.forEach(service => {
+                    for (let i = 0; i < service.tickets_count; i++) {
+                        printContent.innerHTML += `
+                            <div class="ticket" style="width: 360px; font-size: 20px; page-break-after: always;">
+                                <!-- Центрируем QR-код -->
+                                <div style="text-align: center;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}" 
+                                        alt="QR Code" style="display: inline-block;">
                                 </div>
-                            `;
-                        }
-                    });
-
-                    if (!data.services || data.services.length === 0) {
-                        printContent.innerHTML = "<p>Заказ не оплачен</p>"
+                                <div class="small-spacing"></div>
+                                Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
+                                <div class="small-spacing"></div>
+                                <div>Количество билетов: <strong>1</strong></div>
+                                <div class="small-spacing"></div>
+                                <strong>Дата и время сеанса:</strong>
+                                <div>${service.event_date}    ${service.event_time}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Услуга:</strong>
+                                <div>${service.service_name}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Мероприятие:</strong>
+                                <div>${service.event_name}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Стоимость билета:</strong>
+                                <div>${service.amount}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Подробная информация:</strong>
+                                <div>www.muzaidyny.kz <i class="bi bi-telephone-fill"></i> 8(7172) 242424</div>
+                                <hr>
+                            </div>
+                        `;
                     }
-
-                    // Открыть модальное окно для печати
-                    const printTicketModal = new bootstrap.Modal(document.getElementById('printTicketModal'));
-                    printTicketModal.show();
                 });
+        
+                if (!data.services || data.services.length === 0) {
+                    printContent.innerHTML = "<p>Заказ не оплачен</p>"
+                }
+        
+                // Открыть модальное окно для печати
+                const printTicketModal = new bootstrap.Modal(document.getElementById('printTicketModal'));
+                printTicketModal.show();
+            });
         }
+        
 
         document.getElementById('print-button').addEventListener('click', function () {
             const printContent = document.getElementById('print-content').innerHTML;
