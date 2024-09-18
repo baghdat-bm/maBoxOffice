@@ -64,3 +64,6 @@ psql -U MaDbUser -h db -d madb < backup.sql
 
 ### container
 apt-get update && apt-get install redis-tools
+
+### git
+git reset --hard
