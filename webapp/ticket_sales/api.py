@@ -171,6 +171,6 @@ class PaymentDataView(APIView):
         if serializer.is_valid():
             # Логика обработки данных будет добавлена здесь позже.
             # На данный момент просто возвращаем валидные данные.
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({'message': 'Ok'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
