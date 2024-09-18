@@ -31,7 +31,7 @@ class TicketSalesServiceForm(forms.ModelForm):
     class Meta:
         model = TicketSalesService
         fields = ['service', 'event', 'event_date', 'event_time', 'event_time_end', 'tickets_count', 'tickets_amount',
-                  'discount', 'total_amount']
+                  'discount', 'total_amount', 'paid_amount']
 
 
 class TicketSalesPaymentsForm(forms.ModelForm):

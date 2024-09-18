@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q
@@ -22,7 +23,8 @@ from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsFo
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
 from .ticket_sale_utils import get_available_events_dates, get_events_data, get_filtered_services
-from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal_settings, update_terminal_token
+from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal_settings, update_terminal_token, \
+    create_tickets_on_new_payment
 
 
 # TicketSale Views
@@ -255,7 +257,8 @@ def payment_process(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        response = requests.get(f'https://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
+        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
                                 headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response_data:
@@ -278,7 +281,8 @@ def payment_process_terminal(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        response = requests.get(f'https://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
+        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:8080/payment?amount={ticket_sale.amount}',
                                 headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response_data:
@@ -299,7 +303,8 @@ def check_payment_status(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        response = requests.get(f'https://{terminal['ip_address']}:8080/status?processId={process_id}',
+        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:8080/status?processId={process_id}',
                                 headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response.status_code == 200:
@@ -349,7 +354,8 @@ def check_payment_status_terminal(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        response = requests.get(f'https://{terminal['ip_address']}:8080/status?processId={process_id}',
+        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:8080/status?processId={process_id}',
                                 headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response.status_code == 200:
@@ -381,6 +387,9 @@ def check_payment_status_terminal(request, process_id, ticket_sale_id):
                 new_payment.save()
 
                 ticket_sale.save()
+
+                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+
                 return JsonResponse({'status': 'success'})
             else:
                 return JsonResponse({'status': 'wait'})
@@ -408,6 +417,8 @@ def cash_payment_process(request, ticket_sale_id):
         new_payment.payment_date = datetime.now()
         new_payment.payment_method = "CH"
         new_payment.save()
+
+        create_tickets_on_new_payment(ticket_sale, new_payment, paid_cash)
 
         return JsonResponse({'status': 'success'})
 
@@ -496,7 +507,7 @@ def terminal_settings_cashier(request):
 
         if not ip_address or not username:
             messages.error(request, "Необходимо заполнить поля IP Address и Username.")
-            return redirect('ticket_sales:terminal-settings')
+            return redirect('ticket_sales:terminal-settings-cashier')
 
         if settings is None:
             settings = TerminalSettings(
@@ -537,7 +548,7 @@ def terminal_settings_terminal(request):
 
         if not ip_address or not username:
             messages.error(request, "Необходимо заполнить поля IP Address и Username.")
-            return redirect('ticket_sales:terminal-settings')
+            return redirect('ticket_sales:terminal-settings-terminal')
 
         if settings is None:
             settings = TerminalSettings(

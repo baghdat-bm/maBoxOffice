@@ -7,6 +7,7 @@ import uuid
 import enum
 
 from references.models import Service, Event, Inventory
+from ticket_sales.helpers import get_num_val
 
 
 def default_datetime():
@@ -82,7 +83,7 @@ class TicketSale(models.Model):
 
     def save(self, *args, **kwargs):
         # Рассчитываем сумму оплаты
-        self.paid_amount = self.paid_cash + self.paid_card + self.paid_qr
+        self.paid_amount = get_num_val(self.paid_cash) + get_num_val(self.paid_card) + get_num_val(self.paid_qr)
 
         # Обновляем статус заказа в зависимости от суммы оплаты и возврата
         if self.status != 'CN':  # если заказ не отменен
@@ -99,31 +100,31 @@ class TicketSale(models.Model):
             elif self.paid_amount < self.amount:
                 self.status = SaleStatusEnum.PP.value[0]
 
-            if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
-                # Получаем все связанные записи TicketSalesService
-                services = TicketSalesService.objects.filter(ticket_sale=self)
-
-                # Переменная для нумерации билетов
-                curr_num = 1
-
-                for service in services:
-                    for _ in range(service.tickets_count):
-                        ticket = TicketSalesTicket.objects.create(
-                            ticket_sale=self,
-                            service=service.service,
-                            event=service.event,
-                            event_date=service.event_date,
-                            event_time=service.event_time,
-                            event_time_end=service.event_time_end,
-                            amount=service.tickets_amount // service.tickets_count,
-                            ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
-                            number=curr_num
-                        )
-                        ticket.save()
-                        curr_num += 1
-
-                # Вызов метода super() для завершения стандартного сохранения модели
-                self.tickets_made = True
+            # if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
+            #     # Получаем все связанные записи TicketSalesService
+            #     services = TicketSalesService.objects.filter(ticket_sale=self)
+            #
+            #     # Переменная для нумерации билетов
+            #     curr_num = 1
+            #
+            #     for service in services:
+            #         for _ in range(service.tickets_count):
+            #             ticket = TicketSalesTicket.objects.create(
+            #                 ticket_sale=self,
+            #                 service=service.service,
+            #                 event=service.event,
+            #                 event_date=service.event_date,
+            #                 event_time=service.event_time,
+            #                 event_time_end=service.event_time_end,
+            #                 amount=service.tickets_amount // service.tickets_count,
+            #                 ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
+            #                 number=curr_num
+            #             )
+            #             ticket.save()
+            #             curr_num += 1
+            #
+            #     # Вызов метода super() для завершения стандартного сохранения модели
+            #     self.tickets_made = True
 
         super(TicketSale, self).save(*args, **kwargs)
 
@@ -139,6 +140,7 @@ class TicketSalesService(models.Model):
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
     discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
     total_amount = models.IntegerField(verbose_name="Сумма итого")
+    paid_amount = models.IntegerField(verbose_name="Сумма оплачено", blank=True, default=0)
 
     def __str__(self):
         return f'{self.ticket_sale.pk}-{self.pk}'
@@ -179,6 +181,7 @@ class TicketSalesPayments(models.Model):
 class TicketSalesTicket(models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
+    payment = models.ForeignKey(TicketSalesPayments, on_delete=models.PROTECT, verbose_name="Платеж", blank=True, null=True)
     amount = models.IntegerField(verbose_name="Сумма билета")
     number = models.PositiveSmallIntegerField(verbose_name="Номер билета")
     ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")

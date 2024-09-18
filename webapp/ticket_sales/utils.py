@@ -1,4 +1,7 @@
-from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings
+import uuid
+
+from ticket_sales.helpers import get_num_val
+from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket
 from django.db import models
 import requests
 from django.core.cache import cache
@@ -85,3 +88,32 @@ def update_terminal_token(terminal_settings):
             return {'error': 'Unknown error occurred during registration.', 'status': response.status_code}
     except requests.exceptions.RequestException as e:
         return {'error': f'Connection error: {str(e)}', 'status': 500}
+
+
+def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
+    # Переменная для нумерации билетов
+    curr_num = 1
+    services = TicketSalesService.objects.filter(ticket_sale=ticket_sale)
+
+    for service in services:
+        payment_amount = get_num_val(service.paid_amount)
+        payment_sum = service.total_amount - payment_amount
+        if payment_sum == 0:
+            continue
+        service.paid_amount = payment_amount + min(paid_sum, payment_sum)
+        service.save()
+        for _ in range(service.tickets_count):
+            ticket = TicketSalesTicket.objects.create(
+                ticket_sale=ticket_sale,
+                service=service.service,
+                event=service.event,
+                event_date=service.event_date,
+                event_time=service.event_time,
+                event_time_end=service.event_time_end,
+                amount=service.tickets_amount // service.tickets_count,
+                ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
+                number=curr_num,
+                payment=new_payment
+            )
+            ticket.save()
+            curr_num += 1

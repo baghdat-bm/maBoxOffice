@@ -61,7 +61,7 @@ services:
       - "443:443"
       - "80:80"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/dev.conf.d:/etc/nginx/conf.d
       - ./certs:/etc/nginx/certs
       - static_volume:/staticfiles
       - media_volume:/media
