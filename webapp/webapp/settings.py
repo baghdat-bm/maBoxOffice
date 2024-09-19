@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
+    'corsheaders',
     # 'report_builder',  # +
     # Local
     "references.apps.ReferencesConfig",
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # +
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -237,6 +239,25 @@ SWAGGER_SETTINGS = {
 
 CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost',
                         'https://kassa.muzaidyny.kz', 'https://muzaidyny.kz']
+
+CORS_ALLOWED_ORIGINS = [
+    'https://muzaidyny.kz',
+    'https://kassa.muzaidyny.kz',
+]
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'DELETE',
+    'OPTIONS',
+]
+
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
+]
+
 
 # Настройки для Celery
 CELERY_BROKER_URL = 'redis://redis:6379/0'
