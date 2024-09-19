@@ -100,32 +100,6 @@ class TicketSale(models.Model):
             elif self.paid_amount < self.amount:
                 self.status = SaleStatusEnum.PP.value[0]
 
-            # if self.paid_amount > 0 and self.paid_amount >= self.amount and not self.tickets_made:
-            #     # Получаем все связанные записи TicketSalesService
-            #     services = TicketSalesService.objects.filter(ticket_sale=self)
-            #
-            #     # Переменная для нумерации билетов
-            #     curr_num = 1
-            #
-            #     for service in services:
-            #         for _ in range(service.tickets_count):
-            #             ticket = TicketSalesTicket.objects.create(
-            #                 ticket_sale=self,
-            #                 service=service.service,
-            #                 event=service.event,
-            #                 event_date=service.event_date,
-            #                 event_time=service.event_time,
-            #                 event_time_end=service.event_time_end,
-            #                 amount=service.tickets_amount // service.tickets_count,
-            #                 ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
-            #                 number=curr_num
-            #             )
-            #             ticket.save()
-            #             curr_num += 1
-            #
-            #     # Вызов метода super() для завершения стандартного сохранения модели
-            #     self.tickets_made = True
-
         super(TicketSale, self).save(*args, **kwargs)
 
 
@@ -164,13 +138,18 @@ class TicketSalesPayments(models.Model):
     process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
     last_status = models.CharField(max_length=15, verbose_name='Последний статус', null=True, blank=True)
     error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
-    transaction_id = models.CharField(max_length=20, verbose_name='Идентификатор успешной транзакции', null=True,
+    transaction_id = models.CharField(max_length=50, verbose_name='Идентификатор успешной транзакции', null=True,
                                       blank=True)
-    response_data = models.TextField(max_length=600, verbose_name='Полученные данные', null=True,
+    currency = models.CharField(max_length=3, verbose_name='Валюта', null=True, blank=True)
+    description = models.CharField(max_length=250, verbose_name='Описание', null=True, blank=True)
+    card_mask = models.CharField(max_length=25, verbose_name='Маска карты', null=True, blank=True)
+    terminal = models.CharField(max_length=45, verbose_name='ID терминала', null=True, blank=True)
+    response_data = models.TextField(max_length=1000, verbose_name='Полученные данные', null=True,
                                      blank=True)
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
 
     def __str__(self):
-        return f'{self.ticket_sale.pk}-{self.pk}'
+        return f'{self.pk}-{self.ticket_sale.pk}'
 
     class Meta:
         verbose_name = 'Платеж'

@@ -50,27 +50,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно для печати -->
-    <div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog modal-lg"> <!-- Увеличим ширину окна -->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="printTicketModalLabel">Печать заказа</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="print-area">
-                    <!-- Здесь будет формироваться содержимое для печати -->
-                    <div id="print-content"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="print-button">Печать</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="container" style="padding-top: 110px;">
         <h3>Покупка билета</h3>
 
@@ -201,6 +180,9 @@
             </div>
         </form>
     </div>
+
+    <!-- Скрытая область для печати -->
+    <div id="print-content" style="display: none;"></div>
 {% endblock %}
 
 
@@ -231,10 +213,9 @@
         </script>
     {% endif %}
 
-    {#    JavaScript для печати #}
+    <!-- Скрипт печати -->
     <script>
         function printTicket() {
-            
             // Запрос на получение данных для печати (TicketSalesService)
             fetch("{% if form.instance.id %}{% url 'ticket_sales:ticket-print-data' form.instance.id %}{% endif %}", {
                 method: 'GET',
@@ -242,68 +223,60 @@
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
-                .then(response => response.json())
-                .then(data => {
-                    const printContent = document.getElementById('print-content');
-                    printContent.innerHTML = '';  // Очистить старый контент
+            .then(response => response.json())
+            .then(data => {
+                const printContent = document.getElementById('print-content');
+                printContent.innerHTML = '';  // Очистить старый контент
 
-                    data.services.forEach(service => {
-                        for (let i = 0; i < service.tickets_count; i++) {
-                            printContent.innerHTML += `
-                            <div class="ticket" style="width: 360px; font-size: 20px; page-break-after: always;">
-                                <!-- Центрируем QR-код -->
-                                <div style="text-align: center;">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}" 
-                                        alt="QR Code" style="display: inline-block;">
-                                </div>
-                                <div class="small-spacing"></div>
-                                Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
-                                <div class="small-spacing"></div>
-                                <div>Количество билетов: <strong>1</strong></div>
-                                <div class="small-spacing"></div>
-                                <strong>Дата и время сеанса:</strong>
-                                <div>${service.event_date}    ${service.event_time}</div>
-                                <div class="small-spacing"></div>
-                                <strong>Услуга:</strong>
-                                <div>${service.service_name}</div>
-                                <div class="small-spacing"></div>
-                                <strong>Мероприятие:</strong>
-                                <div>${service.event_name}</div>
-                                <div class="small-spacing"></div>
-                                <strong>Стоимость билета:</strong>
-                                <div>${service.amount}</div>
-                                <div class="small-spacing"></div>
-                                <strong>Подробная информация:</strong>
-                                <div>www.muzaidyny.kz <i class="bi bi-telephone-fill"></i> 8(7172) 242424</div>
-                                <hr>
+                data.services.forEach(service => {
+                    for (let i = 0; i < service.tickets_count; i++) {
+                        printContent.innerHTML += `
+                        <div class="ticket" style="width: 360px; font-size: 20px; page-break-after: always;">
+                            <!-- Центрируем QR-код -->
+                            <div style="text-align: center;">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}"
+                                    alt="QR Code" style="display: inline-block;">
                             </div>
+                            <div class="small-spacing"></div>
+                            Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
+                            <div class="small-spacing"></div>
+                            <div>Количество билетов: <strong>1</strong></div>
+                            <div class="small-spacing"></div>
+                            <strong>Дата и время сеанса:</strong>
+                            <div>${service.event_date}    ${service.event_time}</div>
+                            <div class="small-spacing"></div>
+                            <strong>Услуга:</strong>
+                            <div>${service.service_name}</div>
+                            <div class="small-spacing"></div>
+                            <strong>Мероприятие:</strong>
+                            <div>${service.event_name}</div>
+                            <div class="small-spacing"></div>
+                            <strong>Стоимость билета:</strong>
+                            <div>${service.amount}</div>
+                            <div class="small-spacing"></div>
+                            <strong>Подробная информация:</strong>
+                            <div>www.muzaidyny.kz <i class="bi bi-telephone-fill"></i> 8(7172) 242424</div>
+                            <hr>
+                        </div>
                         `;
-                        }
-                    });
-
-                    if (!data.services || data.services.length === 0) {
-                        printContent.innerHTML = "<p>Билеты не оплачены</p>"
                     }
-
-                    // Открыть модальное окно для печати
-                    const printTicketModal = new bootstrap.Modal(document.getElementById('printTicketModal'));
-                    printTicketModal.show();
                 });
-        }
 
-        document.getElementById('print-button').addEventListener('click', function () {
-            const printContent = document.getElementById('print-content').innerHTML;
-            const originalContent = document.body.innerHTML;
+                if (!data.services || data.services.length === 0) {
+                    printContent.innerHTML = "<p>Билеты не оплачены</p>"
+                }
 
-            // Заменить содержимое body на контент для печати
-            document.body.innerHTML = printContent;
+                // Выполняем печать сразу
+                const originalContent = document.body.innerHTML;
+                document.body.innerHTML = printContent.innerHTML;
 
-            window.print();
+                window.print();  // Печать без модального окна
 
-            // Восстановить исходное содержимое после печати
-            document.body.innerHTML = originalContent;
-            location.reload();  // Обновить страницу после печати
-        });
+                // Восстановить содержимое после печати
+                document.body.innerHTML = originalContent;
+                location.reload();  // Обновить страницу после печати
+            });
+        }       
     </script>
 
     <script>

@@ -2,10 +2,10 @@
     <table class="table table-striped">
         <thead>
         <tr>
-            <th>Услуга</th>
-            <th>Кол-во билетов</th>
+            <th>Услуга</th>            
             <th>Дата сеанса</th>
             <th>Время сеанса</th>
+            <th>Кол-во билетов</th>
             <th>Сумма билетов</th>
             <th>Скидка</th>
             <th>Итого</th>
@@ -14,10 +14,10 @@
         <tbody>
         {% for service in ticket_sale.ticketsalesservice_set.all %}
             <tr>
-                <td>{{ service.service.name }}</td>
-                <td>{{ service.tickets_count }}</td>
+                <td>{{ service.service.name }}</td>                
                 <td>{{ service.event_date }}</td>
                 <td>{{ service.event_time }} - {{ service.event_time_end }}</td>
+                <td>{{ service.tickets_count }}</td>
                 <td>{{ service.tickets_amount }} ₸</td>
                 <td>{{ service.discount }} ₸</td>
                 <td>{{ service.total_amount }} ₸</td>

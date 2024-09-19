@@ -8,10 +8,11 @@ from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .models import TicketSalesTicket
+from .models import TicketSalesTicket, TicketSalesPayments, TicketSale
 from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer, TicketSaleSerializer, \
     PaymentDataSerializer
 from .ticket_sale_utils import get_available_events_dates, get_events_data, get_available_services
+from .utils import create_tickets_on_new_payment
 
 
 class TicketCheckView(APIView):
@@ -169,8 +170,42 @@ class PaymentDataView(APIView):
         serializer = PaymentDataSerializer(data=request.data)
 
         if serializer.is_valid():
-            # Логика обработки данных будет добавлена здесь позже.
-            # На данный момент просто возвращаем валидные данные.
-            return Response({'message': 'Ok'}, status=status.HTTP_200_OK)
+            try:
+                ticket_sale = TicketSale.objects.filter(id=serializer.validated_data['invoiceId']).first()
+            except Exception as e:
+                return Response({'error': e.__str__(), 'success': False},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if not ticket_sale:
+                return Response({'error': 'No invoice found with invoiceId', 'success': False},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                new_payment = TicketSalesPayments.objects.get(transaction_id=serializer.validated_data['id'],
+                                                              ticket_sale=ticket_sale)
+            except TicketSalesPayments.DoesNotExist:
+                new_payment = TicketSalesPayments(ticket_sale=ticket_sale,
+                                                  transaction_id=serializer.validated_data['id'])
+            new_payment.payment_date = serializer.validated_data['dateTime']
+            new_payment.payment_method = 'CD'
+            new_payment.currency = serializer.validated_data['currency']
+            new_payment.description = serializer.validated_data['description']
+            new_payment.card_mask = serializer.validated_data['cardMask']
+            new_payment.terminal = serializer.validated_data['terminal']
+            new_payment.response_data = request.data
+            if serializer.validated_data['code'] == 'ok':
+                new_payment.amount = serializer.validated_data['amount']
+            else:
+                new_payment.error_text = {"reason": serializer.validated_data['reason'],
+                                          "reasonCode": serializer.validated_data['reasonCode']}
+            new_payment.save()
+
+            if new_payment.amount > 0:
+                ticket_sale.paid_amount += new_payment.amount
+                ticket_sale.paid_card += new_payment.amount
+                ticket_sale.save()
+                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+
+            return Response({'success': True}, status=status.HTTP_200_OK)
+
+        return Response({'error': serializer.errors, 'success': False},
+                        status=status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
-    TicketSaleDetailView, payment_process, check_payment_status, payment_detail_view, ticket_sale_create_view, \
+    TicketSaleDetailView, payment_process_cashier, check_payment_status_cashier, payment_detail_view, ticket_sale_create_view, \
     ticket_sale_update_view, cash_payment_process, print_ticket_view, filtered_events, filtered_event_times, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
@@ -40,9 +40,9 @@ urlpatterns = [
          name='payment-delete'),
 
     # Payment process
-    path('payment-process/<int:ticket_sale_id>/', payment_process, name='payment-process'),
+    path('payment-process/<int:ticket_sale_id>/', payment_process_cashier, name='payment-process'),
     path('payment-process-terminal/<int:ticket_sale_id>/', payment_process_terminal, name='payment-process-terminal'),
-    path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status,
+    path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status_cashier,
          name='check-payment-status'),
     path('check-payment-status-terminal/<str:process_id>/<str:ticket_sale_id>/', check_payment_status_terminal,
          name='check-payment-status-terminal'),

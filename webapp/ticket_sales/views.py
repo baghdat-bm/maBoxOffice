@@ -250,7 +250,7 @@ def payment_detail_view(request, ticket_sale_id, pk):
     return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'object': payment})
 
 
-def payment_process(request, ticket_sale_id):
+def payment_process_cashier(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
     terminal = get_terminal_settings()
     if not terminal:
@@ -297,7 +297,7 @@ def payment_process_terminal(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'error': error}, status=500)
 
 
-def check_payment_status(request, process_id, ticket_sale_id):
+def check_payment_status_cashier(request, process_id, ticket_sale_id):
     terminal = get_terminal_settings()
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
@@ -326,6 +326,8 @@ def check_payment_status(request, process_id, ticket_sale_id):
                     ticket_sale.paid_qr += new_payment.amount
                 elif chequeInfo['method'] == 'card':
                     new_payment.payment_method = "CD"
+                    new_payment.card_mask = chequeInfo['cardMask']
+                    new_payment.terminal = chequeInfo['terminalId']
                     ticket_sale.paid_card += new_payment.amount
                 else:
                     new_payment.payment_method = "CH"
@@ -336,6 +338,9 @@ def check_payment_status(request, process_id, ticket_sale_id):
                 new_payment.save()
 
                 ticket_sale.save()
+
+                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+
                 return JsonResponse({'status': 'success'})
             else:
                 return JsonResponse({'status': 'wait'})
