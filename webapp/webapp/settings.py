@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-#a)#57_6*1tze3mul2x031r28rbkge__)q#z=&&kf4prv+u2j7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["muzaidyny.kz", "localhost", "127.0.0.1", "ma-kassa.com"]
 
 
 # Application definition
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
+    # 'report_builder',  # +
     # Local
     "references.apps.ReferencesConfig",
     "ticket_sales.apps.TicketSalesConfig",
