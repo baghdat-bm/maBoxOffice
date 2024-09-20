@@ -49,6 +49,10 @@ class TicketCheckView(APIView):
             return Response({'result': False, 'error_code': '2', 'message': 'Билет не активен по времени мероприятия'},
                             status=HTTP_400_BAD_REQUEST)
 
+        if not ticket.payment or ticket.payment.amount == 0:
+            return Response({'result': False, 'error_code': '5', 'message': 'Билет не оплачен'},
+                            status=HTTP_400_BAD_REQUEST)
+
         # 3. Проверка последнего события в зависимости от event_code
         if event_code == "1":  # Вход
             if ticket.last_event_code == "1":
