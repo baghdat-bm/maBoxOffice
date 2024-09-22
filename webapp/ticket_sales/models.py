@@ -66,7 +66,7 @@ class TicketSale(models.Model):
     sale_type = models.CharField(max_length=2,
                                  verbose_name="Тип продажи",
                                  choices=SaleTypeEnum.choices(),
-                                 default=SaleTypeEnum.CS.value[0],
+                                 default='CS',
                                  blank=True)
     email = models.CharField(max_length=50, verbose_name='Email', null=True, blank=True)
     phone = models.CharField(max_length=50, verbose_name='Телефон', null=True, blank=True)

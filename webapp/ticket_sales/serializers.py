@@ -104,6 +104,7 @@ class TicketSaleSerializer(serializers.Serializer):
         booking_end_date = booking_begin_date + timedelta(minutes=20)
 
         ticket_sale = TicketSale.objects.create(
+            sale_type='SM',
             email=email,
             phone=phone,
             booking_begin_date=booking_begin_date,

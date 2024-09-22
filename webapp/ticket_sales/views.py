@@ -43,16 +43,9 @@ class TicketSaleListView(ListView):
         return queryset
 
 
-class TicketSaleCreateView(CreateView):
-    model = TicketSale
-    form_class = TicketSaleForm
-    template_name = 'ticket_sales/ticket_sale_form.html'
-    success_url = reverse_lazy('ticket_sales:ticket-sale-list')
-
-
 def create_ticket_sale_cashier(request):
     # Создаем новую запись TicketSale
-    ticket_sale = TicketSale.objects.create(sale_type=SaleTypeEnum.CS.value[0])
+    ticket_sale = TicketSale.objects.create(sale_type='CS')
 
     # Перенаправляем на страницу редактирования
     return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))
