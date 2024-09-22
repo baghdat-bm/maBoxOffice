@@ -62,7 +62,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/dev.conf.d:/etc/nginx/conf.d
-      - ./certs:/etc/nginx/certs
+      - ./dev-certs:/etc/nginx/certs
       - static_volume:/staticfiles
       - media_volume:/media
     depends_on:
