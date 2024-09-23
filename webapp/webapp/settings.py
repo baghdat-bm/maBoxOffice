@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',
     'corsheaders',
-    # 'report_builder',  # +
     # Local
     "references.apps.ReferencesConfig",
     "ticket_sales.apps.TicketSalesConfig",
