@@ -67,3 +67,6 @@ apt-get update && apt-get install redis-tools
 
 ### git
 git reset --hard
+
+
+Successfully installed django-report-builder-6.4.2 et-xmlfile-1.1.0 openpyxl-3.0.10

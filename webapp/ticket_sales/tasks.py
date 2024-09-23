@@ -27,7 +27,7 @@ def check_booking_expiration(ticket_sale_id):
 @shared_task
 def cancel_expired_tickets():
     # Получаем все заказы, у которых истекло время бронирования и не было оплаты
-    expired_sales = TicketSale.objects.filter(booking_end_date__lte=timezone.now(), paid_amount=0)
+    expired_sales = TicketSale.objects.filter(booking_end_date__lte=timezone.now(), paid_amount=0, status='NP')
 
     # Обновляем статус для этих заказов
     for ticket_sale in expired_sales:
