@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Отчет продажи{% endblock %}
+
+{% block header %}
+    <link rel="stylesheet" href="{% static 'css/report.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h3>Отчет продажи</h3>
+
+        <!-- Форма фильтрации -->
+        <form method="get" class="row g-3">
+            {% if form.errors %}
+                {% for field in form %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-warning" role="alert">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <div class="alert alert-warning" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-3 mt-4">
+                    <button type="submit" class="btn btn-primary">Сформировать отчет</button>
+                </div>
+                <!-- Фильтры даты -->
+                <div class="col-md-3">
+                    {{ form.start_date.label_tag }}
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                        <div class="text-danger">{{ form.start_date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    {{ form.end_date.label_tag }}
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}
+                        <div class="text-danger">{{ form.end_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Кнопка для показа/скрытия дополнительных фильтров -->
+            <div class="col-md-12">
+                <button type="button" class="btn btn-secondary" id="showHideAdditionalFiltersButton"
+                        onclick="showHideAdditionalFilters(this)">
+                    Показать дополнительные фильтры
+                </button>
+            </div>
+
+            <!-- Скрываемые фильтры -->
+            <div id="extraFilters" style="display: none;">
+                <div class="col-md-3">
+                    {{ form.sale_types.label_tag }}
+                    {{ form.sale_types }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.events.label_tag }}
+                    {{ form.events }}
+                </div>
+            </div>
+        </form>
+
+        <br>
+
+        <!-- Таблица с данными отчета -->
+        <table class="table table-striped">
+            <thead class="table-header-center">
+            <tr>
+                <th rowspan="2">№</th>
+                <th rowspan="2">Дата</th>
+                <th rowspan="2">Сумма продажи</th>
+                <th colspan="7">В том числе</th>
+                <th rowspan="2">Мероприятие</th>
+            </tr>
+            <tr>
+                <th>Касса (безнал)</th>
+                <th>Касса (наличные)</th>
+                <th>Киоск</th>
+                <th>Muzaidyny.kz (KaspiQR)</th>
+                <th>Muzaidyny.kz (Карта)</th>
+                <th>Kaspi платежи</th>
+                <th>Возвраты</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for sale in page_obj %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ sale.event_date|date:"d.m.Y" }}</td>
+                    <td>{{ sale.total_amount }}</td>
+                    <td>
+                        {% if sale.ticket_sale__sale_type == "CS" %}
+                            {{ sale.paid_card }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.ticket_sale__sale_type == "CS" %}
+                            {{ sale.paid_cash }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.ticket_sale__sale_type == "TS" %}
+                            {{ sale.paid_amount }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.ticket_sale__sale_type == "SM" %}
+                            {{ sale.paid_qr }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.ticket_sale__sale_type == "SM" %}
+                            {{ sale.paid_card }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.ticket_sale__sale_type == "KP" %}
+                            {{ sale.paid_amount }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>{{ sale.refund_amount }}</td>
+                    <td>{{ sale.event__name }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="11">Нет данных для отображения.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Пагинация -->
+        {% include 'reports/partials/paginator.html' %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/report.js' %}"></script>
+{% endblock %}

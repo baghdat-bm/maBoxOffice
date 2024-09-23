@@ -36,6 +36,20 @@
     </a>
     {% endif %}
     
+    {% if perms.reports.view_sales_report %}
+        <a href="{% url 'reports:sales_report' %}?start_date={% now 'd-m-Y' %}&end_date={% now 'd-m-Y' %}"
+           class="list-group-item list-group-item-action {% if '/reports/sales/' in request.path %}active{% endif %}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Отчет продажи
+        </a>
+    {% endif %}
+
+    {% if perms.reports.sessions_report %}
+        <a href="{% url 'reports:sessions_report' %}?start_date={% now 'd-m-Y' %}&end_date={% now 'd-m-Y' %}"
+           class="list-group-item list-group-item-action {% if '/reports/sessions/' in request.path %}active{% endif %}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Отчет по сеансам
+        </a>
+    {% endif %}
+
     {% if perms.reports.view_tickets_report %}
         <a href="{% url 'reports:tickets_report' %}?start_date={% now 'd-m-Y' %}&end_date={% now 'd-m-Y' %}"
            class="list-group-item list-group-item-action {% if '/reports/tickets/' in request.path %}active{% endif %}">

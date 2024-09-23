@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import django
 from django.utils.translation import gettext_lazy as _
+from django.contrib.messages import constants as message_constants
 from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -157,6 +158,14 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+MESSAGE_TAGS = {
+    message_constants.DEBUG: 'alert-info',
+    message_constants.INFO: 'alert-info',
+    message_constants.SUCCESS: 'alert-success',
+    message_constants.WARNING: 'alert-warning',
+    message_constants.ERROR: 'alert-danger',
 }
 
 LOCALE_PATHS = [

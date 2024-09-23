@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Отчет по сеансам{% endblock %}
+
+{% block header %}
+    <link rel="stylesheet" href="{% static 'css/report.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h3>Отчет по сеансам</h3>
+
+    <!-- Форма фильтрации -->
+    <form method="get" class="row g-3">
+        {% if form.errors %}
+            {% for field in form %}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-warning" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-warning" role="alert">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+    
+        <div class="row">
+            <div class="col-md-3 mt-4">
+                <button type="submit" class="btn btn-primary">Сформировать отчет</button>
+            </div>
+            <!-- Фильтры даты -->
+            <div class="col-md-3">
+                {{ form.start_date.label_tag }}
+                {{ form.start_date }}
+            </div>
+            <div class="col-md-3">
+                {{ form.end_date.label_tag }}
+                {{ form.end_date }}
+            </div>
+        </div>
+
+        <!-- Кнопка для показа/скрытия дополнительных фильтров -->
+        <div class="col-md-12">
+            <button type="button" class="btn btn-secondary" id="showHideAdditionalFiltersButton" 
+                    onclick="showHideAdditionalFilters(this)">
+                Показать дополнительные фильтры
+            </button>
+        </div>
+
+        <!-- Скрываемые фильтры -->
+        <div id="extraFilters" style="display: none;">
+            <div class="col-md-6">
+                {{ form.event_templates.label_tag }}
+                {{ form.event_templates }}
+            </div>
+        </div>
+    </form>
+
+    <br>
+
+    <!-- Таблица с данными отчета -->
+    <table class="table table-striped">
+        <thead class="table-header-center">
+            <tr>
+                <th rowspan="2">№</th>
+                <th rowspan="2">Дата</th>
+                <th rowspan="2">Время сеанса</th>
+                <th rowspan="2">Кол-во всего билетов</th>
+                <th rowspan="2">Кол-во остатков билетов</th>
+                <th rowspan="2">Кол-во проданных билетов</th>
+                <th colspan="7">В том числе</th>
+                <th rowspan="2">Мероприятие</th>
+            </tr>
+            <tr>    
+                <th>Касса (безнал)</th>
+                <th>Касса (наличные)</th>
+                <th>Киоск</th>
+                <th>Muzaidyny.kz (KaspiQR)</th>
+                <th>Muzaidyny.kz (Карта)</th>
+                <th>Kaspi платежи</th>
+                <th>Возвраты</th>                
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in page_obj %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ ticket.event_date|date:"d.m.Y" }}</td>
+                <td>{{ ticket.event_time|time:"H:i" }}</td>
+                <td>{{ ticket.event__quantity }}</td>
+                <td>{{ ticket.total_tickets_left }}</td>
+                <td>{{ ticket.total_tickets_sold }}</td>
+                <td>{{ ticket.total_card_sales_cs }}</td>
+                <td>{{ ticket.total_cash_sales_cs }}</td>
+                <td>{{ ticket.total_kiosk_sales }}</td>
+                <td>{{ ticket.total_qr_sales_sm }}</td>
+                <td>{{ ticket.total_card_sales_sm }}</td>
+                <td>{{ ticket.total_kaspi_sales }}</td>
+                <td>{{ ticket.total_refunds }}</td>
+                <td>{{ ticket.event__event_template__name }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="14">Нет данных для отображения.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Пагинация -->
+    {% include 'reports/partials/paginator.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/report.js' %}"></script>
+{% endblock %}
