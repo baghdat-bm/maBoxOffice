@@ -35,6 +35,13 @@
         <i class="bi bi-wrench me-2"></i> Услуги
     </a>
     {% endif %}
+    
+    {% if perms.reports.view_tickets_report %}
+        <a href="{% url 'reports:tickets_report' %}?start_date={% now 'd-m-Y' %}&end_date={% now 'd-m-Y' %}"
+           class="list-group-item list-group-item-action {% if '/reports/tickets/' in request.path %}active{% endif %}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Отчет Реестр билетов
+        </a>
+    {% endif %}
 
     {% if perms.ticket_sales.change_terminalsettings %}
     <a href="{% url 'ticket_sales:terminal-settings-cashier' %}"

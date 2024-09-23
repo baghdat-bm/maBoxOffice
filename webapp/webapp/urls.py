@@ -15,6 +15,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("references/", include("references.urls")),
     path("ticket-sales/", include("ticket_sales.urls")),
+    path("reports/", include("reports.urls")),
 
     path('api-token-auth/', views.obtain_auth_token),
     path("api/", include("ticket_sales.api_urls")),

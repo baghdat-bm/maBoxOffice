@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # Local
     "references.apps.ReferencesConfig",
     "ticket_sales.apps.TicketSalesConfig",
+    "reports.apps.ReportsConfig",
 ]
 
 MIDDLEWARE = [

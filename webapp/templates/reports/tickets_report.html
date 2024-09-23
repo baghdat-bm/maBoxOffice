@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Реестр билетов{% endblock %}
+
+{% block header %}
+    <link rel="stylesheet" href="{% static 'css/report.css' %}">
+    <script src="{% static 'js/report.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h3>Реестр билетов</h3>
+
+        {% include 'reports/partials/filters.html' %}
+    </div>
+
+    <br>
+    <div class="container">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>№</th>
+                <th>№ билета</th>
+                <th>№ заказа</th>
+                <th>Дата и время сеанса</th>
+                <th>Стоимость билета</th>
+                <th>Наименование услуги</th>
+                <th>Наименование инвентарья</th>
+                <th>Тип продажи</th>
+                <th>Дата и время брони</th>
+                <th>Номер чек оплаты</th>
+                <th>Номер телефона клиента</th>
+                <th>Скачать билет</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for ticket in page_obj %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ ticket.ticket_number }}</td>
+                    <td>{{ ticket.ticket_sale.id }}</td>
+                    <td>{{ ticket.event_date }} {{ ticket.event_time }}</td>
+                    <td>{{ ticket.amount }}</td>
+                    <td>{{ ticket.service.name }}</td>
+                    <td>{{ ticket.service.inventory.name }}</td>
+                    <td>{{ ticket.ticket_sale.get_sale_type_display }}</td>
+                    <td>
+                        {% if ticket.ticket_sale.booking_begin_date %}
+                            {{ ticket.ticket_sale.booking_begin_date }}
+                        {% else %}
+                            <!-- Если даты нет, выводим пустое поле -->
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if ticket.payment_id %}
+                            {{ ticket.payment_id }}
+                        {% else %}
+                            <!-- Если платеж не найден, оставляем пустое поле -->
+                        {% endif %}
+                    </td>
+                    {% if ticket.ticket_sale.phone %}
+                        <td>{{ ticket.ticket_sale.phone }}</td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                    <td><a href="#" class="btn btn-outline-secondary">Скачать</a></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="12">Нет данных для отображения.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% include 'reports/partials/paginator.html' %}
+
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+            $('.datepicker').datepicker({
+                format: 'dd-mm-yyyy', // формат даты
+                autoclose: true,
+                todayHighlight: true,
+                language: 'ru'
+            });
+        });
+    </script>
+{% endblock %}

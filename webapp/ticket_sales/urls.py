@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import TicketSaleListView, TicketSaleCreateView, TicketSaleUpdateView, TicketSaleDeleteView, \
+from .views import TicketSaleListView, TicketSaleUpdateView, TicketSaleDeleteView, \
     TicketSaleDetailView, payment_process_cashier, check_payment_status_cashier, payment_detail_view, ticket_sale_create_view, \
     ticket_sale_update_view, cash_payment_process, print_ticket_view, filtered_events, filtered_event_times, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
