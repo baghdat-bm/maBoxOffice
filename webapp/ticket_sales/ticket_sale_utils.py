@@ -142,7 +142,8 @@ def get_filtered_services(event_id):
         event = Event.objects.get(id=event_id)
         if event:
             services = EventTemplateServices.objects.filter(event_template=event.event_template)
-            services_data = [{"id": service.service.id, "name": service.service.name} for service in services]
+            services_data = [{"id": service.service.id, "name": service.service.name, "price": service.service.cost}
+                             for service in services]
             return services_data
     return []
 

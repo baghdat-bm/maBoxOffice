@@ -63,7 +63,7 @@ class TicketCheckView(APIView):
                                 status=HTTP_400_BAD_REQUEST)
         elif event_code == "0":  # Выход
             if ticket.last_event_code == "0" or ticket.last_event_code is None:
-                return Response({'result': False, 'error_code': '3', 'message': 'Билет не был использован для входа'},
+                return Response({'result': False, 'error_code': '5', 'message': 'Билет не был использован для входа'},
                                 status=HTTP_400_BAD_REQUEST)
         else:
             return Response({'result': False, 'error_code': '1', 'message': 'Некорректный код события'},

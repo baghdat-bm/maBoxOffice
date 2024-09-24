@@ -1,13 +1,14 @@
 from django.urls import path
 from .views import TicketSaleListView, TicketSaleUpdateView, TicketSaleDeleteView, \
-    TicketSaleDetailView, payment_process_cashier, check_payment_status_cashier, payment_detail_view, ticket_sale_create_view, \
+    TicketSaleDetailView, payment_process_cashier, check_payment_status_cashier, payment_detail_view, \
+    ticket_sale_create_view, \
     ticket_sale_update_view, cash_payment_process, print_ticket_view, filtered_events, filtered_event_times, \
     ticket_sales_service_create, ticket_sales_service_update, ticket_sales_service_delete, \
     ticket_sales_payments_create, ticket_sales_payments_update, ticket_sales_payments_delete, \
     filtered_services, get_service_cost, terminal_settings_cashier, register_terminal, refresh_terminal_token, \
     get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
     create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal, \
-    get_refund_tickets, refund_tickets
+    get_refund_tickets, refund_tickets, page_terminal2
 
 app_name = 'ticket_sales'
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('<int:pk>/update-x/', ticket_sale_update_view, name='ticket-sale-update-x'),
     path('<int:pk>/update-t/', TicketSaleUpdateViewTerminal.as_view(), name='ticket-sale-update-t'),
     path('home-terminal/', home_page_terminal, name='home-terminal'),
+    path('home-terminal2/', page_terminal2, name='home-terminal'),
     path('create-sale-terminal/', create_ticket_sale_terminal, name='create-sale-terminal'),
 
     # TicketSalesService URLs

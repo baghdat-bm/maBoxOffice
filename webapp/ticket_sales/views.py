@@ -62,6 +62,10 @@ def home_page_terminal(request):
     return render(request, 'terminal/home.html')
 
 
+def page_terminal2(request):
+    return render(request, 'terminal/muzaidyny_kiosk.html')
+
+
 @csrf_exempt
 def create_ticket_sale_terminal(request):
     # Создаем новую запись TicketSale
