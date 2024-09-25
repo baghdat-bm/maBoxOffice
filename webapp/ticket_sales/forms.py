@@ -3,7 +3,7 @@ from django.utils import timezone
 from crispy_forms.layout import Layout, Row, Column, Submit, Fieldset, ButtonHolder, Field, Div
 from crispy_forms.helper import FormHelper
 
-from .models import TicketSale, TicketSalesService, TicketSalesPayments
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketSalesBooking
 
 
 class TicketSaleForm(forms.ModelForm):
@@ -40,3 +40,10 @@ class TicketSalesPaymentsForm(forms.ModelForm):
         fields = ['payment_date', 'payment_method', 'amount', 'refund_amount', 'process_id', 'last_status',
                   'error_text', 'transaction_id', 'response_data', 'currency', 'description', 'card_mask',
                   'terminal' ]
+
+
+class TicketSalesBookingForm(forms.ModelForm):
+    class Meta:
+        model = TicketSalesBooking
+        fields = ['service', 'event', 'event_date', 'event_time', 'event_time_end', 'tickets_count', 'tickets_amount',
+                  'discount', 'total_amount']

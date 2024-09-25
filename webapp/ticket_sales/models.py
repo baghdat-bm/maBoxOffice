@@ -181,20 +181,24 @@ class TicketSalesTicket(models.Model):
         ordering = ['number']
 
 
-class TicketsSold(models.Model):
-    ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
+class TicketSalesBooking(models.Model):
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
-    event_date = models.DateField(verbose_name="Дата мероприятия")
-    event_time = models.TimeField(verbose_name="Время мероприятия")
+    event_date = models.DateField(verbose_name="Дата мероприятия", default=default_datetime)
+    event_time = models.TimeField(verbose_name="Время начала мероприятия")
+    event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Количество билетов")
+    tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
+    discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
+    total_amount = models.IntegerField(verbose_name="Сумма итого")
+    created_date = models.DateTimeField(verbose_name="Дата создания", auto_now_add=True)
 
     def __str__(self):
-        return f'{self.ticket_sale.pk}-{self.pk}'
+        return f'{self.pk}'
 
     class Meta:
-        verbose_name = 'Проданный билет'
-        verbose_name_plural = 'Проданные билеты'
+        verbose_name = 'Бронь места'
+        verbose_name_plural = 'Бронирование мест'
         ordering = ['-id']
 
 

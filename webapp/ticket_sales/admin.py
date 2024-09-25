@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketsSold, TerminalSettings, \
-    TicketSalesTicket
+from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, \
+    TicketSalesTicket, TicketSalesBooking
 
 
 class TicketSalesServiceInline(admin.StackedInline):
@@ -51,5 +51,14 @@ class TerminalSettingsAdmin(admin.ModelAdmin):
     #     return False
 
 
+class TicketSalesBookingAdmin(admin.ModelAdmin):
+    model = TicketSalesBooking
+    list_display = ('id', 'service', 'event', 'event_date', 'event_time', 'tickets_count', 'total_amount',
+                    'created_date')
+    list_filter = ('event_date', 'created_date')
+    search_fields = ('service__name', 'event__name')
+
+
 admin.site.register(TicketSale, TicketSaleAdmin)
 admin.site.register(TerminalSettings, TerminalSettingsAdmin)
+admin.site.register(TicketSalesBooking, TicketSalesBookingAdmin)

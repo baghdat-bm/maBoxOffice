@@ -758,7 +758,7 @@
         <h3>Выберите дату</h3>
         <div class="date-picker-container">
             <button class="arrow-button" onclick="changeWeek(-1)">❮</button>
-            <div id="datePickerContainer" class="date-picker-items">                
+            <div id="datePickerContainer" class="date-picker-items">
             </div>
             <button class="arrow-button" onclick="changeWeek(1)">❯</button>
         </div>
@@ -767,7 +767,7 @@
     <!-- Блок выбора сеанса -->
     <div class="container session-wrapper block-divider mt-3">
         <h3>Выберите время сеанса</h3>
-        <div class="session-card-container" id="sessionCards">            
+        <div class="session-card-container" id="sessionCards">
         </div>
     </div>
 
@@ -778,7 +778,7 @@
             <select class="form-control" id="serviceSelect">
                 <option value="">Выберите время сеанса</option>
             </select>
-            <select class="form-control" id="quantity">                               
+            <select class="form-control" id="quantity">
             </select>
             <button class="btn btn-success" id="addTicketBtn">Добавить</button>
         </div>
@@ -802,7 +802,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr>                    
+                <tr>
                 </tr>
                 </tbody>
             </table>
@@ -861,6 +861,9 @@
         let totalAmount = 0;
         let isSessionSelected = false;
         let selectedDate = null;
+        let selectedEventId = null;
+        let selectedBeginTime = null;
+        let selectedEndTime = null;
         let ticketToRemove = null;
         let weekOffset = 0; // Сохранение смещения по неделям
         ////
@@ -868,39 +871,38 @@
         let currentX = 0;
         let isSwiping = false;
         const datePickerItems = document.querySelector('.date-picker-items');
-        
+
         // Генерация блока выбора даты с данными с сервера
         function generateDatePicker() {
             const datePickerContainer = document.getElementById('datePickerContainer');
             datePickerContainer.innerHTML = ""; // Очищаем предыдущие дни
-        
+
             // Получаем доступные даты с сервера
             fetch("{% url 'ticket_sales:get-events-dates' %}")
                 .then(response => response.json())
                 .then(data => {
                     const availableDates = data.available_dates; // Массив доступных дат
-                    console.log('Доступные даты:', availableDates);
-        
+
                     const today = new Date();
                     const maxDate = new Date(today);
                     maxDate.setDate(today.getDate() + 30); // Ограничение до 30 дней
-        
+
                     let currentDate = new Date(today);
                     currentDate.setDate(currentDate.getDate() + weekOffset); // Добавляем смещение недели
-        
+
                     const dayOfWeek = currentDate.getDay();
                     const offset = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
                     currentDate.setDate(currentDate.getDate() + offset);
-        
+
                     for (let i = 0; i < 7; i++) {
                         const formattedDate = currentDate.toISOString().slice(0, 10); // Форматируем дату
-        
+
                         const day = currentDate.toLocaleDateString('ru-RU', {weekday: 'short', day: 'numeric', month: 'short'});
                         const dateElement = document.createElement('div');
                         dateElement.classList.add('date-picker-item');
                         dateElement.textContent = day;
                         dateElement.dataset.date = formattedDate;
-        
+
                         // Проверка на доступность даты
                         if (!availableDates.includes(formattedDate)) {
                             dateElement.classList.add('disabled');
@@ -909,21 +911,20 @@
                                 if (!this.classList.contains('disabled')) {
                                     document.querySelectorAll('.date-picker-item').forEach(item => item.classList.remove('selected'));
                                     this.classList.add('selected');
-                                    selectedDate = this.dataset.date;
                                     generateSessions(this.dataset.date); // Генерация сеансов для выбранной даты
                                 }
                                 isSessionSelected = false;
                             });
                         }
-        
+
                         if (formattedDate === selectedDate) {
                             dateElement.classList.add('selected');
                         }
-        
+
                         datePickerContainer.appendChild(dateElement);
                         currentDate.setDate(currentDate.getDate() + 1);
                     }
-        
+
                     // Автовыбор первой доступной даты
                     if (!selectedDate) {
                         const firstAvailableDate = document.querySelector('.date-picker-item:not(.disabled)');
@@ -944,19 +945,19 @@
             weekOffset += direction * 7; // Смещение на 7 дней
             generateDatePicker(); // Перегенерируем даты
         }
-        
+
         // Генерация сеансов на основе выбранной даты и события
         function generateSessions(date) {
+            selectedDate = date;
             const sessionCardContainer = document.querySelector("#sessionCards");
             sessionCardContainer.innerHTML = ""; // Очищаем предыдущие сеансы
-        
+
             const url = `{% url 'ticket_sales:get-events' %}?date=${date}`;
-            
+
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Данные с сервера:", data); // Логируем ответ сервера для диагностики
-        
+
                     // Проверка, что есть события с сеансами
                     if (!data || !data.events || data.events.length === 0) {
                         console.error("Нет доступных мероприятий или сеансов.");
@@ -968,16 +969,17 @@
                         sessionCardContainer.innerHTML += noSessionsCard;
                         return;
                     }
-        
+
                     let sessionsFound = false;
-        
+
                     // Обрабатываем каждый event и его seances
                     data.events.forEach(event => {
                         event.times.forEach(time => {
                             const isDisabled = time.quantity === 0;
                             const card = `
-                              <div class="session-card ${isDisabled ? 'disabled' : ''}" data-time="${time.begin_date}" 
-                                data-event-id="${event.id}" data-tickets-quantity="${time.quantity}">
+                              <div class="session-card ${isDisabled ? 'disabled' : ''}" data-time="${time.begin_date}"
+                                data-event-id="${event.id}" data-tickets-quantity="${time.quantity}"
+                                data-end-time="${time.end_date}">
                                 <div>${time.begin_date}</div>
                                 <div>${time.quantity} билетов</div>
                               </div>
@@ -1003,10 +1005,12 @@
                                 document.querySelectorAll('.session-card').forEach(card => card.classList.remove('selected'));
                                 this.classList.add('selected');
                                 isSessionSelected = true;
-        
+
                                 // Извлечение eventId из атрибута data-event-id и вызов updateServiceOptions
-                                const eventId = this.getAttribute('data-event-id');
-                                updateServiceOptions(eventId);
+                                selectedEventId = this.getAttribute('data-event-id');
+                                selectedBeginTime = this.getAttribute('data-time');
+                                selectedEndTime = this.getAttribute('data-end-time');
+                                updateServiceOptions(selectedEventId, selectedEndTime);
 
                                 const ticketsCount = this.getAttribute('data-tickets-quantity');
                                 updateQuantityOptions(ticketsCount);
@@ -1024,15 +1028,17 @@
                     sessionCardContainer.innerHTML += errorCard;
                 });
         }
-        
+
         // функция для заполнения блока выбора услуг
-        function updateServiceOptions(eventId) {
+        function updateServiceOptions(eventId, endDate) {
+            selectedEventId = eventId;
+            selectedEndTime = endDate;
             var serviceSelect = document.getElementById('serviceSelect'); // Изменяем на ваш ID
-        
+
             if (eventId) {
                 const url = new URL("{% url 'ticket_sales:filtered-services' %}", window.location.origin);
                 url.searchParams.set('event_id', eventId);
-        
+
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
@@ -1044,6 +1050,8 @@
                             var option = document.createElement('option');
                             option.value = service.id;
                             option.text = `${service.name} - ${service.price} теңге`; // Добавляем цену в текст
+                            option.setAttribute('data-end-date', endDate);
+                            option.setAttribute('data-price', service.price);
                             serviceSelect.appendChild(option);
                         });
                     })
@@ -1055,16 +1063,13 @@
                 serviceSelect.innerHTML = '<option value="">Выберите время сеанса</option>';
             }
         }
-        
+
         // функция для заполнения блока выбора количества билета
         function updateQuantityOptions(ticketsCount) {
             var quantitySelect = document.getElementById('quantity'); // Изменяем на ваш ID
-                   
+
             // Очистить старые опции
             quantitySelect.innerHTML = ''; // Очищаем все старые опции
-
-            // Добавить опцию по умолчанию
-            quantitySelect.innerHTML = '<option value="1">1</option>';
 
             // Добавить новые опции
             for (let i = 1; i <= ticketsCount; i++) {
@@ -1075,49 +1080,6 @@
             }
         }
 
-        // Добавление билетов
-        document.getElementById('addTicketBtn').addEventListener('click', () => {
-            // Проверяем, выбран ли сеанс
-            if (!isSessionSelected) {
-                document.getElementById('warningModal').classList.add('show');
-                return;
-            }
-
-            // Получаем данные выбранной даты, услуги, количества и времени
-            const date = document.querySelector('.date-picker-item.selected').dataset.date;
-            const service = document.getElementById('serviceSelect').selectedOptions[0].text;
-            const price = parseInt(document.getElementById('serviceSelect').value);
-            const quantity = parseInt(document.getElementById('quantity').value);
-            const time = document.querySelector('.session-card.selected').dataset.time;
-
-            // Проверяем, существует ли уже билет с такими же характеристиками
-            const existingTicket = tickets.find(ticket => ticket.date === date && ticket.time === time && ticket.service === service);
-
-            if (existingTicket) {
-                // Обновляем количество и сумму для существующего билета
-                existingTicket.quantity += quantity;
-                existingTicket.total = existingTicket.price * existingTicket.quantity;
-            } else {
-                // Создаем новый билет и добавляем в массив
-                const ticket = {
-                    date,
-                    time,
-                    service,
-                    quantity,
-                    price,
-                    total: price * quantity
-                };
-                tickets.push(ticket);
-            }
-
-            // Обновляем общую сумму
-            totalAmount = tickets.reduce((sum, ticket) => sum + ticket.total, 0);
-
-            // Обновляем таблицу с билетами
-            updateTicketList();
-            updateFooterPosition(); // Обновляем позицию футера
-        });
-
         // Функция обновления списка билетов
         function updateTicketList() {
             const ticketList = document.getElementById('ticketList').querySelector('tbody');
@@ -1126,7 +1088,7 @@
             tickets.forEach((ticket, index) => {
                 const row = `
                   <tr>
-                    <td>${formatDate(ticket.date)} ${ticket.time}</td>
+                    <td>${formatDate(ticket.date)} ${ticket.timeBegin}</td>
                     <td>${ticket.service}</td>
                     <td>${ticket.quantity}</td>
                     <td>${ticket.total} теңге</td> <!-- Добавляем "теңге" только один раз -->
@@ -1140,12 +1102,12 @@
 
             updateFooterPosition(); // Убедимся, что футер корректно позиционирован
         }
-        
+
         function updateFooterPosition() {
             const ticketTable = document.querySelector('.scrollable-table');
-            const footer = document.querySelector('.ticket-footer');            
+            const footer = document.querySelector('.ticket-footer');
             const maxScrollTop = ticketTable.scrollHeight - ticketTable.clientHeight;
-            
+
             if (ticketTable.scrollTop >= maxScrollTop) {
                 footer.style.position = 'relative';
             } else {
@@ -1154,38 +1116,6 @@
             }
         }
 
-
-        // Вызываем обновление при изменении размеров окна и прокрутке
-
-        window.addEventListener('scroll', updateFooterPosition);
-        window.addEventListener('resize', updateFooterPosition);
-        window.addEventListener('load', updateFooterPosition);
-        document.getElementById('confirmDelete').addEventListener('click', () => {
-            document.getElementById('deleteModal').classList.remove('show');
-            removeTicket(ticketToRemove);
-        });
-        document.getElementById('cancelDelete').addEventListener('click', () => {
-            document.getElementById('deleteModal').classList.remove('show');
-        });
-
-        // Открытие модального окна
-        document.getElementById('openRulesModal').addEventListener('click', function (event) {
-            event.preventDefault();
-            document.getElementById('rulesModal').style.display = 'flex'; // Показываем модальное окно
-        });
-
-        // Закрытие модального окна
-        document.getElementById('closeRulesModal').addEventListener('click', function () {
-            document.getElementById('rulesModal').style.display = 'none'; // Скрываем модальное окно
-        });
-
-        // Закрытие модального окна при клике вне его
-        window.addEventListener('click', function (event) {
-            const modal = document.getElementById('rulesModal');
-            if (event.target === modal) {
-                modal.style.display = 'none'; // Скрываем модальное окно при клике вне него
-            }
-        });
 
         // Форматирование даты в формате DD-MM-YYYY
         function formatDate(date) {
@@ -1230,6 +1160,156 @@
         }
 
         setInterval(updateDateTime, 1000); // Обновляем время каждую минуту
+
+        // Функция для получения CSRF-токена из кукисов (если используется CSRF)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function createSalesBooking(serviceId, eventId, eventDate, eventTime, eventTimeEnd, ticketsCount, ticketsAmount)
+        {
+            // Создаем объект данных для отправки
+            var bookingData = {
+                service_id: serviceId,
+                event_id: eventId,
+                event_date: eventDate,
+                event_time: eventTime,
+                event_time_end: eventTimeEnd,
+                tickets_count: ticketsCount,
+                tickets_amount: ticketsAmount,
+                discount: 0,
+                total_amount: ticketsAmount
+            };
+
+            // Отправляем данные через fetch
+            fetch("{% url 'ticket_sales:booking_create' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // защита CSRF
+                },
+                body: JSON.stringify(bookingData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'created') {
+                    console.log('Бронирование успешно создано! ID: ' + data.id);
+                    return data.id;
+                } else {
+                    console.error('Ошибка создания бронирования: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при отправке данных:', error);
+            });
+            return null;
+        }
+
+        // Добавление билетов
+        document.getElementById('addTicketBtn').addEventListener('click', () => {
+            // Проверяем, выбран ли сеанс
+            if (!isSessionSelected) {
+                document.getElementById('warningModal').classList.add('show');
+                return;
+            }
+
+            // Получаем данные выбранной даты, услуги, количества и времени
+            const date = document.querySelector('.date-picker-item.selected').dataset.date;
+            const service = document.getElementById('serviceSelect').selectedOptions[0].text;
+            const serviceId = parseInt(document.getElementById('serviceSelect').value);
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const time = document.querySelector('.session-card.selected').dataset.time;
+
+            const serviceSelect = document.getElementById('serviceSelect');
+            const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+            const price = parseInt(selectedOption.getAttribute('data-price'));
+
+            console.log('selectedDate', selectedDate);
+            console.log('selectedBeginTime', selectedBeginTime);
+            console.log('selectedEndTime', selectedEndTime);
+            console.log('selectedEventId', selectedEventId);
+            console.log('serviceId', serviceId);
+            console.log('price', price);
+
+            const idBooking = createSalesBooking(serviceId, selectedEventId, selectedDate, selectedBeginTime,
+                selectedEndTime, quantity, quantity * price);
+
+            // Проверяем, существует ли уже билет с такими же характеристиками
+            const existingTicket = false; // tickets.find(ticket => ticket.date === selectedDate
+                {#&& ticket.eventId === selectedEventId    #}
+                {#&& ticket.timeBegin === selectedBeginTime #}
+                {#&& ticket.serviceId === serviceId);#}
+
+            if (existingTicket) {
+                // Обновляем количество и сумму для существующего билета
+                existingTicket.quantity += quantity;
+                existingTicket.total = quantity * price;
+            } else {
+                // Создаем новый билет и добавляем в массив
+                const ticket = {
+                    idBooking,
+                    date: selectedDate,
+                    timeBegin: selectedBeginTime,
+                    endTime: selectedEndTime,
+                    eventId: selectedEventId,
+                    serviceId,
+                    service,
+                    quantity,
+                    price,
+                    total: quantity * price
+                };
+                tickets.push(ticket);
+            }
+
+            // Обновляем общую сумму
+            totalAmount = tickets.reduce((sum, ticket) => sum + ticket.total, 0);
+
+            // Обновляем таблицу с билетами
+            updateTicketList();
+            //updateFooterPosition(); // Обновляем позицию футера
+        });
+
+        // Вызываем обновление при изменении размеров окна и прокрутке
+        window.addEventListener('scroll', updateFooterPosition);
+        window.addEventListener('resize', updateFooterPosition);
+        window.addEventListener('load', updateFooterPosition);
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            document.getElementById('deleteModal').classList.remove('show');
+            removeTicket(ticketToRemove);
+        });
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('deleteModal').classList.remove('show');
+        });
+
+        // Открытие модального окна
+        document.getElementById('openRulesModal').addEventListener('click', function (event) {
+            event.preventDefault();
+            document.getElementById('rulesModal').style.display = 'flex'; // Показываем модальное окно
+        });
+
+        // Закрытие модального окна
+        document.getElementById('closeRulesModal').addEventListener('click', function () {
+            document.getElementById('rulesModal').style.display = 'none'; // Скрываем модальное окно
+        });
+
+        // Закрытие модального окна при клике вне его
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('rulesModal');
+            if (event.target === modal) {
+                modal.style.display = 'none'; // Скрываем модальное окно при клике вне него
+            }
+        });
 
 
         // Обработчик начала касания

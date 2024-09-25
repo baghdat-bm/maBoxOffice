@@ -1,0 +1,6 @@
+<form method="POST">
+    {% csrf_token %}
+    <p>Вы уверены, что хотите удалить бронирование?</p>
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    <a href="{% url 'ticket_sales_booking_list' %}" class="btn btn-secondary">Отмена</a>
+</form>

@@ -9,7 +9,7 @@ import re
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.utils.dateparse import parse_datetime
 from django.core.exceptions import ValidationError
@@ -18,7 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, \
-    SaleTypeEnum
+    SaleTypeEnum, TicketSalesBooking
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
@@ -59,10 +59,10 @@ class TicketSaleUpdateView(UpdateView):
 
 
 def home_page_terminal(request):
-    return render(request, 'terminal/home.html')
+    return render(request, 'terminal/kiosk_home.html')
 
 
-def page_terminal2(request):
+def kiosk_sale_tickets(request):
     return render(request, 'terminal/muzaidyny_kiosk.html')
 
 
@@ -700,3 +700,69 @@ def refund_tickets(request, sale_id):
             return JsonResponse({'success': False, 'message': 'Invalid JSON'})
 
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+### БРОНИРОВАНИЕ БИЛЕТОВ
+
+# Create
+@csrf_exempt
+def ticket_sales_booking_create(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            booking = TicketSalesBooking.objects.create(
+                service_id=data['service_id'],
+                event_id=data['event_id'],
+                event_date=data['event_date'],
+                event_time=data['event_time'],
+                event_time_end=data.get('event_time_end'),
+                tickets_count=data['tickets_count'],
+                tickets_amount=data['tickets_amount'],
+                discount=data.get('discount', 0),
+                total_amount=data['total_amount']
+            )
+            return JsonResponse({'id': booking.id, 'status': 'created'}, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return HttpResponse(status=405)  # Method Not Allowed
+
+
+# Read (list)
+def ticket_sales_booking_list(request):
+    bookings = TicketSalesBooking.objects.all().values(
+        'id', 'service_id', 'event_id', 'event_date', 'event_time', 'event_time_end', 'tickets_count', 'tickets_amount', 'discount', 'total_amount'
+    )
+    return JsonResponse(list(bookings), safe=False)
+
+
+# Update
+@csrf_exempt
+def ticket_sales_booking_update(request, pk):
+    booking = get_object_or_404(TicketSalesBooking, pk=pk)
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        try:
+            booking.service_id = data['service_id']
+            booking.event_id = data['event_id']
+            booking.event_date = data['event_date']
+            booking.event_time = data['event_time']
+            booking.event_time_end = data.get('event_time_end')
+            booking.tickets_count = data['tickets_count']
+            booking.tickets_amount = data['tickets_amount']
+            booking.discount = data.get('discount', 0)
+            booking.total_amount = data['total_amount']
+            booking.save()
+            return JsonResponse({'id': booking.id, 'status': 'updated'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return HttpResponse(status=405)  # Method Not Allowed
+
+
+# Delete
+@csrf_exempt
+def ticket_sales_booking_delete(request, pk):
+    booking = get_object_or_404(TicketSalesBooking, pk=pk)
+    if request.method == 'DELETE':
+        booking.delete()
+        return JsonResponse({'status': 'deleted'}, status=200)
+    return HttpResponse(status=405)  # Method Not Allowed
