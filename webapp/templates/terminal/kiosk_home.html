@@ -14,7 +14,7 @@
     <style>
         body {
             background-color: #f0f2f5;
-            color: #000;            
+            color: #000;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -152,7 +152,54 @@
             overflow-y: auto;
             padding-left: 20px;
             padding-right: 20px;
-        }        
+        }
+
+        /* Стили для модального окна */
+        .modal {
+            display: none; /* Скрываем модальное окно по умолчанию */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Контейнер для кнопок */
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px; /* Расстояние между кнопками */
+            margin-top: 20px;
+        }
+
+        /* Кнопки должны занимать равное пространство */
+        .modal-buttons button {
+            flex-grow: 1;
+            padding: 10px;
+        }
+
 
         /* Футер */
         /* Растягиваем фон футера на всю ширину браузера */
@@ -169,8 +216,7 @@
 
         /* Контейнер для содержимого футера, выравниваем по ширине как другие блоки */
         .footer-content {
-            {#max-width: 1080px; /* Ширина как у остальных блоков */#}
-            margin: 0 auto; /* Центрируем содержимое */
+        {#max-width: 1080px; /* Ширина как у остальных блоков */#} margin: 0 auto; /* Центрируем содержимое */
             display: flex;
             justify-content: space-between;
             padding-left: 15px;
@@ -198,7 +244,7 @@
 
         .rules-link:hover {
             color: #0c5ab9;
-        }        
+        }
     </style>
 </head>
 <body>
@@ -222,17 +268,14 @@
 
 <!-- Контент -->
 <div class="main-content">
-        
-    <div class="d-flex justify-content-center align-items-center" style="padding-top: 250px;">        
-        <form action="{% url 'ticket_sales:create-sale-terminal' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-lg">Купить билет</button>
-        </form>
+
+    <div class="d-flex justify-content-center align-items-center" style="padding-top: 250px;">
+        <a href="{% url 'ticket_sales:kiosk-sale-tickets' %}" class="btn btn-success btn-lg">Купить билет</a>
     </div>
-    
+
     <!-- Футер -->
     <div class="footer">
-        <div class="footer-content">            
+        <div class="footer-content">
             <!-- Ссылка на правила покупки билетов -->
             <a href="#" id="openRulesModal" class="rules-link">Правила покупки билетов</a>
         </div>
@@ -249,10 +292,10 @@
             </p>
         </div>
     </div>
-      
+
 </div>
 
-<script>    
+<script>
     // Установка текущей даты и времени в шапку
     function updateDateTime() {
         const now = new Date();
@@ -263,9 +306,20 @@
             minute: '2-digit'
         });
     }
-    
+
     setInterval(updateDateTime, 1000); // Обновляем время каждую минуту
-    
+
+    // Открытие модального окна
+    document.getElementById('openRulesModal').addEventListener('click', function (event) {
+        event.preventDefault();
+        document.getElementById('rulesModal').style.display = 'flex'; // Показываем модальное окно
+    });
+
+    // Закрытие модального окна
+    document.getElementById('closeRulesModal').addEventListener('click', function () {
+        document.getElementById('rulesModal').style.display = 'none'; // Скрываем модальное окно
+    });
+
 </script>
 </body>
 </html>

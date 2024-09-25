@@ -68,11 +68,42 @@ def kiosk_sale_tickets(request):
 
 @csrf_exempt
 def create_ticket_sale_terminal(request):
-    # Создаем новую запись TicketSale
-    ticket_sale = TicketSale.objects.create(sale_type=SaleTypeEnum.TS.value[0])
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            # Шаг 2: Создаем заказ
+            booking_begin_date = timezone.now()
+            booking_end_date = booking_begin_date + timedelta(minutes=20)
+            sale_type = data.get('sale_type', 'TS')
 
-    # Перенаправляем на страницу редактирования
-    return redirect(reverse('ticket_sales:ticket-sale-update-t', kwargs={'pk': ticket_sale.pk}))
+            ticket_sale = TicketSale.objects.create(
+                booking_begin_date=booking_begin_date,
+                booking_end_date=booking_end_date,
+                sale_type=sale_type
+            )
+
+            # Шаг 3: Создаем записи TicketSalesService для каждой брони
+            tickets = data.get('tickets', [])
+            for ticket in tickets:
+                booking = TicketSalesBooking.objects.get(id=ticket['idBooking'])
+                TicketSalesService.objects.create(
+                    ticket_sale=ticket_sale,
+                    service_id=ticket['serviceId'],
+                    event_id=ticket['eventId'],
+                    event_date=ticket['date'],
+                    event_time=ticket['beginTime'],
+                    event_time_end=ticket['endTime'],
+                    tickets_count=ticket['quantity'],
+                    tickets_amount=ticket['price'],
+                    total_amount=ticket['total']
+                )
+
+            return JsonResponse({'status': 'created', 'ticket_sale_id': ticket_sale.id}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 class TicketSaleUpdateViewTerminal(UpdateView):
