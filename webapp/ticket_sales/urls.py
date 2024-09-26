@@ -9,7 +9,7 @@ from .views import TicketSaleListView, TicketSaleUpdateView, TicketSaleDeleteVie
     get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
     create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal, \
     get_refund_tickets, refund_tickets, kiosk_sale_tickets, ticket_sales_booking_list, ticket_sales_booking_create, \
-    ticket_sales_booking_update, ticket_sales_booking_delete
+    ticket_sales_booking_update, ticket_sales_booking_delete, tickets_purchased, delete_bookings
 
 app_name = 'ticket_sales'
 
@@ -23,8 +23,10 @@ urlpatterns = [
     path('<int:pk>/update-x/', ticket_sale_update_view, name='ticket-sale-update-x'),
     path('<int:pk>/update-t/', TicketSaleUpdateViewTerminal.as_view(), name='ticket-sale-update-t'),
     path('home-terminal/', home_page_terminal, name='home-terminal'),
-    path('kiosk-sale-tickets/', kiosk_sale_tickets, name='kiosk-sale-tickets'),
+    path('kiosk-sale-tickets/<uuid:kiosk_guid>/', kiosk_sale_tickets, name='kiosk-sale-tickets'),
+    path('tickets-purchased/<int:sale_id>/', tickets_purchased, name='tickets-purchased'),
     path('create-sale-terminal/', create_ticket_sale_terminal, name='create-sale-terminal'),
+    path('delete-bookings/', delete_bookings, name='delete-bookings'),
 
     # TicketSalesService URLs
     path('<int:ticket_sale_id>/services/create/', ticket_sales_service_create,
@@ -74,7 +76,7 @@ urlpatterns = [
 
     # Бронирование билетов
 
-    path('bookings/', ticket_sales_booking_list, name='booking_list'),
+    path('bookings/<uuid:booking_guid>/', ticket_sales_booking_list, name='booking_list'),
     path('bookings/create/', ticket_sales_booking_create, name='booking_create'),
     path('bookings/<int:pk>/edit/', ticket_sales_booking_update, name='booking_update'),
     path('bookings/<int:pk>/delete/', ticket_sales_booking_delete, name='booking_delete'),

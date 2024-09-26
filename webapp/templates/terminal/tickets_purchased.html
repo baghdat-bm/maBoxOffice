@@ -270,8 +270,16 @@
 <div class="main-content">
 
     <div class="d-flex justify-content-center align-items-center" style="padding-top: 250px;">
-        <a href="{% url 'ticket_sales:kiosk-sale-tickets' new_guid %}" class="btn btn-success btn-lg">
-            Купить билет
+        <h1>Поздравляем с покупкой!</h1>
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center" style="padding-top: 10px;">
+        <button class="btn btn-success btn-lg mr-3" id="printTickets" onclick="printTicket()">
+            Распечатать билеты
+        </button>
+
+        <a href="{% url 'ticket_sales:home-terminal' %}" class="btn btn-success btn-lg">
+            На главную страницу
         </a>
     </div>
 
@@ -294,7 +302,30 @@
             </p>
         </div>
     </div>
-        
+
+    <!-- Модальное окно для печати -->
+    <div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Увеличим ширину окна -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printTicketModalLabel">Печать заказа</h5>
+                </div>
+                <div class="modal-body" id="print-area">
+                    <!-- Здесь будет формироваться содержимое для печати -->
+                    <div id="print-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="print-button">Печать</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-print-button" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрытое поле для хранения sale_id -->
+    <input type="hidden" id="saleId" value="{{ sale_id }}">
+
 </div>
 
 <script>
@@ -323,6 +354,117 @@
     });
 
 </script>
+
+
+
+    <!-- JavaScript для печати -->
+    <script>
+
+        // Функция для получения CSRF-токена из кукисов (если используется CSRF)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function printTicket() {
+            // Запрос на получение данных для печати (TicketSalesService)
+            fetch("{% url 'ticket_sales:ticket-print-data' sale_id %}", {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                console.log('Response:', response);
+                return response.json()
+            })
+            .then(data => {
+                const printContent = document.getElementById('print-content');
+                printContent.innerHTML = '';  // Очистить старый контент
+
+                data.services.forEach(service => {
+                    for (let i = 0; i < service.tickets_count; i++) {
+                        printContent.innerHTML += `
+                            <div class="ticket" style="width: 360px; font-size: 20px; page-break-after: always;">
+                                <!-- Центрируем QR-код -->
+                                <div style="text-align: center;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}"
+                                        alt="QR Code" style="display: inline-block;">
+                                </div>
+                                <div class="small-spacing"></div>
+                                Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
+                                <div class="small-spacing"></div>
+                                <div>Количество билетов: <strong>1</strong></div>
+                                <div class="small-spacing"></div>
+                                <strong>Дата и время сеанса:</strong>
+                                <div>${service.event_date} ${service.event_time}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Услуга:</strong>
+                                <div>${service.service_name}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Мероприятие:</strong>
+                                <div>${service.event_name}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Стоимость билета:</strong>
+                                <div>${service.amount} ₸</div>
+                                <div class="small-spacing"></div>
+                                <strong>Подробная информация:</strong>
+                                <div>www.muzaidyny.kz <i class="bi bi-telephone-fill"></i> 8(7172) 242424</div>
+                                <hr>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (!data.services || data.services.length === 0) {
+                    printContent.innerHTML = "<p>Заказ не оплачен</p>"
+                }
+
+                // Выполняем печать сразу
+                const originalContent = document.body.innerHTML;
+                document.body.innerHTML = printContent.innerHTML;
+
+                window.print();  // Печать без модального окна
+
+                // Восстановить содержимое после печати
+                document.body.innerHTML = originalContent;
+                location.reload();  // Обновить страницу после печати
+            });
+        }
+
+        // Скрытие модального окна при нажатии кнопки "Отмена" или на закрытие
+        document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const printTicketModal = document.getElementById('printTicketModal');
+                printTicketModal.classList.remove('show');
+                printTicketModal.style.display = 'none';
+            });
+        });
+
+        document.getElementById('print-button').addEventListener('click', function () {
+            const printContent = document.getElementById('print-content').innerHTML;
+            const originalContent = document.body.innerHTML;
+
+            // Заменить содержимое body на контент для печати
+            document.body.innerHTML = printContent;
+
+            window.print();
+
+            // Восстановить исходное содержимое после печати
+            document.body.innerHTML = originalContent;
+            location.reload();  // Обновить страницу после печати
+        });
+    </script>
 
 </body>
 </html>

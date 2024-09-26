@@ -72,6 +72,7 @@ class TicketSale(models.Model):
     phone = models.CharField(max_length=50, verbose_name='Телефон', null=True, blank=True)
     booking_begin_date = models.DateTimeField(verbose_name="Дата время бронирования", null=True, blank=True)
     booking_end_date = models.DateTimeField(verbose_name="Дата время окончания бронирования", null=True, blank=True)
+    booking_guid = models.UUIDField(verbose_name="GUID бронирования", blank=True)
 
     def __str__(self):
         return f'№{self.pk} от {self.date}'
@@ -191,6 +192,7 @@ class TicketSalesBooking(models.Model):
     tickets_amount = models.IntegerField(verbose_name="Сумма билетов")
     discount = models.IntegerField(verbose_name="Скидка", blank=True, default=0)
     total_amount = models.IntegerField(verbose_name="Сумма итого")
+    booking_guid = models.UUIDField(verbose_name="GUID бронирования", blank=True)
     created_date = models.DateTimeField(verbose_name="Дата создания", auto_now_add=True)
 
     def __str__(self):

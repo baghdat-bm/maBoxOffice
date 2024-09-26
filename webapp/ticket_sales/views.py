@@ -2,7 +2,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 from django.core.paginator import Paginator
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 from django.utils import timezone
 import re
 
@@ -59,11 +59,35 @@ class TicketSaleUpdateView(UpdateView):
 
 
 def home_page_terminal(request):
-    return render(request, 'terminal/kiosk_home.html')
+    new_guid = uuid.uuid4()
+    return render(request, 'terminal/kiosk_home.html', {'new_guid': new_guid})
 
 
-def kiosk_sale_tickets(request):
-    return render(request, 'terminal/muzaidyny_kiosk.html')
+def kiosk_sale_tickets(request, kiosk_guid):
+    ticket_sale = TicketSale.objects.filter(booking_guid=kiosk_guid).first()
+    paid_amount = 0
+    if ticket_sale:
+        paid_amount = ticket_sale.paid_amount
+    return render(request, 'terminal/muzaidyny_kiosk.html',
+                  {'kiosk_guid': kiosk_guid, 'paid_amount': paid_amount})
+
+
+def tickets_purchased(request, sale_id):
+    return render(request, 'terminal/tickets_purchased.html', {'sale_id': sale_id})
+
+
+@csrf_exempt
+def delete_bookings(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        booking_guid = data.get('booking_guid')
+
+        if booking_guid:
+            # Удаляем брони с указанным booking_guid
+            deleted_count, _ = TicketSalesBooking.objects.filter(booking_guid=booking_guid).delete()
+            return JsonResponse({'status': 'deleted', 'deleted_count': deleted_count}, status=200)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 @csrf_exempt
@@ -71,31 +95,42 @@ def create_ticket_sale_terminal(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         try:
+            tickets = data.get('tickets', [])
+            total_amount = data.get('totalAmount', 0)
+            booking_guid = data.get('booking_guid')
+            if len(tickets) == 0:
+                return JsonResponse({'error': 'No tickets data'}, status=400)
+
             # Шаг 2: Создаем заказ
             booking_begin_date = timezone.now()
             booking_end_date = booking_begin_date + timedelta(minutes=20)
             sale_type = data.get('sale_type', 'TS')
 
-            ticket_sale = TicketSale.objects.create(
-                booking_begin_date=booking_begin_date,
-                booking_end_date=booking_end_date,
-                sale_type=sale_type
-            )
+            ticket_sale = TicketSale.objects.filter(booking_guid=booking_guid).first()
+            if ticket_sale is None:
+                ticket_sale = TicketSale.objects.create(
+                    booking_begin_date=booking_begin_date,
+                    booking_end_date=booking_end_date,
+                    sale_type=sale_type,
+                    amount=total_amount,
+                    booking_guid=booking_guid
+                )
+            else:
+                ticket_sale.update(amount=total_amount)
 
             # Шаг 3: Создаем записи TicketSalesService для каждой брони
-            tickets = data.get('tickets', [])
             for ticket in tickets:
-                booking = TicketSalesBooking.objects.get(id=ticket['idBooking'])
+                booking = TicketSalesBooking.objects.get(id=ticket['id'])
                 TicketSalesService.objects.create(
                     ticket_sale=ticket_sale,
-                    service_id=ticket['serviceId'],
-                    event_id=ticket['eventId'],
-                    event_date=ticket['date'],
-                    event_time=ticket['beginTime'],
-                    event_time_end=ticket['endTime'],
-                    tickets_count=ticket['quantity'],
-                    tickets_amount=ticket['price'],
-                    total_amount=ticket['total']
+                    service_id=booking.service_id,
+                    event_id=booking.event_id,
+                    event_date=booking.event_date,
+                    event_time=booking.event_time,
+                    event_time_end=booking.event_time_end,
+                    tickets_count=booking.tickets_count,
+                    tickets_amount=booking.tickets_amount,
+                    total_amount=booking.total_amount
                 )
 
             return JsonResponse({'status': 'created', 'ticket_sale_id': ticket_sale.id}, status=201)
@@ -422,6 +457,8 @@ def check_payment_status_terminal(request, process_id, ticket_sale_id):
                 ticket_sale.save()
 
                 create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+                bookings = TicketSalesBooking.objects.filter(booking_guid=ticket_sale.booking_guid)
+                bookings.delete()
 
                 return JsonResponse({'status': 'success'})
             else:
@@ -750,7 +787,8 @@ def ticket_sales_booking_create(request):
                 tickets_count=data['tickets_count'],
                 tickets_amount=data['tickets_amount'],
                 discount=data.get('discount', 0),
-                total_amount=data['total_amount']
+                total_amount=data['total_amount'],
+                booking_guid=data.get('booking_guid', '')
             )
             return JsonResponse({'id': booking.id, 'status': 'created'}, status=201)
         except Exception as e:
@@ -759,9 +797,11 @@ def ticket_sales_booking_create(request):
 
 
 # Read (list)
-def ticket_sales_booking_list(request):
-    bookings = TicketSalesBooking.objects.all().values(
-        'id', 'service_id', 'event_id', 'event_date', 'event_time', 'event_time_end', 'tickets_count', 'tickets_amount', 'discount', 'total_amount'
+def ticket_sales_booking_list(request, booking_guid):
+    bookings = TicketSalesBooking.objects.filter(booking_guid=booking_guid).annotate(
+        service_name=F('service__name')  # Добавляем название услуги
+    ).values(
+        'id', 'service_id', 'service_name', 'event_id', 'event_date', 'event_time', 'event_time_end', 'tickets_count', 'tickets_amount', 'discount', 'total_amount'
     )
     return JsonResponse(list(bookings), safe=False)
 
