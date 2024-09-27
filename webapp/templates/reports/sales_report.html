@@ -40,17 +40,11 @@
                 <!-- Фильтры даты -->
                 <div class="col-md-3">
                     {{ form.start_date.label_tag }}
-                    {{ form.start_date }}
-                    {% if form.start_date.errors %}
-                        <div class="text-danger">{{ form.start_date.errors }}</div>
-                    {% endif %}
+                    {{ form.start_date }}                    
                 </div>
                 <div class="col-md-3">
                     {{ form.end_date.label_tag }}
-                    {{ form.end_date }}
-                    {% if form.end_date.errors %}
-                        <div class="text-danger">{{ form.end_date.errors }}</div>
-                    {% endif %}
+                    {{ form.end_date }}                    
                 </div>
             </div>
 
@@ -65,12 +59,38 @@
             <!-- Скрываемые фильтры -->
             <div id="extraFilters" style="display: none;">
                 <div class="col-md-3">
-                    {{ form.sale_types.label_tag }}
-                    {{ form.sale_types }}
+                    <!-- Фильтр по типам продаж -->
+                    <div class="mb-3">
+                        <label>Тип продажи:</label><br>
+                        <!-- Первый элемент "Все" -->
+                        <input type="checkbox" id="sale_type_all" name="sale_types" value="all"
+                               onchange="toggleSaleType(this)" {% if 'all' in selected_sale_types %}checked{% endif %}>
+                        <label for="sale_type_all">Все</label><br>
+                        
+                        <!-- Остальные элементы из `SaleTypeEnum` -->
+                        {% for value, display in sale_type_choices %}
+                            <input type="checkbox" id="sale_type_{{ value }}" name="sale_types" value="{{ value }}"
+                                   {% if value in selected_sale_types %}checked{% endif %}>
+                            <label for="sale_type_{{ value }}">{{ display }}</label><br>
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    {{ form.events.label_tag }}
-                    {{ form.events }}
+                    <!-- Фильтр по мероприятиям -->
+                    <div class="mb-3">
+                        <label>Мероприятия:</label><br>
+                        <!-- Первый элемент "Все" -->
+                        <input type="checkbox" id="event_all" name="events" value="all"
+                               onchange="toggleEvent(this)" {% if 'all' in selected_events %}checked{% endif %}>
+                        <label for="event_all">Все</label><br>
+                        
+                        <!-- Остальные элементы из queryset `Event` -->
+                        {% for event in events_list %}
+                            <input type="checkbox" id="event_{{ event.id }}" name="events" value="{{ event.id }}"
+                                   {% if event.id|stringformat:"s" in selected_events %}checked{% endif %}>
+                            <label for="event_{{ event.id }}">{{ event.name }}</label><br>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </form>
@@ -102,52 +122,52 @@
             {% for sale in page_obj %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ sale.event_date|date:"d.m.Y" }}</td>
-                    <td>{{ sale.total_amount }}</td>
+                    <td>{{ sale.sale_date|date:"d.m.Y" }}</td>
+                    <td>{{ sale.amount }}</td>
                     <td>
-                        {% if sale.ticket_sale__sale_type == "CS" %}
+                        {% if sale.sale_type == "CS" %}
                             {{ sale.paid_card }}
                         {% else %}
                             0
                         {% endif %}
                     </td>
                     <td>
-                        {% if sale.ticket_sale__sale_type == "CS" %}
+                        {% if sale.sale_type == "CS" %}
                             {{ sale.paid_cash }}
                         {% else %}
                             0
                         {% endif %}
                     </td>
                     <td>
-                        {% if sale.ticket_sale__sale_type == "TS" %}
+                        {% if sale.sale_type == "TS" %}
                             {{ sale.paid_amount }}
                         {% else %}
                             0
                         {% endif %}
                     </td>
                     <td>
-                        {% if sale.ticket_sale__sale_type == "SM" %}
+                        {% if sale.sale_type == "SM" %}
                             {{ sale.paid_qr }}
                         {% else %}
                             0
                         {% endif %}
                     </td>
                     <td>
-                        {% if sale.ticket_sale__sale_type == "SM" %}
+                        {% if sale.sale_type == "SM" %}
                             {{ sale.paid_card }}
                         {% else %}
                             0
                         {% endif %}
                     </td>
                     <td>
-                        {% if sale.ticket_sale__sale_type == "KP" %}
+                        {% if sale.sale_type == "KP" %}
                             {{ sale.paid_amount }}
                         {% else %}
                             0
                         {% endif %}
                     </td>
                     <td>{{ sale.refund_amount }}</td>
-                    <td>{{ sale.event__name }}</td>
+                    <td>{{ sale.event_name }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -163,5 +183,5 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'js/report.js' %}"></script>
+    <script src="{% static 'js/report.js' %}"></script>    
 {% endblock %}

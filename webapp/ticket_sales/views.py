@@ -45,7 +45,7 @@ class TicketSaleListView(ListView):
 
 def create_ticket_sale_cashier(request):
     # Создаем новую запись TicketSale
-    ticket_sale = TicketSale.objects.create(sale_type='CS')
+    ticket_sale = TicketSale.objects.create(sale_type='CS', booking_guid=uuid.uuid4())
 
     # Перенаправляем на страницу редактирования
     return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))

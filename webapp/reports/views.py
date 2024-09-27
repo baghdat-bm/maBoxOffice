@@ -3,107 +3,116 @@ from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
 from datetime import date, timedelta
 from django.db import models
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField
 from django.contrib import messages
 
-from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService
+from references.models import Event
+from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
 from .forms import TicketReportForm, SalesReportForm, SessionsReportForm
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
-
-
-@permission_required('reports.view_tickets_report', raise_exception=True)
-def tickets_report(request):
-    form = TicketReportForm(request.GET or None)
-    tickets = TicketSalesTicket.objects.all()
-
-    # Фильтруем по номеру билета
-    if form.is_valid():
-        ticket_number = form.cleaned_data.get('ticket_number')
-        order_number = form.cleaned_data.get('order_number')
-        start_date = form.cleaned_data.get('start_date')
-        end_date = form.cleaned_data.get('end_date')
-        event_templates = form.cleaned_data.get('event_templates')
-
-        if ticket_number:
-            tickets = tickets.filter(number=ticket_number)
-        if order_number:
-            tickets = tickets.filter(ticket_sale__id=order_number)
-        if start_date and end_date:
-            tickets = tickets.filter(event_date__range=(start_date, end_date))
-        if event_templates:
-            tickets = tickets.filter(event__event_template__in=event_templates)
-
-        # Аннотируем поле для объединения ticket_sale.id и номера билета
-        tickets = tickets.annotate(
-            ticket_number=Concat(
-                F('ticket_sale__id'), Value('-'), F('number'),
-                output_field=CharField()
-            )
-        )
-
-        # Добавляем пагинацию
-        paginator = Paginator(tickets, 10)  # 10 билетов на страницу
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-
-    else:
-        page_obj = None  # Ошибки формы
-        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
-
-    context = {
-        'form': form,
-        'page_obj': page_obj
-    }
-    return render(request, 'reports/tickets_report.html', context)
 
 
 @permission_required('reports.view_sales_report', raise_exception=True)
 def sales_report(request):
     # Получаем данные из формы фильтрации
     form = SalesReportForm(request.GET or None)
-    sales = TicketSalesService.objects.all().select_related('ticket_sale', 'event', 'service')
 
-    # Обязательный фильтр по дате
     if form.is_valid():
+        # Основные фильтры
         start_date = form.cleaned_data.get('start_date', date.today())
         end_date = form.cleaned_data.get('end_date', date.today())
-        sales = sales.filter(event_date__range=(start_date, end_date))
 
         # Дополнительные фильтры
-        sale_types = form.cleaned_data.get('sale_types')
-        if sale_types:
-            sales = sales.filter(ticket_sale__sale_type__in=sale_types)
+        sale_types = request.GET.getlist('sale_types')
+        events = request.GET.getlist('events')
 
-        events = form.cleaned_data.get('events')
-        if events:
-            sales = sales.filter(event__in=events)
+        # Находим записи TicketSale в заданном интервале дат
+        ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date))
 
-        # Группируем данные по полям sale_type, event, event_date
-        sales = sales.order_by('event_date').values(
-            'ticket_sale__sale_type',
-            'event__name',
-            'event_date'
-        ).annotate(
-            total_amount=models.Sum('tickets_amount'),
-            paid_card=models.Sum('ticket_sale__paid_card'),
-            paid_qr=models.Sum('ticket_sale__paid_qr'),
-            paid_cash=models.Sum('ticket_sale__paid_cash'),
-            refund_amount=models.Sum('ticket_sale__refund_amount'),
-            paid_amount=models.Sum('paid_amount')
-        )
+        # Проверяем наличие "Все" в фильтре sale_types
+        if 'all' not in sale_types:
+            sales = ticket_sales.filter(sale_type__in=sale_types)
+
+        # Фильтруем записи TicketSalesService по найденным TicketSale
+        sales = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
+
+        # Проверяем наличие "Все" в фильтре events
+        if 'all' not in events:
+            sales = sales.filter(event__id__in=events)
+
+        # # Добавляем короткие названия для полей
+        # sales = sales.annotate(
+        #     sale_date=models.F('ticket_sale__date'),
+        #     sale_type=models.F('ticket_sale__sale_type'),
+        #     event_name=models.F('event__name'),
+        #     paid_card=models.F('ticket_sale__paid_card'),
+        #     paid_qr=models.F('ticket_sale__paid_qr'),
+        #     paid_cash=models.F('ticket_sale__paid_cash'),
+        #     refund_amount=models.F('ticket_sale__refund_amount'),
+        # ).order_by('sale_date', 'ticket_sale__id', 'id')
+
+        # Агрегируем платежи на основе типа оплаты
+        sales = sales.annotate(
+            sale_date=F('ticket_sale__date'),
+            sale_type=F('ticket_sale__sale_type'),
+            event_name=F('event__name'),
+
+            # Агрегация для paid_card
+            paid_card=Sum(
+                Case(
+                    When(payment__payment_method='CD', then=F('payment__amount')),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            ),
+
+            # Агрегация для paid_qr
+            paid_qr=Sum(
+                Case(
+                    When(payment__payment_method='QR', then=F('payment__amount')),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            ),
+
+            # Агрегация для paid_cash
+            paid_cash=Sum(
+                Case(
+                    When(payment__payment_method='CH', then=F('payment__amount')),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            ),
+
+            # Агрегация для refund_amount
+            refund_amount=Sum(F('payment__refund_amount')),
+        ).order_by('sale_date', 'ticket_sale__id', 'id')
 
         # Пагинация по 10 записей на страницу
         paginator = Paginator(sales, 10)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+
+        # Если не выбраны sale_types или events, ставим "all" по умолчанию
+        if len(sale_types) == 0:
+            sale_types = ['all', ]
+        if len(events) == 0:
+            events = ['all', ]
+
     else:
         page_obj = None  # Ошибки формы
+        sale_types = []
+        events = []
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
 
     context = {
         'form': form,
         'page_obj': page_obj,
+        'sale_type_choices': SaleTypeEnum.choices(),
+        'events_list': Event.objects.all(),
+        'selected_sale_types': sale_types,  # Передаем выбранные типы продаж
+        'selected_events': events,  # Передаем выбранные мероприятия
     }
     return render(request, 'reports/sales_report.html', context)
 
@@ -162,3 +171,49 @@ def sessions_report(request):
     }
 
     return render(request, 'reports/sessions_report.html', context)
+
+
+@permission_required('reports.view_tickets_report', raise_exception=True)
+def tickets_report(request):
+    form = TicketReportForm(request.GET or None)
+    tickets = TicketSalesTicket.objects.all()
+
+    # Фильтруем по номеру билета
+    if form.is_valid():
+        ticket_number = form.cleaned_data.get('ticket_number')
+        order_number = form.cleaned_data.get('order_number')
+        start_date = form.cleaned_data.get('start_date')
+        end_date = form.cleaned_data.get('end_date')
+        event_templates = form.cleaned_data.get('event_templates')
+
+        if ticket_number:
+            tickets = tickets.filter(number=ticket_number)
+        if order_number:
+            tickets = tickets.filter(ticket_sale__id=order_number)
+        if start_date and end_date:
+            tickets = tickets.filter(event_date__range=(start_date, end_date))
+        if event_templates:
+            tickets = tickets.filter(event__event_template__in=event_templates)
+
+        # Аннотируем поле для объединения ticket_sale.id и номера билета
+        tickets = tickets.annotate(
+            ticket_number=Concat(
+                F('ticket_sale__id'), Value('-'), F('number'),
+                output_field=CharField()
+            )
+        )
+
+        # Добавляем пагинацию
+        paginator = Paginator(tickets, 10)  # 10 билетов на страницу
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+    else:
+        page_obj = None  # Ошибки формы
+        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+
+    context = {
+        'form': form,
+        'page_obj': page_obj
+    }
+    return render(request, 'reports/tickets_report.html', context)

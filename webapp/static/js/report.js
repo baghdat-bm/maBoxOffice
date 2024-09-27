@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Инициализация Datepicker для всех элементов с классом .datepicker
     $('.datepicker').datepicker({
         format: 'dd-mm-yyyy', // формат даты
@@ -17,5 +17,35 @@ function showHideAdditionalFilters(button) {
     } else {
         extraFilters.style.display = 'none';
         button.textContent = 'Показать дополнительные фильтры';
+    }
+}
+
+// JavaScript для обработки "Все" чекбоксов
+
+function toggleSaleType(checkbox) {
+    const saleTypeCheckboxes = document.querySelectorAll('input[name="sale_types"]');
+    if (checkbox.value === 'all' && checkbox.checked) {
+        saleTypeCheckboxes.forEach(cb => {
+            if (cb.value !== 'all') {
+                cb.checked = false;
+                cb.disabled = true;
+            }
+        });
+    } else {
+        saleTypeCheckboxes.forEach(cb => cb.disabled = false);
+    }
+}
+
+function toggleEvent(checkbox) {
+    const eventCheckboxes = document.querySelectorAll('input[name="events"]');
+    if (checkbox.value === 'all' && checkbox.checked) {
+        eventCheckboxes.forEach(cb => {
+            if (cb.value !== 'all') {
+                cb.checked = false;
+                cb.disabled = true;
+            }
+        });
+    } else {
+        eventCheckboxes.forEach(cb => cb.disabled = false);
     }
 }
