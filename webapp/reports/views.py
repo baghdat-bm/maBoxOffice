@@ -92,7 +92,7 @@ def sales_report(request):
         ).order_by('sale_date', 'ticket_sale__id', 'id')
 
         # Пагинация по 10 записей на страницу
-        paginator = Paginator(tickets, 10)
+        paginator = Paginator(tickets, 20)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
