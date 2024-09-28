@@ -21,31 +21,39 @@ function showHideAdditionalFilters(button) {
 }
 
 // JavaScript для обработки "Все" чекбоксов
-
 function toggleSaleType(checkbox) {
     const saleTypeCheckboxes = document.querySelectorAll('input[name="sale_types"]');
     if (checkbox.value === 'all' && checkbox.checked) {
+        // Если выбран чекбокс "Все", снимаем отметки с остальных
         saleTypeCheckboxes.forEach(cb => {
             if (cb.value !== 'all') {
                 cb.checked = false;
-                cb.disabled = true;
             }
         });
     } else {
-        saleTypeCheckboxes.forEach(cb => cb.disabled = false);
+        // Снимаем отметку с чекбокса "Все", если любой другой выбран
+        const selectAllCheckbox = document.querySelector('input[name="sale_types"][value="all"]');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
     }
 }
 
 function toggleEvent(checkbox) {
     const eventCheckboxes = document.querySelectorAll('input[name="events"]');
+
     if (checkbox.value === 'all' && checkbox.checked) {
+        // Если выбран чекбокс "Все", снимаем отметки с остальных
         eventCheckboxes.forEach(cb => {
             if (cb.value !== 'all') {
                 cb.checked = false;
-                cb.disabled = true;
             }
         });
     } else {
-        eventCheckboxes.forEach(cb => cb.disabled = false);
+        // Снимаем отметку с чекбокса "Все", если любой другой выбран
+        const selectAllCheckbox = document.querySelector('input[name="events"][value="all"]');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
     }
 }

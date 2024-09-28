@@ -1,16 +1,21 @@
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
 from datetime import date, timedelta
-from django.db import models
+import openpyxl
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.contrib import messages
+from django.utils.timezone import now
+from openpyxl.utils import get_column_letter
 
 from references.models import Event
 from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
 from .forms import TicketReportForm, SalesReportForm, SessionsReportForm
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
+
+from .utils import get_filtered_sales_data
 
 
 @permission_required('reports.view_sales_report', raise_exception=True)
@@ -19,98 +24,8 @@ def sales_report(request):
     form = SalesReportForm(request.GET or None)
 
     if form.is_valid():
-        # Основные фильтры
-        start_date = form.cleaned_data.get('start_date', date.today())
-        end_date = form.cleaned_data.get('end_date', date.today())
 
-        # Дополнительные фильтры
-        sale_types = request.GET.getlist('sale_types')
-        events = request.GET.getlist('events')
-
-        # Находим записи TicketSale в заданном интервале дат
-        ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date))
-
-        # Проверяем наличие "Все" в фильтре sale_types
-        if 'all' not in sale_types:
-            ticket_sales = ticket_sales.filter(sale_type__in=sale_types)
-
-        # Фильтруем записи TicketSalesTicket по найденным TicketSale
-        tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
-
-        # Проверяем наличие "Все" в фильтре events
-        if 'all' not in events:
-            tickets = tickets.filter(event__id__in=events)
-
-        # Агрегируем платежи на основе типа оплаты и добавляем обработанные поля
-        tickets = tickets.annotate(
-            sale_date=F('ticket_sale__date'),
-            sale_type=F('ticket_sale__sale_type'),
-            event_name=F('event__name'),
-
-            # Минимальная сумма между платежом и суммой билета
-            min_payment_amount=Case(
-                When(payment__amount__lte=F('amount'), then=F('payment__amount')),
-                default=F('amount'),
-                output_field=IntegerField()
-            ),
-
-            # Обработанные поля для шаблона
-            cashier_paid_card=Sum(
-                Case(
-                    When(payment__payment_method='CD', sale_type='CS', then=F('min_payment_amount')),
-                    default=Value(0),
-                    output_field=IntegerField()
-                )
-            ),
-
-            cashier_paid_cash=Sum(
-                Case(
-                    When(payment__payment_method='CH', sale_type='CS', then=F('min_payment_amount')),
-                    default=Value(0),
-                    output_field=IntegerField()
-                )
-            ),
-
-            kiosk_paid=Sum(
-                Case(
-                    When(sale_type='TS', then=F('min_payment_amount')),
-                    default=Value(0),
-                    output_field=IntegerField()
-                )
-            ),
-
-            muzaidyny_qr_paid=Sum(
-                Case(
-                    When(payment__payment_method='QR', sale_type='SM', then=F('min_payment_amount')),
-                    default=Value(0),
-                    output_field=IntegerField()
-                )
-            ),
-
-            muzaidyny_card_paid=Sum(
-                Case(
-                    When(payment__payment_method='CD', sale_type='SM', then=F('min_payment_amount')),
-                    default=Value(0),
-                    output_field=IntegerField()
-                )
-            ),
-
-            kaspi_paid=Sum(
-                Case(
-                    When(sale_type='KP', then=F('min_payment_amount')),
-                    default=Value(0),
-                    output_field=IntegerField()
-                )
-            ),
-
-            refund_amount=Sum(
-                Case(
-                    When(payment__refund_amount__lte=F('amount'), then=F('payment__refund_amount')),
-                    default=F('amount'),
-                    output_field=IntegerField()
-                )
-            ),
-        ).order_by('sale_date', 'ticket_sale__id', 'id')
+        tickets = get_filtered_sales_data(request, form.cleaned_data)
 
         # Пагинация по 20 записей на страницу
         paginator = Paginator(tickets, 20)
@@ -128,6 +43,10 @@ def sales_report(request):
             'total_kaspi_paid': sum(item.kaspi_paid for item in page_obj),
             'total_refund_amount': sum(item.refund_amount for item in page_obj),
         }
+
+        # Получаем дополнительные данные для контекста
+        sale_types = request.GET.getlist('sale_types')
+        events = request.GET.getlist('events')
 
         # Если не выбраны sale_types или events, ставим "all" по умолчанию
         if len(sale_types) == 0:
@@ -152,6 +71,60 @@ def sales_report(request):
         'selected_events': events,  # Передаем выбранные мероприятия
     }
     return render(request, 'reports/sales_report.html', context)
+
+
+@permission_required('reports.view_sales_report', raise_exception=True)
+def sales_report_export(request):
+    # Получаем данные из формы фильтрации
+    form = SalesReportForm(request.GET or None)
+
+    if form.is_valid():
+
+        tickets = get_filtered_sales_data(request, form.cleaned_data)
+
+        # Создаем Excel-файл
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.title = "Sales Report"
+
+        # Заголовки для столбцов
+        headers = [
+            "Дата", "Сумма продажи", "Касса (безнал)", "Касса (наличные)",
+            "Киоск", "Muzaidyny.kz (KaspiQR)", "Muzaidyny.kz (Карта)",
+            "Kaspi платежи", "Возвраты", "Мероприятие"
+        ]
+        sheet.append(headers)
+
+        # Заполняем строки данными отчета
+        for ticket in tickets:
+            sheet.append([
+                ticket.sale_date.strftime('%d.%m.%Y'),
+                ticket.amount,
+                ticket.cashier_paid_card,
+                ticket.cashier_paid_cash,
+                ticket.kiosk_paid,
+                ticket.muzaidyny_qr_paid,
+                ticket.muzaidyny_card_paid,
+                ticket.kaspi_paid,
+                ticket.refund_amount,
+                ticket.event_name,
+            ])
+
+        # Настраиваем ширину колонок
+        for col_num, column_title in enumerate(headers, 1):
+            column_letter = get_column_letter(col_num)
+            sheet.column_dimensions[column_letter].width = 15
+
+        # Создаем HTTP-ответ с Excel-файлом
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename=sales_report_{now().strftime("%Y-%m-%d")}.xlsx'
+        workbook.save(response)
+
+        return response
+
+    else:
+        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+        return redirect('reports:sales_report')
 
 
 @permission_required('reports.view_events_report', raise_exception=True)
