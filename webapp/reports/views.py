@@ -117,17 +117,17 @@ def sales_report(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        # Итоговые суммы по каждой колонке
-        totals = tickets.aggregate(
-            total_amount=Sum('amount'),
-            total_cashier_paid_card=Sum('cashier_paid_card'),
-            total_cashier_paid_cash=Sum('cashier_paid_cash'),
-            total_kiosk_paid=Sum('kiosk_paid'),
-            total_muzaidyny_qr_paid=Sum('muzaidyny_qr_paid'),
-            total_muzaidyny_card_paid=Sum('muzaidyny_card_paid'),
-            total_kaspi_paid=Sum('kaspi_paid'),
-            total_refund_amount=Sum('refund_amount')
-        )
+        # Итоговые суммы по текущей странице
+        totals = {
+            'total_amount': sum(item.amount for item in page_obj),
+            'total_cashier_paid_card': sum(item.cashier_paid_card for item in page_obj),
+            'total_cashier_paid_cash': sum(item.cashier_paid_cash for item in page_obj),
+            'total_kiosk_paid': sum(item.kiosk_paid for item in page_obj),
+            'total_muzaidyny_qr_paid': sum(item.muzaidyny_qr_paid for item in page_obj),
+            'total_muzaidyny_card_paid': sum(item.muzaidyny_card_paid for item in page_obj),
+            'total_kaspi_paid': sum(item.kaspi_paid for item in page_obj),
+            'total_refund_amount': sum(item.refund_amount for item in page_obj),
+        }
 
         # Если не выбраны sale_types или events, ставим "all" по умолчанию
         if len(sale_types) == 0:
