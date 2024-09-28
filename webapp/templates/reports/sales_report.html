@@ -138,6 +138,21 @@
                     <td colspan="11">Нет данных для отображения.</td>
                 </tr>
             {% endfor %}
+            
+            <!-- Строка итогов -->
+            <tr class="table-footer">
+                <td colspan="2"><strong>Итого:</strong></td>
+                <td><strong>{{ totals.total_amount }}</strong></td>
+                <td><strong>{{ totals.total_cashier_paid_card }}</strong></td>
+                <td><strong>{{ totals.total_cashier_paid_cash }}</strong></td>
+                <td><strong>{{ totals.total_kiosk_paid }}</strong></td>
+                <td><strong>{{ totals.total_muzaidyny_qr_paid }}</strong></td>
+                <td><strong>{{ totals.total_muzaidyny_card_paid }}</strong></td>
+                <td><strong>{{ totals.total_kaspi_paid }}</strong></td>
+                <td><strong>{{ totals.total_refund_amount }}</strong></td>
+                <td></td>
+            </tr>
+
             </tbody>
         </table>
 

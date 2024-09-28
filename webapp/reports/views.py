@@ -117,6 +117,18 @@ def sales_report(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        # Итоговые суммы по каждой колонке
+        totals = tickets.aggregate(
+            total_amount=Sum('amount'),
+            total_cashier_paid_card=Sum('cashier_paid_card'),
+            total_cashier_paid_cash=Sum('cashier_paid_cash'),
+            total_kiosk_paid=Sum('kiosk_paid'),
+            total_muzaidyny_qr_paid=Sum('muzaidyny_qr_paid'),
+            total_muzaidyny_card_paid=Sum('muzaidyny_card_paid'),
+            total_kaspi_paid=Sum('kaspi_paid'),
+            total_refund_amount=Sum('refund_amount')
+        )
+
         # Если не выбраны sale_types или events, ставим "all" по умолчанию
         if len(sale_types) == 0:
             sale_types = ['all', ]
@@ -125,6 +137,7 @@ def sales_report(request):
 
     else:
         page_obj = None  # Ошибки формы
+        totals = {}  # Пустые итоги
         sale_types = []
         events = []
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
@@ -132,6 +145,7 @@ def sales_report(request):
     context = {
         'form': form,
         'page_obj': page_obj,
+        'totals': totals,  # Передаем итоговые суммы в контекст
         'sale_type_choices': SaleTypeEnum.choices(),
         'events_list': Event.objects.all(),
         'selected_sale_types': sale_types,  # Передаем выбранные типы продаж
