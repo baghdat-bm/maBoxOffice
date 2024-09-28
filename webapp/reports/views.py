@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
 from datetime import date, timedelta
 from django.db import models
-from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField
+from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.contrib import messages
 
 from references.models import Event
@@ -32,36 +32,32 @@ def sales_report(request):
 
         # Проверяем наличие "Все" в фильтре sale_types
         if 'all' not in sale_types:
-            sales = ticket_sales.filter(sale_type__in=sale_types)
+            ticket_sales = ticket_sales.filter(sale_type__in=sale_types)
 
-        # Фильтруем записи TicketSalesService по найденным TicketSale
-        sales = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
+        # Фильтруем записи TicketSalesTicket по найденным TicketSale
+        tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
 
         # Проверяем наличие "Все" в фильтре events
         if 'all' not in events:
-            sales = sales.filter(event__id__in=events)
+            tickets = tickets.filter(event__id__in=events)
 
-        # # Добавляем короткие названия для полей
-        # sales = sales.annotate(
-        #     sale_date=models.F('ticket_sale__date'),
-        #     sale_type=models.F('ticket_sale__sale_type'),
-        #     event_name=models.F('event__name'),
-        #     paid_card=models.F('ticket_sale__paid_card'),
-        #     paid_qr=models.F('ticket_sale__paid_qr'),
-        #     paid_cash=models.F('ticket_sale__paid_cash'),
-        #     refund_amount=models.F('ticket_sale__refund_amount'),
-        # ).order_by('sale_date', 'ticket_sale__id', 'id')
-
-        # Агрегируем платежи на основе типа оплаты
-        sales = sales.annotate(
+        # Агрегируем платежи на основе типа оплаты и берем минимум от суммы билета и платежа
+        tickets = tickets.annotate(
             sale_date=F('ticket_sale__date'),
             sale_type=F('ticket_sale__sale_type'),
             event_name=F('event__name'),
 
+            # Минимальная сумма между платежом и суммой билета
+            min_payment_amount=Case(
+                When(payment__amount__lte=F('amount'), then=F('payment__amount')),
+                default=F('amount'),
+                output_field=IntegerField()
+            ),
+
             # Агрегация для paid_card
             paid_card=Sum(
                 Case(
-                    When(payment__payment_method='CD', then=F('payment__amount')),
+                    When(payment__payment_method='CD', then=F('min_payment_amount')),
                     default=Value(0),
                     output_field=IntegerField()
                 )
@@ -70,7 +66,7 @@ def sales_report(request):
             # Агрегация для paid_qr
             paid_qr=Sum(
                 Case(
-                    When(payment__payment_method='QR', then=F('payment__amount')),
+                    When(payment__payment_method='QR', then=F('min_payment_amount')),
                     default=Value(0),
                     output_field=IntegerField()
                 )
@@ -79,18 +75,24 @@ def sales_report(request):
             # Агрегация для paid_cash
             paid_cash=Sum(
                 Case(
-                    When(payment__payment_method='CH', then=F('payment__amount')),
+                    When(payment__payment_method='CH', then=F('min_payment_amount')),
                     default=Value(0),
                     output_field=IntegerField()
                 )
             ),
 
             # Агрегация для refund_amount
-            refund_amount=Sum(F('payment__refund_amount')),
+            refund_amount=Sum(
+                Case(
+                    When(payment__refund_amount__lte=F('amount'), then=F('payment__refund_amount')),
+                    default=F('amount'),
+                    output_field=IntegerField()
+                )
+            ),
         ).order_by('sale_date', 'ticket_sale__id', 'id')
 
         # Пагинация по 10 записей на страницу
-        paginator = Paginator(sales, 10)
+        paginator = Paginator(tickets, 10)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
