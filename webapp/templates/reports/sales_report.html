@@ -124,48 +124,12 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ sale.sale_date|date:"d.m.Y" }}</td>
                     <td>{{ sale.amount }}</td>
-                    <td>
-                        {% if sale.sale_type == "CS" %}
-                            {{ sale.paid_card }}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if sale.sale_type == "CS" %}
-                            {{ sale.paid_cash }}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if sale.sale_type == "TS" %}
-                            {{ sale.paid_amount }}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if sale.sale_type == "SM" %}
-                            {{ sale.paid_qr }}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if sale.sale_type == "SM" %}
-                            {{ sale.paid_card }}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if sale.sale_type == "KP" %}
-                            {{ sale.paid_amount }}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </td>
+                    <td>{{ sale.cashier_paid_card }}</td>
+                    <td>{{ sale.cashier_paid_cash }}</td>
+                    <td>{{ sale.kiosk_paid }}</td>
+                    <td>{{ sale.muzaidyny_qr_paid }}</td>
+                    <td>{{ sale.muzaidyny_card_paid }}</td>
+                    <td>{{ sale.kaspi_paid }}</td>
                     <td>{{ sale.refund_amount }}</td>
                     <td>{{ sale.event_name }}</td>
                 </tr>

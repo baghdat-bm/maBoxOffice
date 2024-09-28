@@ -41,7 +41,7 @@ def sales_report(request):
         if 'all' not in events:
             tickets = tickets.filter(event__id__in=events)
 
-        # Агрегируем платежи на основе типа оплаты и берем минимум от суммы билета и платежа
+        # Агрегируем платежи на основе типа оплаты и добавляем обработанные поля
         tickets = tickets.annotate(
             sale_date=F('ticket_sale__date'),
             sale_type=F('ticket_sale__sale_type'),
@@ -54,34 +54,55 @@ def sales_report(request):
                 output_field=IntegerField()
             ),
 
-            # Агрегация для paid_card
-            paid_card=Sum(
+            # Обработанные поля для шаблона
+            cashier_paid_card=Sum(
                 Case(
-                    When(payment__payment_method='CD', then=F('min_payment_amount')),
+                    When(payment__payment_method='CD', sale_type='CS', then=F('min_payment_amount')),
                     default=Value(0),
                     output_field=IntegerField()
                 )
             ),
 
-            # Агрегация для paid_qr
-            paid_qr=Sum(
+            cashier_paid_cash=Sum(
                 Case(
-                    When(payment__payment_method='QR', then=F('min_payment_amount')),
+                    When(payment__payment_method='CH', sale_type='CS', then=F('min_payment_amount')),
                     default=Value(0),
                     output_field=IntegerField()
                 )
             ),
 
-            # Агрегация для paid_cash
-            paid_cash=Sum(
+            kiosk_paid=Sum(
                 Case(
-                    When(payment__payment_method='CH', then=F('min_payment_amount')),
+                    When(sale_type='TS', then=F('min_payment_amount')),
                     default=Value(0),
                     output_field=IntegerField()
                 )
             ),
 
-            # Агрегация для refund_amount
+            muzaidyny_qr_paid=Sum(
+                Case(
+                    When(payment__payment_method='QR', sale_type='SM', then=F('min_payment_amount')),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            ),
+
+            muzaidyny_card_paid=Sum(
+                Case(
+                    When(payment__payment_method='CD', sale_type='SM', then=F('min_payment_amount')),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            ),
+
+            kaspi_paid=Sum(
+                Case(
+                    When(sale_type='KP', then=F('min_payment_amount')),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            ),
+
             refund_amount=Sum(
                 Case(
                     When(payment__refund_amount__lte=F('amount'), then=F('payment__refund_amount')),
@@ -91,7 +112,7 @@ def sales_report(request):
             ),
         ).order_by('sale_date', 'ticket_sale__id', 'id')
 
-        # Пагинация по 10 записей на страницу
+        # Пагинация по 20 записей на страницу
         paginator = Paginator(tickets, 20)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
