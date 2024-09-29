@@ -89,3 +89,16 @@ function OnSessionsReportLoaded() {
     // Run default check on page load
     checkDefault();
 }
+
+
+function OnTicketsReportLoad () {
+    // Проверяем, заданы ли дополнительные фильтры
+    const orderNumber = document.querySelector('input[name="order_number"]').value;
+    const ticketNumber = document.querySelector('input[name="ticket_number"]').value;
+    const eventTemplates = document.querySelector('select[name="event_templates"]').value;
+
+    if (orderNumber || ticketNumber || eventTemplates) {
+        document.getElementById('extraFilters').style.display = 'block';  // Показываем блок, если фильтры заданы
+        document.getElementById('showHideAdditionalFiltersButton').textContent = 'Скрыть дополнительные фильтры';
+    }
+}

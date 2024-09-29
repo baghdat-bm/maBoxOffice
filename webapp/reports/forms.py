@@ -79,7 +79,6 @@ class SessionsReportForm(forms.Form):
 class TicketReportForm(forms.Form):
     ticket_number = forms.IntegerField(required=False, label='Номер билета')
     order_number = forms.IntegerField(required=False, label='Номер заказа')
-
     start_date = forms.DateField(
         required=False,
         initial=date.today().strftime('%d-%m-%Y'),  # Текущая дата по умолчанию
@@ -88,7 +87,6 @@ class TicketReportForm(forms.Form):
         help_text="Выберите начало периода",
         input_formats=['%d-%m-%Y'],  # Указываем формат 'dd-mm-yyyy'
     )
-
     end_date = forms.DateField(
         required=False,
         initial=date.today().strftime('%d-%m-%Y'),  # Текущая дата по умолчанию
@@ -97,11 +95,10 @@ class TicketReportForm(forms.Form):
         help_text="Выберите конец периода",
         input_formats=['%d-%m-%Y'],  # Указываем формат 'dd-mm-yyyy'
     )
-
     event_templates = forms.ModelMultipleChoiceField(
         queryset=EventTemplate.objects.all(),
+        widget=forms.CheckboxSelectMultiple,  # Use checkboxes instead of a select box
         required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
         label='Мероприятие'
     )
 

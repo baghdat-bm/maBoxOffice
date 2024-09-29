@@ -67,8 +67,19 @@
                     {{ form.ticket_number }}
                 </div>
                 <div class="col-md-6">
-                    {{ form.event_templates.label_tag }}
-                    {{ form.event_templates }}
+                    <label>Мероприятие</label>
+                    <div>
+                        <input type="checkbox" id="event_all" name="event_all" 
+                               {% if 'all' in selected_events %}checked{% endif %}>
+                        <label for="event_all">Все</label>
+                    </div>
+                    {% for event in events_list %}
+                    <div>
+                        <input type="checkbox" id="event_{{ event.id }}" name="event_templates" value="{{ event.id }}" 
+                               {% if event in selected_events %}checked{% endif %}>
+                        <label for="event_{{ event.id }}">{{ event.name }}</label>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </form>
@@ -142,16 +153,6 @@
     <script src="{% static 'js/report.js' %}"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {            
-            // Проверяем, заданы ли дополнительные фильтры
-            const orderNumber = document.querySelector('input[name="order_number"]').value;
-            const ticketNumber = document.querySelector('input[name="ticket_number"]').value;
-            const eventTemplates = document.querySelector('select[name="event_templates"]').value;
-
-            if (orderNumber || ticketNumber || eventTemplates) {
-                document.getElementById('extraFilters').style.display = 'block';  // Показываем блок, если фильтры заданы
-                document.getElementById('showHideAdditionalFiltersButton').textContent = 'Скрыть дополнительные фильтры';                
-            }
-        });
+        window.onload = OnSessionsReportLoaded;
     </script>
 {% endblock %}

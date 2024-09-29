@@ -99,7 +99,7 @@ def get_filtered_sales_data(request, form_data):
     return tickets
 
 
-def get_sessions_report_data(form):
+def get_sessions_report_data(form, calculate_total_summary=False):
     # Get date range from form
     start_date = form.cleaned_data.get('start_date', date.today())
     end_date = form.cleaned_data.get('end_date', date.today())
@@ -137,17 +137,20 @@ def get_sessions_report_data(form):
     ).order_by('event_date')
 
     # Calculate totals
-    total_summary = tickets_grouped.aggregate(
-        total_quantity=Sum('event__quantity'),
-        total_sold=Sum('total_tickets_sold'),
-        total_left=Sum('total_tickets_left'),
-        total_card_sales_cs=Sum('total_card_sales_cs'),
-        total_cash_sales_cs=Sum('total_cash_sales_cs'),
-        total_kiosk_sales=Sum('total_kiosk_sales'),
-        total_qr_sales_sm=Sum('total_qr_sales_sm'),
-        total_card_sales_sm=Sum('total_card_sales_sm'),
-        total_kaspi_sales=Sum('total_kaspi_sales'),
-        total_refunds=Sum('total_refunds')
-    )
+    if calculate_total_summary:
+        total_summary = tickets_grouped.aggregate(
+            total_quantity=Sum('event__quantity'),
+            total_sold=Sum('total_tickets_sold'),
+            total_left=Sum('total_tickets_left'),
+            total_card_sales_cs=Sum('total_card_sales_cs'),
+            total_cash_sales_cs=Sum('total_cash_sales_cs'),
+            total_kiosk_sales=Sum('total_kiosk_sales'),
+            total_qr_sales_sm=Sum('total_qr_sales_sm'),
+            total_card_sales_sm=Sum('total_card_sales_sm'),
+            total_kaspi_sales=Sum('total_kaspi_sales'),
+            total_refunds=Sum('total_refunds')
+        )
+    else:
+        total_summary = {}
 
     return tickets_grouped, total_summary

@@ -132,7 +132,7 @@ def sessions_report(request):
     form = SessionsReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets_grouped, total_summary = get_sessions_report_data(form)
+        tickets_grouped, total_summary = get_sessions_report_data(form, True)
 
         # Paginate the results
         paginator = Paginator(tickets_grouped, 20)
@@ -219,7 +219,6 @@ def export_sessions_report_to_excel(request):
 @permission_required('reports.view_tickets_report', raise_exception=True)
 def tickets_report(request):
     form = TicketReportForm(request.GET or None)
-    tickets = TicketSalesTicket.objects.all()
 
     # Фильтруем по номеру билета
     if form.is_valid():
@@ -229,12 +228,16 @@ def tickets_report(request):
         end_date = form.cleaned_data.get('end_date')
         event_templates = form.cleaned_data.get('event_templates')
 
+        # Filter TicketSales based on date range
+        ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+
+        # Retrieve tickets related to ticket sales
+        tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
+
         if ticket_number:
             tickets = tickets.filter(number=ticket_number)
         if order_number:
             tickets = tickets.filter(ticket_sale__id=order_number)
-        if start_date and end_date:
-            tickets = tickets.filter(event_date__range=(start_date, end_date))
         if event_templates:
             tickets = tickets.filter(event__event_template__in=event_templates)
 
@@ -251,12 +254,20 @@ def tickets_report(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        events_list = EventTemplate.objects.all()
+        selected_events = form.cleaned_data.get('event_templates', ['all'])
+
     else:
         page_obj = None  # Ошибки формы
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
 
+        events_list = EventTemplate.objects.all()
+        selected_events = ['all']
+
     context = {
         'form': form,
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'events_list': events_list,
+        'selected_events': selected_events,
     }
     return render(request, 'reports/tickets_report.html', context)
