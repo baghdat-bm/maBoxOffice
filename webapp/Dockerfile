@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     libgirepository1.0-dev \
     libcairo2-dev \
     gir1.2-gobject-2.0 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
