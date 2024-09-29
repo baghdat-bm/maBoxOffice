@@ -9,10 +9,11 @@ from django.contrib import messages
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from openpyxl.utils import get_column_letter
+from collections import defaultdict
 
 from references.models import Event, EventTemplate
 from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
-from .forms import TicketReportForm, SalesReportForm, SessionsReportForm
+from .forms import TicketReportForm, SalesReportForm, SessionsReportForm, ServiceReportForm
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
 
@@ -370,3 +371,75 @@ def ticket_print_pdf(request, ticket_id):
     response['Content-Disposition'] = f'attachment; filename="ticket_{ticket_id}.pdf"'
 
     return response
+
+
+@csrf_exempt
+def services_report(request):
+    form = ServiceReportForm(request.GET or None)
+
+    if form.is_valid():
+        # Filter dates
+        start_date = form.cleaned_data.get('start_date')
+        end_date = form.cleaned_data.get('end_date')
+
+        # Filter ticket sales
+        ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+
+        # Filter TicketSalesService based on ticket_sales
+        services_data = TicketSalesService.objects.filter(ticket_sale__in=ticket_sales)
+
+        # Filter by selected services
+        selected_services = form.cleaned_data.get('services')
+        if selected_services:
+            services_data = services_data.filter(service__in=selected_services)
+
+        # Group by service and date, aggregate tickets_amount and tickets_count
+        grouped_data = services_data.values(
+            'service__id',
+            'service__name',
+            'ticket_sale__date'
+        ).annotate(
+            total_amount=Sum('tickets_amount'),
+            total_count=Sum('tickets_count')
+        ).order_by('ticket_sale__date')
+
+        # Prepare the report data
+        report_data = defaultdict(lambda: defaultdict(lambda: {'amount': 0, 'count': 0}))
+        dates = sorted({entry['ticket_sale__date'] for entry in grouped_data})
+        services = {entry['service__id']: entry['service__name'] for entry in grouped_data}
+
+        for entry in grouped_data:
+            report_data[entry['service__id']][entry['ticket_sale__date']] = {
+                'amount': entry['total_amount'],
+                'count': entry['total_count']
+            }
+
+        # Paginate services
+        paginator = Paginator(list(services.keys()), 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Summary calculations (across all dates and services)
+        summary = defaultdict(lambda: {'total_amount': 0, 'total_count': 0})
+        for service_id, date_data in report_data.items():
+            for date, data in date_data.items():
+                summary[service_id]['total_amount'] += data['amount']
+                summary[service_id]['total_count'] += data['count']
+    else:
+        page_obj = None
+        report_data = {}
+        dates = []
+        services = {}
+        summary = {}
+        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+
+    context = {
+        'form': form,
+        'page_obj': page_obj,
+        'report_data': report_data,
+        'dates': dates,
+        'services': services,
+        'summary': summary,
+    }
+
+    return render(request, 'reports/service_report.html', context)

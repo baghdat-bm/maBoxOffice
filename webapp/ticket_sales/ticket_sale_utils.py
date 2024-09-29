@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime
 from django.utils import timezone
 from django.db.models import Sum, Q
+from collections import defaultdict
 
 from references.models import Event, EventTimes, EventTemplateServices
 from ticket_sales.models import TicketSalesService
@@ -22,7 +23,9 @@ def is_day_included(event, date):
 
 def get_available_events_dates(include_tickets=False):
     events = Event.objects.all()
-    available_dates = []
+
+    # Используем словарь для суммирования количества билетов по уникальным датам
+    available_dates_dict = defaultdict(int)
 
     # Определяем диапазон дат: сегодня и +30 дней
     today = timezone.now().date()
@@ -51,13 +54,10 @@ def get_available_events_dates(include_tickets=False):
             if today <= current_date <= date_limit and is_day_included(event, current_date):
 
                 if include_tickets:
-                    # Преобразование даты в строку, если это необходимо для фильтрации
-                    current_date_str = current_date.isoformat()
-
                     # Подсчет проданных билетов для данного мероприятия на текущую дату
                     sold_tickets = TicketSalesService.objects.filter(
                         event=event,
-                        event_date=current_date_str,  # Преобразование текущей даты в строку, если это необходимо
+                        event_date=current_date,  # Используем текущую дату без преобразования в строку
                         service__on_calculation=True,
                         ticket_sale__status__in=['NP', 'PD', 'PP', 'PT']  # Исключаем "CN" и "RT"
                     ).aggregate(total_sold_tickets=Sum('tickets_count'))
@@ -68,19 +68,25 @@ def get_available_events_dates(include_tickets=False):
                     # Вычисляем доступное количество билетов
                     available_quantity = event.quantity * event_times_count - sold_tickets_count
 
-                    # Добавляем дату и количество доступных билетов в список
-                    available_dates.append({
-                        'date': current_date,
-                        'quantity': available_quantity
-                    })
+                    # Суммируем количество билетов по уникальной дате
+                    available_dates_dict[current_date] += available_quantity
                 else:
-                    available_dates.append(current_date)
+                    # Просто добавляем дату в словарь
+                    available_dates_dict[current_date] += 0
 
-    # Удаление дубликатов и сортировка по дате
-    if include_tickets:
-        available_dates = sorted(available_dates, key=lambda x: x['date'])
-    else:
-        available_dates = sorted(list(set(available_dates)))
+    # Преобразуем словарь в список
+    available_dates = []
+    for date, quantity in available_dates_dict.items():
+        if include_tickets:
+            available_dates.append({
+                'date': date,
+                'quantity': quantity
+            })
+        else:
+            available_dates.append(date)
+
+    # Сортируем по дате
+    available_dates = sorted(available_dates, key=lambda x: x['date'] if include_tickets else x)
 
     return available_dates
 

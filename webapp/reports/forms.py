@@ -2,7 +2,7 @@ from django import forms
 from datetime import date, timedelta
 from django.core.exceptions import ValidationError
 
-from references.models import EventTemplate, Event
+from references.models import EventTemplate, Event, Service
 from ticket_sales.models import SaleTypeEnum
 
 
@@ -117,5 +117,39 @@ class TicketReportForm(forms.Form):
             # Проверяем, что интервал не превышает 30 дней
             if end_date - start_date > timedelta(days=30):
                 raise ValidationError("Интервал дат не может превышать 30 дней.")
+
+        return cleaned_data
+
+
+class ServiceReportForm(forms.Form):
+    start_date = forms.DateField(
+        required=False,
+        initial=date.today().strftime('%d-%m-%Y'),
+        widget=forms.TextInput(attrs={'class': 'form-control datepicker', 'autocomplete': 'off'}),
+        label='Начало периода',
+        input_formats=['%d-%m-%Y'],
+    )
+    end_date = forms.DateField(
+        required=False,
+        initial=date.today().strftime('%d-%m-%Y'),
+        widget=forms.TextInput(attrs={'class': 'form-control datepicker', 'autocomplete': 'off'}),
+        label='Конец периода',
+        input_formats=['%d-%m-%Y'],
+    )
+    services = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label='Виды услуг'
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date:
+            if end_date < start_date:
+                raise forms.ValidationError("Конец периода не может быть раньше начала периода.")
 
         return cleaned_data

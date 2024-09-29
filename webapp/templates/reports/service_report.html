@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <h3>Реестр видов услуг</h3>
+
+    <!-- Форма фильтрации -->
+    <form method="get" class="row g-3">
+        {% if form.errors %}
+            {% for field in form %}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-warning" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-warning" role="alert">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-3 mt-4">
+                <button type="submit" class="btn btn-primary">Сформировать отчет</button>
+            </div>
+            <!-- Date filters -->
+            <div class="col-md-3">
+                {{ form.start_date.label_tag }}
+                {{ form.start_date }}
+            </div>
+            <div class="col-md-3">
+                {{ form.end_date.label_tag }}
+                {{ form.end_date }}
+            </div>
+        </div>
+
+        <!-- Additional filters: Service types -->
+        <div class="col-md-6">
+            <label>Виды услуг</label>
+            <div>
+                <input type="checkbox" id="service_all" name="service_all" {% if not form.cleaned_data.services %}checked{% endif %}>
+                <label for="service_all">Все</label>
+            </div>
+            {% for service in form.fields.services.queryset %}
+            <div>
+                <input type="checkbox" id="service_{{ service.id }}" name="services" value="{{ service.id }}" 
+                       {% if service in form.cleaned_data.services %}checked{% endif %}>
+                <label for="service_{{ service.id }}">{{ service.name }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </form>
+
+    <!-- Таблица отчета -->
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Наименование услуги</th>
+                {% for date in dates %}
+                    <th>{{ date|date:"d.m.Y" }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for service_id in page_obj %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ services[service_id] }}</td>
+                    {% for date in dates %}
+                        <td>
+                            {{ report_data[service_id][date].amount }} / {{ report_data[service_id][date].count }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{{ dates|length|add:"2" }}">Нет данных для отображения.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <!-- Итоговая строка -->
+        <tfoot>
+            <tr>
+                <td colspan="2"><strong>Итого:</strong></td>
+                {% for date in dates %}
+                    <td>
+                        {{ summary|get_total_amount_for_date:date }} / {{ summary|get_total_count_for_date:date }}
+                    </td>
+                {% endfor %}
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Пагинация -->
+    {% include 'reports/partials/paginator.html' %}
+</div>
+{% endblock %}
