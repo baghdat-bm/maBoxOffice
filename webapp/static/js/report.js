@@ -57,3 +57,35 @@ function toggleEvent(checkbox) {
         }
     }
 }
+
+function OnSessionsReportLoaded() {
+    const allCheckbox = document.getElementById('event_all');
+    const eventCheckboxes = document.querySelectorAll('input[name="event_templates"]');
+
+    // If no individual events are checked, select "all"
+    function checkDefault() {
+        const anyChecked = Array.from(eventCheckboxes).some(checkbox => checkbox.checked);
+        if (!anyChecked) {
+            allCheckbox.checked = true;
+        }
+    }
+
+    // When "all" is checked, uncheck all others
+    allCheckbox.addEventListener('change', function () {
+        if (allCheckbox.checked) {
+            eventCheckboxes.forEach(checkbox => checkbox.checked = false);
+        }
+    });
+
+    // When any individual event is checked, uncheck "all"
+    eventCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (checkbox.checked) {
+                allCheckbox.checked = false;
+            }
+        });
+    });
+
+    // Run default check on page load
+    checkDefault();
+}

@@ -57,7 +57,7 @@ class SessionsReportForm(forms.Form):
     )
     event_templates = forms.ModelMultipleChoiceField(
         queryset=EventTemplate.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        widget=forms.CheckboxSelectMultiple,  # Use checkboxes instead of a select box
         required=False,
         label='Мероприятие'
     )

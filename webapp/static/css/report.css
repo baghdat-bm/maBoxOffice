@@ -15,3 +15,8 @@ th {
 .table-header-center th {
     text-align: center;
 }
+
+.table-summary {
+    font-weight: bold;
+    background-color: #f0f0f0; /* Light grey background */
+}

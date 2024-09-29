@@ -9,13 +9,13 @@ from django.contrib import messages
 from django.utils.timezone import now
 from openpyxl.utils import get_column_letter
 
-from references.models import Event
+from references.models import Event, EventTemplate
 from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
 from .forms import TicketReportForm, SalesReportForm, SessionsReportForm
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
 
-from .utils import get_filtered_sales_data
+from .utils import get_filtered_sales_data, get_sessions_report_data
 
 
 @permission_required('reports.view_sales_report', raise_exception=True)
@@ -129,58 +129,91 @@ def sales_report_export(request):
 
 @permission_required('reports.view_events_report', raise_exception=True)
 def sessions_report(request):
-    # Получаем данные из формы фильтрации
     form = SessionsReportForm(request.GET or None)
 
-    tickets = TicketSalesTicket.objects.all().select_related('ticket_sale', 'event', 'payment')
-
-    # Фильтрация по дате
     if form.is_valid():
-        start_date = form.cleaned_data.get('start_date', date.today())
-        end_date = form.cleaned_data.get('end_date', date.today())
-        tickets = tickets.filter(event_date__range=(start_date, end_date))
+        tickets_grouped, total_summary = get_sessions_report_data(form)
 
-        # Фильтр по мероприятиям
-        event_templates = form.cleaned_data.get('event_templates')
-        if event_templates:
-            tickets = tickets.filter(event__event_template__in=event_templates)
-
-        # Группировка данных по ticket_sale, event, payment, event_date
-        tickets_grouped = tickets.values(
-            'ticket_sale',
-            'event',
-            'event__event_template__name',
-            'payment',
-            'event_date',
-            'event__quantity',
-            'event_time'
-        ).annotate(
-            total_tickets_sold=Count('id'),
-            total_tickets_left=F('event__quantity') - Count('id'),
-            total_card_sales_cs=Count('id', filter=Q(payment__payment_method__in=['CD', 'QR']) & Q(ticket_sale__sale_type='CS')),
-            total_cash_sales_cs=Count('id', filter=Q(payment__payment_method='CH') & Q(ticket_sale__sale_type='CS')),
-            total_kiosk_sales=Count('id', filter=Q(ticket_sale__sale_type='TS')),
-            total_qr_sales_sm=Count('id', filter=Q(payment__payment_method='QR') & Q(ticket_sale__sale_type='SM')),
-            total_card_sales_sm=Count('id', filter=Q(payment__payment_method='CD') & Q(ticket_sale__sale_type='SM')),
-            total_kaspi_sales=Count('id', filter=Q(ticket_sale__sale_type='KP')),
-            total_refunds=Count('id', filter=Q(is_refund=True))
-        ).order_by('event_date')
-
-        # Пагинация по 10 записей на страницу
-        paginator = Paginator(tickets_grouped, 10)
+        # Paginate the results
+        paginator = Paginator(tickets_grouped, 20)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        events_list = EventTemplate.objects.all()
+        selected_events = form.cleaned_data.get('event_templates', ['all'])
     else:
-        page_obj = None  # Ошибки формы
+        page_obj = None
+        total_summary = {}
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+
+        events_list = EventTemplate.objects.all()
+        selected_events = ['all']
 
     context = {
         'form': form,
         'page_obj': page_obj,
+        'events_list': events_list,
+        'selected_events': selected_events,
+        'total_summary': total_summary,
     }
 
     return render(request, 'reports/sessions_report.html', context)
+
+
+@permission_required('reports.view_events_report', raise_exception=True)
+def export_sessions_report_to_excel(request):
+    form = SessionsReportForm(request.GET or None)
+
+    if form.is_valid():
+        tickets_grouped, total_summary = get_sessions_report_data(form)
+
+        # Create a new Excel workbook and worksheet
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Отчет по сеансам'
+
+        # Define headers for Excel columns
+        headers = [
+            '№', 'Дата', 'Время сеанса', 'Кол-во всего билетов', 'Кол-во остатков билетов',
+            'Кол-во проданных билетов', 'Касса (безнал)', 'Касса (наличные)', 'Киоск',
+            'Muzaidyny.kz (KaspiQR)', 'Muzaidyny.kz (Карта)', 'Kaspi платежи', 'Возвраты', 'Мероприятие'
+        ]
+
+        # Write headers to Excel sheet
+        for col_num, header in enumerate(headers, 1):
+            ws.cell(row=1, column=col_num, value=header)
+
+        # Write data rows
+        for row_num, ticket in enumerate(tickets_grouped, start=2):
+            ws.cell(row=row_num, column=1, value=row_num-1)  # №
+            ws.cell(row=row_num, column=2, value=ticket['event_date'].strftime('%d.%m.%Y'))
+            ws.cell(row=row_num, column=3, value=ticket['event_time'].strftime('%H:%M'))
+            ws.cell(row=row_num, column=4, value=ticket['event__quantity'])
+            ws.cell(row=row_num, column=5, value=ticket['total_tickets_left'])
+            ws.cell(row=row_num, column=6, value=ticket['total_tickets_sold'])
+            ws.cell(row=row_num, column=7, value=ticket['total_card_sales_cs'])
+            ws.cell(row=row_num, column=8, value=ticket['total_cash_sales_cs'])
+            ws.cell(row=row_num, column=9, value=ticket['total_kiosk_sales'])
+            ws.cell(row=row_num, column=10, value=ticket['total_qr_sales_sm'])
+            ws.cell(row=row_num, column=11, value=ticket['total_card_sales_sm'])
+            ws.cell(row=row_num, column=12, value=ticket['total_kaspi_sales'])
+            ws.cell(row=row_num, column=13, value=ticket['total_refunds'])
+            ws.cell(row=row_num, column=14, value=ticket['event__event_template__name'])
+
+        # Adjust column widths
+        for col_num in range(1, len(headers) + 1):
+            column_letter = get_column_letter(col_num)
+            ws.column_dimensions[column_letter].width = 20
+
+        # Create a response for the Excel file
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="sessions_report.xlsx"'
+        wb.save(response)
+
+        return response
+    else:
+        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+        return redirect('reports:sessions_report')
 
 
 @permission_required('reports.view_tickets_report', raise_exception=True)
