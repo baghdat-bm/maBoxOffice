@@ -96,14 +96,14 @@
                 <th colspan="7">В том числе</th>
                 <th rowspan="2">Мероприятие</th>
             </tr>
-            <tr>    
+            <tr>
                 <th>Касса (безнал)</th>
                 <th>Касса (наличные)</th>
                 <th>Киоск</th>
                 <th>Muzaidyny.kz (KaspiQR)</th>
                 <th>Muzaidyny.kz (Карта)</th>
                 <th>Kaspi платежи</th>
-                <th>Возвраты</th>                
+                <th>Возвраты</th>
             </tr>
         </thead>
         <tbody>
@@ -131,22 +131,24 @@
             {% endfor %}
         </tbody>
         <!-- Summary Row -->
-        <tfoot>
-            <tr class="table-summary">
-                <td colspan="3"><strong>Итого:</strong></td>
-                <td><strong>{{ total_summary.total_quantity }}</strong></td>
-                <td><strong>{{ total_summary.total_left }}</strong></td>
-                <td><strong>{{ total_summary.total_sold }}</strong></td>
-                <td><strong>{{ total_summary.total_card_sales_cs }}</strong></td>
-                <td><strong>{{ total_summary.total_cash_sales_cs }}</strong></td>
-                <td><strong>{{ total_summary.total_kiosk_sales }}</strong></td>
-                <td><strong>{{ total_summary.total_qr_sales_sm }}</strong></td>
-                <td><strong>{{ total_summary.total_card_sales_sm }}</strong></td>
-                <td><strong>{{ total_summary.total_kaspi_sales }}</strong></td>
-                <td><strong>{{ total_summary.total_refunds }}</strong></td>
-                <td></td> <!-- Empty cell for the last column -->
-            </tr>
-        </tfoot>
+        {% if page_obj.has_other_pages or page_obj.object_list %}
+            <tfoot>
+                <tr class="table-summary">
+                    <td colspan="3"><strong>Итого:</strong></td>
+                    <td><strong>{{ total_summary.total_quantity }}</strong></td>
+                    <td><strong>{{ total_summary.total_left }}</strong></td>
+                    <td><strong>{{ total_summary.total_sold }}</strong></td>
+                    <td><strong>{{ total_summary.total_card_sales_cs }}</strong></td>
+                    <td><strong>{{ total_summary.total_cash_sales_cs }}</strong></td>
+                    <td><strong>{{ total_summary.total_kiosk_sales }}</strong></td>
+                    <td><strong>{{ total_summary.total_qr_sales_sm }}</strong></td>
+                    <td><strong>{{ total_summary.total_card_sales_sm }}</strong></td>
+                    <td><strong>{{ total_summary.total_kaspi_sales }}</strong></td>
+                    <td><strong>{{ total_summary.total_refunds }}</strong></td>
+                    <td></td> <!-- Empty cell for the last column -->
+                </tr>
+            </tfoot>
+        {%  endif %}
     </table>
 
     <!-- Пагинация -->

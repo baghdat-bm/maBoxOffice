@@ -1,7 +1,10 @@
 from datetime import date, timedelta
+from pyexpat.errors import messages
+
 import openpyxl
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.db.models import F, Value, CharField
+from django.db.models.functions import Concat
 
 from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
 
@@ -154,3 +157,44 @@ def get_sessions_report_data(form, calculate_total_summary=False):
         total_summary = {}
 
     return tickets_grouped, total_summary
+
+
+def get_ticket_report_data(form, calculate_total_summary=False):
+    # Get filter values from the form
+    ticket_number = form.cleaned_data.get('ticket_number')
+    order_number = form.cleaned_data.get('order_number')
+    start_date = form.cleaned_data.get('start_date')
+    end_date = form.cleaned_data.get('end_date')
+    event_templates = form.cleaned_data.get('event_templates')
+
+    # Filter TicketSales based on date range
+    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+
+    # Retrieve tickets related to ticket sales
+    tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
+
+    # Apply filters based on form data
+    if ticket_number:
+        tickets = tickets.filter(number=ticket_number)
+    if order_number:
+        tickets = tickets.filter(ticket_sale__id=order_number)
+    if event_templates:
+        tickets = tickets.filter(event__event_template__in=event_templates)
+
+    # Annotate ticket number by concatenating sale ID and ticket number
+    tickets = tickets.annotate(
+        ticket_number=Concat(
+            F('ticket_sale__id'), Value('-'), F('number'),
+            output_field=CharField()
+        )
+    )
+
+    # Calculate totals for all numeric fields
+    if calculate_total_summary:
+        total_summary = tickets.aggregate(
+            total_amount=Sum('amount')
+        )
+    else:
+        total_summary = {}
+
+    return tickets, total_summary

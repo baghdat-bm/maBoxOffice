@@ -1,12 +1,13 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
-from datetime import date, timedelta
+from weasyprint import HTML
 import openpyxl
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.contrib import messages
 from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
 from openpyxl.utils import get_column_letter
 
 from references.models import Event, EventTemplate
@@ -15,7 +16,7 @@ from .forms import TicketReportForm, SalesReportForm, SessionsReportForm
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
 
-from .utils import get_filtered_sales_data, get_sessions_report_data
+from .utils import get_filtered_sales_data, get_sessions_report_data, get_ticket_report_data
 
 
 @permission_required('reports.view_sales_report', raise_exception=True)
@@ -220,34 +221,16 @@ def export_sessions_report_to_excel(request):
 def tickets_report(request):
     form = TicketReportForm(request.GET or None)
 
-    # Фильтруем по номеру билета
     if form.is_valid():
+        tickets, total_summary = get_ticket_report_data(form, True)
+
         ticket_number = form.cleaned_data.get('ticket_number')
         order_number = form.cleaned_data.get('order_number')
-        start_date = form.cleaned_data.get('start_date')
-        end_date = form.cleaned_data.get('end_date')
-        event_templates = form.cleaned_data.get('event_templates')
-
-        # Filter TicketSales based on date range
-        ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
-
-        # Retrieve tickets related to ticket sales
-        tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
-
-        if ticket_number:
-            tickets = tickets.filter(number=ticket_number)
-        if order_number:
-            tickets = tickets.filter(ticket_sale__id=order_number)
-        if event_templates:
-            tickets = tickets.filter(event__event_template__in=event_templates)
-
-        # Аннотируем поле для объединения ticket_sale.id и номера билета
-        tickets = tickets.annotate(
-            ticket_number=Concat(
-                F('ticket_sale__id'), Value('-'), F('number'),
-                output_field=CharField()
-            )
-        )
+        if (ticket_number or order_number) and not tickets.exists():
+            if ticket_number:
+                messages.warning(request, f'По номеру билета {ticket_number} данных не найдено')
+            if order_number:
+                messages.warning(request, f'По номеру заказа {order_number} данных не найдено')
 
         # Добавляем пагинацию
         paginator = Paginator(tickets, 10)  # 10 билетов на страницу
@@ -259,6 +242,7 @@ def tickets_report(request):
 
     else:
         page_obj = None  # Ошибки формы
+        total_summary = {}
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
 
         events_list = EventTemplate.objects.all()
@@ -269,5 +253,120 @@ def tickets_report(request):
         'page_obj': page_obj,
         'events_list': events_list,
         'selected_events': selected_events,
+        'total_summary': total_summary,
     }
     return render(request, 'reports/tickets_report.html', context)
+
+
+@permission_required('reports.view_tickets_report', raise_exception=True)
+def export_tickets_report_to_excel(request):
+    form = TicketReportForm(request.GET or None)
+
+    if form.is_valid():
+        tickets, total_summary = get_ticket_report_data(form)
+
+        # Create a new Excel workbook and worksheet
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Реестр билетов'
+
+        # Define headers for Excel columns
+        headers = [
+            '№', '№ билета', '№ заказа', 'Дата и время сеанса', 'Стоимость билета',
+            'Наименование услуги', 'Наименование инвентарья', 'Тип продажи',
+            'Дата и время брони', 'Номер чек оплаты', 'Номер телефона клиента'
+        ]
+
+        # Write headers to Excel sheet
+        for col_num, header in enumerate(headers, 1):
+            ws.cell(row=1, column=col_num, value=header)
+
+        # Write data rows
+        for row_num, ticket in enumerate(tickets, start=2):
+            ws.cell(row=row_num, column=1, value=row_num-1)  # №
+            ws.cell(row=row_num, column=2, value=ticket.ticket_number)
+            ws.cell(row=row_num, column=3, value=ticket.ticket_sale.id)
+            ws.cell(row=row_num, column=4, value=f"{ticket.event_date} {ticket.event_time}")
+            ws.cell(row=row_num, column=5, value=ticket.amount)
+            ws.cell(row=row_num, column=6, value=ticket.service.name)
+            ws.cell(row=row_num, column=7, value=ticket.service.inventory.name if ticket.service.inventory else '')
+            ws.cell(row=row_num, column=8, value=ticket.ticket_sale.get_sale_type_display())
+            ws.cell(row=row_num, column=9, value=ticket.ticket_sale.booking_begin_date)
+            ws.cell(row=row_num, column=10, value=ticket.payment_id)
+            ws.cell(row=row_num, column=11, value=ticket.ticket_sale.phone)
+
+        # Adjust column widths
+        for col_num in range(1, len(headers) + 1):
+            column_letter = get_column_letter(col_num)
+            ws.column_dimensions[column_letter].width = 20
+
+        # Create a response for the Excel file
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="tickets_report.xlsx"'
+        wb.save(response)
+
+        return response
+    else:
+        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+        return redirect('reports:tickets_report')
+
+
+@csrf_exempt
+def ticket_print_data(request, ticket_id):
+    tickets = TicketSalesTicket.objects.filter(id=ticket_id)
+    print('>>>> ticket_id', ticket_id)
+    data = {
+        'services': [
+            {
+                'ticket_guid': str(ticket.ticket_guid),
+                'number': ticket.number,
+                'service_name': ticket.service.name,
+                'event_date': ticket.event_date.strftime('%d.%m.%Y'),
+                'event_time': f'{ticket.event_time.strftime('%H:%M')} - {ticket.event_time_end.strftime('%H:%M')}',
+                'event_name': ticket.event.name,
+                'amount': ticket.amount,
+                'tickets_count': 1,
+                'sale_id': ticket.ticket_sale.id,
+            }
+            for ticket in tickets
+        ]
+    }
+    return JsonResponse(data)
+
+
+@csrf_exempt
+def ticket_print_pdf(request, ticket_id):
+    tickets = TicketSalesTicket.objects.filter(id=ticket_id)
+
+    if not tickets.exists():
+        return HttpResponse("No ticket data available", status=404)
+
+    # Generate the HTML content for the PDF
+    html_content = ''
+    for ticket in tickets:
+        html_content += f'''
+        <div style="text-align: center; font-family: 'Arial', sans-serif;">            
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data={ticket.ticket_guid}" alt="QR Code">
+            <p>Билет № <strong>{ticket.ticket_sale.id}-{ticket.number}</strong></p>
+            <p>Количество билетов: <strong>1</strong></p>
+            <p><strong>Дата и время сеанса:</strong></p>
+            <p>{ticket.event_date.strftime("%d.%m.%Y")} {ticket.event_time.strftime("%H:%M")} - {ticket.event_time_end.strftime("%H:%M")}</p>
+            <p><strong>Услуга:</strong></p> 
+            <p>{ticket.service.name}</p>
+            <p><strong>Мероприятие:</strong></p>
+            <p>{ticket.event.name}</p>
+            <p><strong>Стоимость билета:</strong></p>
+            <p>{ticket.amount} ₸</p>
+            <p><strong>Подробная информация:</strong></p>
+            <p>www.muzaidyny.kz тел: 8(7172) 242424</p>
+        </div>        
+        '''
+
+    # Use WeasyPrint to generate the PDF
+    pdf = HTML(string=html_content).write_pdf()
+
+    # Return the PDF as a response
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="ticket_{ticket_id}.pdf"'
+
+    return response
