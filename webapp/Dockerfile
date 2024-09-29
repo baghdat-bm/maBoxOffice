@@ -5,13 +5,6 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Установить системные зависимости
-RUN apt-get update && apt-get install -y \
-    libgirepository1.0-dev \
-    libcairo2-dev \
-    gir1.2-gobject-2.0 \
-    && rm -rf /var/lib/apt/lists/* \
-
 # Set work directory
 WORKDIR /code
 
