@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required
@@ -363,8 +365,9 @@ def ticket_print_pdf(request, ticket_id):
         </div>        
         '''
 
-    # Use WeasyPrint to generate the
-    # pdf = HTML(string=html_content).write_pdf()
+    # from xhtml2pdf import pisa
+    # # Use WeasyPrint to generate the
+    # pdf = pisa.CreatePDF(html_content, dest=BytesIO())
 
     # Return the PDF as a response
     response = HttpResponse(html_content, content_type='application/pdf')

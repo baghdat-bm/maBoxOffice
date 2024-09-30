@@ -163,7 +163,7 @@
                     {% endif %}
                     <td>
                         <a href="#" class="btn btn-outline-secondary" 
-                           onclick="downloadTicketPdfFromServer({{ ticket.id }})">Скачать</a>
+                           onclick="generatePdfOnJs({{ ticket.id }})">Скачать</a>
                     </td>
                 </tr>
             {% empty %}
@@ -191,11 +191,120 @@
 
 {% block scripts %}
     <script src="{% static 'js/report.js' %}"></script>
-    
+    <script src="{% static 'js/font.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.debug.js"></script>
+
     <script>
+        
         window.onload = OnSessionsReportLoaded;
         
         {#    JavaScript для печати #}
+        
+        function generatePdfOnJs(ticket_id) {
+            // Fetch the data for printing the ticket
+            fetch("{% url 'reports:ticket-print-data' 0 %}".replace('0', ticket_id), {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.services || data.services.length === 0) {
+                    alert('Нет данных для печати');
+                    return;
+                }
+                
+                // Import jsPDF
+                const { jsPDF } = window.jspdf;
+        
+                // Create a new PDF document
+                const doc = new jsPDF();
+        
+                // Embed the fonts
+                doc.addFileToVFS('NotoSans-Medium.ttf', notoSansBase64);
+                doc.addFont('NotoSans-Medium.ttf', 'NotoSans', 'normal');
+                
+                doc.addFileToVFS('NotoSans-Bold.ttf', notoSansBoldBase64);
+                doc.addFont('NotoSans-Bold.ttf', 'NotoSans', 'bold');
+                
+                // Loop through the services and add content to the PDF
+                data.services.forEach((service, index) => {
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}`;
+        
+                    // Add QR code centered at the top
+                    const qrCodeSize = 70; // Size of QR code (in points)
+                    doc.addImage(qrCodeUrl, 'PNG', pageWidth / 2 - (qrCodeSize / 2), 20, qrCodeSize, qrCodeSize);
+        
+                    // Add ticket details beneath the QR code
+                    doc.setFontSize(12);
+        
+                    // "Билет № [номер_билета]"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Билет № `, pageWidth / 2 - 50, 110, { align: 'left' });
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`${service.sale_id}-${service.number}`, pageWidth / 2 - 25, 110, { align: 'left' });
+        
+                    // "Количество билетов: [количество_билетов]"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Количество билетов: `, pageWidth / 2 - 50, 120, { align: 'left' });
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`1`, pageWidth / 2, 120, { align: 'left' });
+        
+                    // "Дата и время сеанса:"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Дата и время сеанса:`, pageWidth / 2 - 50, 130, { align: 'left' });
+        
+                    // "[дата_и_время_сеанса]"
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`${service.event_date} ${service.event_time}`, pageWidth / 2 - 40, 140, { align: 'left' });
+        
+                    // "Услуга:"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Услуга:`, pageWidth / 2 - 50, 150, { align: 'left' });
+        
+                    // "[Услуга]"
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`${service.service_name}`, pageWidth / 2 - 40, 160, { align: 'left' });
+        
+                    // "Мероприятие:"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Мероприятие:`, pageWidth / 2 - 50, 170, { align: 'left' });
+        
+                    // "[Мероприятие]"
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`${service.event_name}`, pageWidth / 2 - 40, 180, { align: 'left' });
+        
+                    // "Стоимость билета:"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Стоимость билета:`, pageWidth / 2 - 50, 190, { align: 'left' });
+        
+                    // "[Стоимость_билета] ₸"
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`${service.amount} ₸`, pageWidth / 2 - 40, 200, { align: 'left' });
+        
+                    // "Подробная информация:"
+                    doc.setFont('NotoSans', 'bold');
+                    doc.text(`Подробная информация:`, pageWidth / 2 - 50, 210, { align: 'left' });
+        
+                    // "www.muzaidyny.kz 8(7172) 242424"
+                    doc.setFont('NotoSans', 'normal');
+                    doc.text(`www.muzaidyny.kz 8(7172) 242424`, pageWidth / 2 - 40, 220, { align: 'left' });
+        
+                    // If there is more than one ticket, create a new page
+                    if (index < data.services.length - 1) {
+                        doc.addPage();
+                    }
+                });
+        
+                // Trigger the download of the PDF
+                doc.save('ticket.pdf');
+            })
+            .catch(error => {
+                console.error('Error generating PDF:', error);
+                alert('Ошибка при генерации PDF');
+            });
+        }
+
         function downloadTicketPdfFromServer(ticket_id) {
             // Fetch the PDF generated by the server
             fetch("{% url 'reports:ticket-print-pdf' 0 %}".replace('0', ticket_id), {
