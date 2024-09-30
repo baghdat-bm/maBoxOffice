@@ -3,11 +3,14 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from reports.models import HasAvailableEventDatesPermission, HasTicketCheckPermission, HasEventsListPermission, \
+    HasServicesListPermission, HasCreateTicketsPermission, HasPaymentInfoPermission
 from .models import TicketSalesTicket, TicketSalesPayments, TicketSale
 from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer, TicketSaleSerializer, \
     PaymentDataSerializer
@@ -16,8 +19,7 @@ from .utils import create_tickets_on_new_payment
 
 
 class TicketCheckView(APIView):
-    # Ограничение доступа только для аутентифицированных пользователей
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasTicketCheckPermission]
 
     @swagger_auto_schema(
         request_body=TicketCheckSerializer,  # Здесь мы указываем, что тело запроса должно соответствовать сериализатору
@@ -79,7 +81,7 @@ class TicketCheckView(APIView):
 
 
 class AvailableDatesView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasAvailableEventDatesPermission]
 
     def get(self, request, *args, **kwargs):
         available_dates = get_available_events_dates(True)
@@ -87,6 +89,8 @@ class AvailableDatesView(APIView):
 
 
 class EventsListView(APIView):
+    permission_classes = [IsAuthenticated, HasEventsListPermission]
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -112,6 +116,8 @@ class EventsListView(APIView):
 
 
 class ServicesListView(APIView):
+    permission_classes = [IsAuthenticated, HasServicesListPermission]
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -145,6 +151,7 @@ class ServicesListView(APIView):
 
 
 class CreateTicketSaleAPIView(APIView):
+    permission_classes = [IsAuthenticated, HasCreateTicketsPermission]
 
     @swagger_auto_schema(
         request_body=TicketSaleSerializer,
@@ -162,6 +169,7 @@ class CreateTicketSaleAPIView(APIView):
 
 
 class PaymentDataView(APIView):
+    permission_classes = [IsAuthenticated, HasPaymentInfoPermission]
 
     @swagger_auto_schema(
         request_body=PaymentDataSerializer,
