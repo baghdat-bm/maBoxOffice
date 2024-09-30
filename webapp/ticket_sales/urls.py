@@ -9,7 +9,7 @@ from .views import TicketSaleListView, TicketSaleUpdateView, TicketSaleDeleteVie
     get_events_dates, get_events, TicketSaleUpdateViewTerminal, home_page_terminal, create_ticket_sale_terminal, \
     create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal, \
     get_refund_tickets, refund_tickets, kiosk_sale_tickets, ticket_sales_booking_list, ticket_sales_booking_create, \
-    ticket_sales_booking_update, ticket_sales_booking_delete, tickets_purchased, delete_bookings
+    ticket_sales_booking_update, ticket_sales_booking_delete, tickets_purchased, delete_bookings, get_refund_payments
 
 app_name = 'ticket_sales'
 
@@ -73,6 +73,7 @@ urlpatterns = [
     # Возврат билетов
     path('<int:sale_id>/refund-tickets/', get_refund_tickets, name='refund_tickets_list'),
     path('<int:sale_id>/refund-tickets/confirm/', refund_tickets, name='refund_tickets'),
+    path('<int:sale_id>/refund-payments/', get_refund_payments, name='refund_payments_list'),
 
     # Бронирование билетов
 

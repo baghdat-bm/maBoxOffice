@@ -770,6 +770,63 @@ def refund_tickets(request, sale_id):
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 
+def get_refund_payments(request, sale_id):
+    ticket_sale = get_object_or_404(TicketSale, pk=sale_id)
+
+    # Get only necessary fields and calculate remaining refund amount
+    payments = (
+        TicketSalesPayments.objects
+        .filter(ticket_sale=ticket_sale, amount__gt=F('refund_amount'))
+        .annotate(remaining_amount=F('amount') - F('refund_amount'))
+        .values('id', 'amount', 'payment_date', 'remaining_amount')
+    )
+
+    refund_text = ''
+    if ticket_sale.paid_cash > 0:
+        refund_text = 'Итого к возврату наличными'
+    elif ticket_sale.paid_card > 0:
+        refund_text = 'Итого к возврату банковской картой'
+    elif ticket_sale.paid_qr > 0:
+        refund_text = 'Итого к возврату по QR коду'
+
+    context = {'payments': payments, 'sale_id': sale_id, 'refund_text': refund_text}
+    return render(request, 'ticket_sales/partials/refund_payment_list.html', context=context)
+
+
+def refund_payments(request, sale_id):
+    if request.method == "POST":
+        # Получаем заказ
+        ticket_sale = get_object_or_404(TicketSale, pk=sale_id)
+
+        # Парсим JSON-данные из тела запроса
+        try:
+            data = json.loads(request.body)
+            payment_ids = data.get('payments', [])
+            print('>>>> payment_ids', payment_ids, 'ticket_sale', ticket_sale)
+
+            # Проверяем, что выбраны оплаты
+            if not payment_ids:
+                return JsonResponse({'success': False, 'message': 'No payments selected'})
+
+            # Обрабатываем возврат оплат
+            payments = TicketSalesPayments.objects.filter(id__in=payment_ids)
+            refund_sum = 0
+            for payment in payments:
+                refund_sum += payment.amount - payment.refund_amount
+                payment.refund_amount = payment.amount
+                payment.save()
+
+            # Обновляем сумму возврата в заказе
+            ticket_sale.refund_amount += refund_sum
+            ticket_sale.save()
+
+            return JsonResponse({'success': True})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
 ### БРОНИРОВАНИЕ БИЛЕТОВ
 
 # Create
