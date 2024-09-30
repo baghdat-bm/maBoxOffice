@@ -141,17 +141,18 @@ def get_sessions_report_data(form, calculate_total_summary=False):
 
     # Calculate totals
     if calculate_total_summary:
-        total_summary = tickets_grouped.aggregate(
+        total_summary = tickets.aggregate(
             total_quantity=Sum('event__quantity'),
-            total_sold=Sum('total_tickets_sold'),
-            total_left=Sum('total_tickets_left'),
-            total_card_sales_cs=Sum('total_card_sales_cs'),
-            total_cash_sales_cs=Sum('total_cash_sales_cs'),
-            total_kiosk_sales=Sum('total_kiosk_sales'),
-            total_qr_sales_sm=Sum('total_qr_sales_sm'),
-            total_card_sales_sm=Sum('total_card_sales_sm'),
-            total_kaspi_sales=Sum('total_kaspi_sales'),
-            total_refunds=Sum('total_refunds')
+            total_sold=Count('id'),
+            total_left=Sum('event__quantity') - Count('id'),
+            total_card_sales_cs=Count('id', filter=Q(payment__payment_method__in=['CD', 'QR']) & Q(
+                ticket_sale__sale_type='CS')),
+            total_cash_sales_cs=Count('id', filter=Q(payment__payment_method='CH') & Q(ticket_sale__sale_type='CS')),
+            total_kiosk_sales=Count('id', filter=Q(ticket_sale__sale_type='TS')),
+            total_qr_sales_sm=Count('id', filter=Q(payment__payment_method='QR') & Q(ticket_sale__sale_type='SM')),
+            total_card_sales_sm=Count('id', filter=Q(payment__payment_method='CD') & Q(ticket_sale__sale_type='SM')),
+            total_kaspi_sales=Count('id', filter=Q(ticket_sale__sale_type='KP')),
+            total_refunds=Count('id', filter=Q(is_refund=True))
         )
     else:
         total_summary = {}
