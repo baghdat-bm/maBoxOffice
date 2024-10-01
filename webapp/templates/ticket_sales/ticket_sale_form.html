@@ -310,12 +310,62 @@
                 })
             }).then(response => response.json()).then(data => {
                 if (data.success) {
-                    alert("Билеты возвращены");
-                    location.reload();
+                    if (data.status === 200) {
+                        alert(data.message);
+                        location.reload();
+                    }
+                    else if (data.status === 202) {
+                        const ticketSaleId = this.getAttribute('data-ticket-sale-id');
+                        const progressBar = document.getElementById('main-progress-bar');
+                        const progressText = document.getElementById('progress-bar-text');
+        
+                        // Отобразить прогресс-бар
+                        progressBar.classList.remove('d-none');
+                        progressText.textContent = data.message;
+                        data.process_ids.forEach((process_id) => {
+                            checkRefundStatus(process_id, ticketSaleId, 1);
+                        });
+                    }                        
                 } else {
-                    alert("Ошибка возврата");
+                    alert(data.message);
                 }
             });
+        }
+        
+        function checkRefundStatus(processId, ticketSaleId, count) {
+            const progressBar = document.getElementById('main-progress-bar');
+            const progressText = document.getElementById('progress-bar-text');
+            
+            if (count === 10) {
+                progressText.textContent = 'Не удалось выполнить возврат';
+                setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                return;
+            }
+
+            fetch(`{% url 'ticket_sales:check-refund-status' process_id='$1' ticket_sale_id='$2' %}`
+                .replace('$1', processId)
+                .replace('$2', ticketSaleId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'wait') {
+                        // Отобразить прогресс-бар
+                        progressBar.classList.remove('d-none');
+                        setTimeout(() => checkRefundStatus(processId, ticketSaleId, count+1), 1000);
+                    } else if (data.status === 'success') {
+                        progressText.textContent = 'Возврат успешно обработан';
+                        setTimeout(() => {
+                            progressBar.classList.add('d-none');
+                            window.location.reload(); // Полное обновление страницы
+                        }, 3000);
+                    } else {
+                        progressText.textContent = `Ошибка: ${data.error_text || 'Неизвестная ошибка'}`;
+                        setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                    }
+                })
+                .catch(() => {
+                    progressText.textContent = 'Ошибка при выполнении возврата';
+                    setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                });
         }
     </script>
     
@@ -498,11 +548,9 @@
             const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
             cashPaymentModal.hide();
         });
-
     </script>
 
     <script>
-
         function hideServiceModal() {
             //window.location.reload();
         }
@@ -531,7 +579,7 @@
                     .then(data => {
                         if (data.status === 'wait') {
                             progressText.textContent = 'Проводим оплату...';
-                            checkPaymentStatus(data.process_id, ticketSaleId);
+                            checkPaymentStatus(data.process_id, ticketSaleId, 1);
                         } else {
                             progressText.textContent = 'Ошибка соединения';
                             setTimeout(() => progressBar.classList.add('d-none'), 5000);
@@ -543,20 +591,23 @@
                     });
             })
         }
-        ;
 
-
-        function checkPaymentStatus(processId, ticketSaleId) {
+        function checkPaymentStatus(processId, ticketSaleId, count) {
             const progressBar = document.getElementById('main-progress-bar');
             const progressText = document.getElementById('progress-bar-text');
-
+            if (count === 10) {
+                progressText.textContent = 'Не удалось выполнить оплату';
+                setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                return;
+            }
+            
             fetch(`{% url 'ticket_sales:check-payment-status' process_id='$1' ticket_sale_id='$2' %}`
                 .replace('$1', processId)
                 .replace('$2', ticketSaleId))
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'wait') {
-                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId), 1000);
+                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1), 1000);
                     } else if (data.status === 'success') {
                         progressText.textContent = 'Заказ оплачен';
                         setTimeout(() => {
@@ -569,7 +620,7 @@
                     }
                 })
                 .catch(() => {
-                    progressText.textContent = 'Ошибка проверки статуса';
+                    progressText.textContent = 'Ошибка при выполнении оплаты';
                     setTimeout(() => progressBar.classList.add('d-none'), 5000);
                 });
         }

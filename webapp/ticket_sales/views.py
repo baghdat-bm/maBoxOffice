@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timedelta
-from django.core.paginator import Paginator
+from collections import defaultdict
 from django.db.models import Sum, Q, F
 from django.utils import timezone
 import re
@@ -740,6 +740,10 @@ def refund_tickets(request, sale_id):
     if request.method == "POST":
         # Получаем заказ
         ticket_sale = get_object_or_404(TicketSale, pk=sale_id)
+        terminal = get_terminal_settings(ticket_sale.sale_type)
+        if not terminal:
+            return JsonResponse({'success': False, 'message': 'Не заданы настройки для терминала оплаты'},
+                                status=400)
 
         # Парсим JSON-данные из тела запроса
         try:
@@ -749,25 +753,136 @@ def refund_tickets(request, sale_id):
 
             # Проверяем, что выбраны билеты
             if not ticket_ids:
-                return JsonResponse({'success': False, 'message': 'No tickets selected'})
+                return JsonResponse({'success': False, 'message': 'Не выбраны билеты к возврату'}, status=400)
 
-            # Обрабатываем возврат билетов
+            # Получаем список билетов к возврату
             tickets = TicketSalesTicket.objects.filter(id__in=ticket_ids, is_refund=False)
-            refund_sum = sum(ticket.amount for ticket in tickets)
-            print('>>>> refund_sum', refund_sum)
 
-            # Обновляем билеты
-            tickets.update(is_refund=True)
+            # Определяем оплаты к возврату
+            payment_refund_map = defaultdict(lambda: {'amount': 0, 'tickets': []})
+            for ticket in tickets:
+                payment = ticket.payment
+                payment_refund_map[payment]['amount'] += ticket.amount
+                payment_refund_map[payment]['tickets'].append(ticket)
 
-            # Обновляем сумму возврата в заказе
-            ticket_sale.refund_amount += refund_sum
+            process_ids = []
+            ticket_ids = []
+            errors = []
+            # Обрабатываем платежи к возврату
+            for payment, data in payment_refund_map.items():
+                if payment.payment_method == 'QR' or payment.payment_method == 'CD':
+                    try:
+                        headers = {'accesstoken': terminal['access_token']}
+                        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+                        method = "card" if payment.payment_method == 'CD' else "qr"
+                        url = f'{protocol}://{terminal['ip_address']}:8080/v2/refund?method={method}'
+                        url += f'"&amount={data['amount']}&transactionId={payment.transaction_id}'
+                        response = requests.get(url, headers=headers, verify=False, timeout=100)
+                        response_data = response.json()
+                        if response_data:
+                            if response.status_code == 200 and response_data['status'] == 'wait':
+                                payment.process_id = response_data['processId']
+                                payment.save()
+                                process_ids.append(payment.process_id)
+                                for ticket in data['tickets']:
+                                    ticket.process_id = response_data['processId']
+                                    ticket.save()
+                            else:
+                                errors.append(response_data['errorText'])
+                        else:
+                            errors.append(response_data['errorText'])
+                            return JsonResponse({'success': False, 'message': response_data['errorText']}, status=400)
+                    except Exception as e:
+                        error = e.__str__()
+                        print('error >> ', error)
+                        return JsonResponse({'success': False, 'message': e.__str__()}, status=500)
+                else:  # Возврат наличной оплаты
+                    payment.refund_amount += data['amount']
+                    payment.save()
+                    # Помечаем возвратные билеты
+                    for ticket in data['tickets']:
+                        ticket.is_refund = True
+                        ticket.save()
+                        ticket_ids.append(ticket.id)
+                    # Обновляем сумму возврата в заказе
+                    ticket_sale.refund_amount += data['amount']
+
             ticket_sale.save()
 
-            return JsonResponse({'success': True})
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Invalid JSON'})
+            if len(errors) > 0:
+                message = 'Произошла ошибка при выполнении возврата...'
+                status = 400
+                success = False
+            elif len(process_ids) == 0:
+                message = 'Возврат успешно обработан'
+                status = 200
+                success = True
+            else:
+                message = 'Возврат обрабатывается...'
+                status = 202
+                success = False
+            return JsonResponse({'success': success, 'message': message, 'process_ids': process_ids,
+                                 'ticket_ids': ticket_ids, 'errors': errors}, status=status)
 
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Не корректные данные'}, status=400)
+
+    return JsonResponse({'success': False, 'message': 'Не корректный http метод'}, status=400)
+
+
+def check_payment_refund_status(request, process_id, ticket_sale_id):
+    terminal = get_terminal_settings()
+    if not terminal:
+        return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
+    try:
+        headers = {'accesstoken': terminal['access_token']}
+        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:8080/status?processId={process_id}',
+                                headers=headers, verify=False, timeout=100)
+        response_data = response.json()
+        if response.status_code == 200:
+            if response_data['status'] == 'success':
+                chequeInfo = response_data["chequeInfo"]
+                ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
+                new_payment = TicketSalesPayments()
+                new_payment.ticket_sale = ticket_sale
+                new_payment.process_id = process_id
+                if chequeInfo['date']:
+                    new_payment.payment_date = datetime.strptime(chequeInfo['date'], "%d.%m.%y %H:%M:%S")
+                else:
+                    new_payment.payment_date = datetime.now()
+
+                new_payment.amount = int(re.sub(r'\D', '', chequeInfo['amount']))
+
+                if chequeInfo['method'] == 'qr':
+                    new_payment.payment_method = "QR"
+                    ticket_sale.paid_qr += new_payment.amount
+                elif chequeInfo['method'] == 'card':
+                    new_payment.payment_method = "CD"
+                    new_payment.card_mask = chequeInfo['cardMask']
+                    new_payment.terminal = chequeInfo['terminalId']
+                    ticket_sale.paid_card += new_payment.amount
+                else:
+                    new_payment.payment_method = "CH"
+                    ticket_sale.paid_cash += new_payment.amount
+
+                new_payment.transaction_id = response_data['transactionId']
+                new_payment.response_data = response_data
+                new_payment.save()
+
+                ticket_sale.save()
+
+                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+
+                return JsonResponse({'status': 'success'})
+            else:
+                return JsonResponse({'status': 'wait'})
+        return JsonResponse(response.json())
+    # except requests.RequestException:
+    #     return JsonResponse({'status': 'fail'})
+    except Exception as e:
+        print(e.__str__())
+        return JsonResponse({'status': 'wait', 'error': e.__str__()})
 
 
 def get_refund_payments(request, sale_id):
@@ -858,7 +973,8 @@ def ticket_sales_booking_list(request, booking_guid):
     bookings = TicketSalesBooking.objects.filter(booking_guid=booking_guid).annotate(
         service_name=F('service__name')  # Добавляем название услуги
     ).values(
-        'id', 'service_id', 'service_name', 'event_id', 'event_date', 'event_time', 'event_time_end', 'tickets_count', 'tickets_amount', 'discount', 'total_amount'
+        'id', 'service_id', 'service_name', 'event_id', 'event_date', 'event_time', 'event_time_end', 'tickets_count',
+        'tickets_amount', 'discount', 'total_amount'
     )
     return JsonResponse(list(bookings), safe=False)
 
