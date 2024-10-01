@@ -1,4 +1,6 @@
 from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 
 class EventTemplate(models.Model):
@@ -82,12 +84,6 @@ class Service(models.Model):
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, verbose_name="Инвентарь", null=True, blank=True)
     on_calculation = models.BooleanField(verbose_name="Учитывать в подсчете билетов", default=False)
     sale_types = models.ManyToManyField(SaleType, verbose_name='Виды продаж', default=None)
-
-    def save(self, *args, **kwargs):
-        # Select all sale types by default if none are specified
-        if not self.sale_types.exists():
-            self.sale_types.set(SaleType.objects.all())
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.name}'
