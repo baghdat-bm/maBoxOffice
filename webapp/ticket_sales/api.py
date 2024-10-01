@@ -140,14 +140,22 @@ class ServicesListView(APIView):
         responses={200: 'Список услуг', 400: 'Неверные параметры'},
     )
     def get(self, request, *args, **kwargs):
-        serializer = ServiceListSerializer(data=request.GET)
-        if serializer.is_valid():
-            event_id = serializer.validated_data['eventID']
-            date = serializer.validated_data['date'].strftime('%Y-%m-%d')
-            data = get_available_services(event_id, date)
-            return Response({'services': data}, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_of_sm = request.user.has_perm('reports.access_sm_app')
+        user_kp_sm = request.user.has_perm('reports.access_kp_app')
+        if user_of_sm or user_kp_sm:
+            serializer = ServiceListSerializer(data=request.GET)
+            if serializer.is_valid():
+                event_id = serializer.validated_data['eventID']
+                date = serializer.validated_data['date'].strftime('%Y-%m-%d')
+                sale_types = []
+                if user_of_sm:
+                    sale_types.append('SM')
+                if user_kp_sm:
+                    sale_types.append('KP')
+                data = get_available_services(event_id, date, sale_types)
+                return Response({'services': data}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Access denied'}, status=status.HTTP_403_FORBIDDEN)
 
 
 class CreateTicketSaleAPIView(APIView):

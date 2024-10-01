@@ -16,6 +16,11 @@ class Reports(models.Model):
             ("access_ticket_check", "Доступ к методу ticket-check"),
             ("access_create_tickets", "Доступ к методу create-tickets"),
             ("access_payment_info", "Доступ к методу payment-info"),
+            # права на приложения
+            ("access_cs_app", "Доступ к приложению Касса"),
+            ("access_ts_app", "Доступ к приложению Кисок"),
+            ("access_sm_app", "Доступ к приложению Сайт muzaidyny.kz"),
+            ("access_kp_app", "Доступ к приложению Kaspi"),
         ]
 
 

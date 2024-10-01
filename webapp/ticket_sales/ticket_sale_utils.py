@@ -157,7 +157,7 @@ def get_filtered_services(event_id, sale_type):
     return []
 
 
-def get_available_services(event_id, date):
+def get_available_services(event_id, date, sale_types):
     if event_id and date:
         # Преобразуем дату из строки в datetime объект
         date_naive = datetime.strptime(date, '%Y-%m-%d')
@@ -191,7 +191,10 @@ def get_available_services(event_id, date):
         ).filter(day_filter).first()
 
         if event:
-            services = EventTemplateServices.objects.filter(event_template=event.event_template)
+            services = EventTemplateServices.objects.filter(
+                event_template=event.event_template,
+                service__sale_types__code__in=sale_types
+            )
             services_data = []
 
             for service in services:
