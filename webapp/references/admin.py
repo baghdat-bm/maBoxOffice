@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import EventTemplate, Event, EventTimes, Inventory, Service, EventTemplateServices
+from .models import EventTemplate, Event, EventTimes, Inventory, Service, EventTemplateServices, SaleType
 
 
 class EventTemplateServicesInline(admin.StackedInline):
@@ -46,3 +46,4 @@ admin.site.register(EventTemplate, EventTemplateAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Inventory, InventoryAdmin)
 admin.site.register(Service, ServiceAdmin)
+admin.site.register(SaleType)

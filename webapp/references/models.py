@@ -68,11 +68,26 @@ class Inventory(models.Model):
         ordering = ['name']
 
 
+class SaleType(models.Model):
+    code = models.CharField(max_length=2, unique=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Service(models.Model):
     name = models.CharField(max_length=300, verbose_name='Наименование')
     cost = models.IntegerField(verbose_name="Стоимость")
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, verbose_name="Инвентарь", null=True, blank=True)
     on_calculation = models.BooleanField(verbose_name="Учитывать в подсчете билетов", default=False)
+    sale_types = models.ManyToManyField(SaleType, verbose_name='Виды продаж', default=None)
+
+    def save(self, *args, **kwargs):
+        # Select all sale types by default if none are specified
+        if not self.sale_types.exists():
+            self.sale_types.set(SaleType.objects.all())
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.name}'

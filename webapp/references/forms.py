@@ -1,10 +1,10 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import inlineformset_factory, CheckboxSelectMultiple
 from crispy_forms.bootstrap import InlineField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Fieldset, ButtonHolder, Field, Div
 
-from .models import EventTemplate, Event, EventTimes, Inventory, Service, EventTemplateServices
+from .models import EventTemplate, Event, EventTimes, Inventory, Service, EventTemplateServices, SaleType
 
 
 class EventTemplateForm(forms.ModelForm):
@@ -85,7 +85,17 @@ class InventoryForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'cost', 'inventory', 'on_calculation']
+        fields = ['name', 'cost', 'inventory', 'on_calculation', 'sale_types']
+        widgets = {
+            'sale_types': CheckboxSelectMultiple(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If the form is used for creating a new instance (no initial sale types)
+        if not self.instance.pk:
+            # Set all SaleType instances as initial value
+            self.fields['sale_types'].initial = SaleType.objects.all()
 
 
 class EventTemplateServicesForm(forms.ModelForm):
