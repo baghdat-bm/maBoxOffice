@@ -60,7 +60,7 @@ urlpatterns = [
     # Filtered events, services
     path('filtered-events/', filtered_events, name='filtered-events'),
     path('filtered-event-times/', filtered_event_times, name='filtered-event-times'),
-    path('filtered-services/', filtered_services, name='filtered-services'),
+    path('filtered-services/<str:sale_type>/', filtered_services, name='filtered-services'),
     path('get-service-cost/', get_service_cost, name='get-service-cost'),
     path('get-events-dates/', get_events_dates, name='get-events-dates'),
     path('get-events/', get_events, name='get-events'),
@@ -78,7 +78,6 @@ urlpatterns = [
          name='check-refund-status'),
 
     # Бронирование билетов
-
     path('bookings/<uuid:booking_guid>/', ticket_sales_booking_list, name='booking_list'),
     path('bookings/create/', ticket_sales_booking_create, name='booking_create'),
     path('bookings/<int:pk>/edit/', ticket_sales_booking_update, name='booking_update'),

@@ -547,9 +547,9 @@ def get_events(request):
 
 
 @csrf_exempt
-def filtered_services(request):
+def filtered_services(request, sale_type):
     event_id = request.GET.get('event_id')
-    data = get_filtered_services(event_id)
+    data = get_filtered_services(event_id, sale_type)
     return JsonResponse(data, safe=False)
 
 

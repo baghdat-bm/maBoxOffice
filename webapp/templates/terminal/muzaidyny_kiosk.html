@@ -1173,7 +1173,7 @@
             var serviceSelect = document.getElementById('serviceSelect'); // Изменяем на ваш ID
 
             if (eventId) {
-                const url = new URL("{% url 'ticket_sales:filtered-services' %}", window.location.origin);
+                const url = new URL("{% url 'ticket_sales:filtered-services' 'TS' %}", window.location.origin);
                 url.searchParams.set('event_id', eventId);
 
                 fetch(url)
