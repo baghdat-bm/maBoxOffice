@@ -10,7 +10,7 @@ from .views import TicketSaleListView, TicketSaleUpdateView, TicketSaleDeleteVie
     create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal, \
     get_refund_tickets, refund_tickets, kiosk_sale_tickets, ticket_sales_booking_list, ticket_sales_booking_create, \
     ticket_sales_booking_update, ticket_sales_booking_delete, tickets_purchased, delete_bookings, get_refund_payments, \
-    check_payment_refund_status
+    check_payment_refund_status, bulk_delete_ticket_sales
 
 app_name = 'ticket_sales'
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path('create/', create_ticket_sale_cashier, name='ticket-sale-create'),
     path('<int:pk>/update/', TicketSaleUpdateView.as_view(), name='ticket-sale-update'),
     path('<int:pk>/delete/', TicketSaleDeleteView.as_view(), name='ticket-sale-delete'),
+    path('bulk-delete/', bulk_delete_ticket_sales, name='bulk-delete'),
     path('<int:pk>/', TicketSaleDetailView.as_view(), name='ticket-sale-detail'),
     path('create-x/', ticket_sale_create_view, name='ticket-sale-create-x'),
     path('<int:pk>/update-x/', ticket_sale_update_view, name='ticket-sale-update-x'),

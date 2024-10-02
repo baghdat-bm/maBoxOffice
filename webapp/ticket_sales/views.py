@@ -174,6 +174,22 @@ class TicketSaleDeleteView(DeleteView):
         return super().post(request, *args, **kwargs)
 
 
+def bulk_delete_ticket_sales(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        ids_count = len(ids)
+        if ids_count > 0:
+            # Ensure only unpaid orders are deleted
+            TicketSale.objects.filter(id__in=ids, paid_amount=0).delete()
+            messages.success(request, f'Удалено {ids_count} заказ(ов)')
+        else:
+            messages.warning(request, 'Не выбрано ни одного заказа')
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False}, status=400)
+
+
 def ticket_sale_create_view(request):
     if request.method == 'POST':
         form = TicketSaleForm(request.POST)

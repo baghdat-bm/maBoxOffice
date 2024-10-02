@@ -3,6 +3,25 @@
 {% block title %}Заказы{% endblock %}
 
 {% block content %}
+    <!-- Confirmation modal for deleting selected orders -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Подтвердите удаление</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить выбранные заказы?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 <div class="container mt-4">
     <h3>Заказы</h3>
     
@@ -12,6 +31,14 @@
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary">Новый заказ</button>
             </form>
+            <!-- Button to select unpaid orders -->
+            <button type="button" class="btn btn-secondary btn-sm mt-2" id="select-unpaid">
+                Выбрать не оплаченные
+            </button>
+            <!-- Button to delete selected orders -->
+            <button type="button" class="btn btn-danger btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                Удалить выбранные
+            </button>        
         </div>
         <div class="col-md-6">
             <form method="GET" action="{% url 'ticket_sales:ticket-sale-list' %}" class="mb-4">
@@ -26,7 +53,8 @@
 
     <table class="table table-striped">
         <thead>
-            <tr>                
+            <tr>
+                <th><input type="checkbox" id="select-all"></th>
                 <th>Номер</th>
                 <th>Дата время</th>
                 <th>Сумма</th>
@@ -39,7 +67,8 @@
         </thead>
         <tbody>
             {% for sale in object_list %}
-            <tr>                
+            <tr> 
+                <td><input type="checkbox" class="order-checkbox" value="{{ sale.id }}"></td>
                 <td>
                     <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">
                         {{ sale.id }}
@@ -106,4 +135,53 @@
     </nav>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Select all checkboxes when "Select All" is clicked
+    document.getElementById('select-all').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+    });
+
+    // Select unpaid orders when "Select Unpaid" is clicked
+    document.getElementById('select-unpaid').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        checkboxes.forEach(checkbox => {
+            const status = checkbox.closest('tr').querySelector('td:nth-child(7)').innerText.trim();
+            if (status === 'Не оплачен' || status === 'Отменен') {
+                checkbox.checked = true;
+            }
+        });
+    });
+
+    // Delete selected orders on modal confirmation
+    document.getElementById('confirm-delete').addEventListener('click', function() {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+            .map(checkbox => checkbox.value);
+
+        if (selectedIds.length > 0) {
+            fetch("{% url 'ticket_sales:bulk-delete' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            })
+            .then(response => {
+                if (response.ok) {                                        
+                    const checkboxes = document.querySelectorAll('.order-checkbox');
+                    checkboxes.forEach(checkbox => checkbox.checked = false);
+                    
+                    location.reload(); // Refresh the page after deletion
+                }
+            });
+        }
+        else {
+            alert('Нужно выбрать хотя бы один заказ на удаление')
+        }
+    });
+</script>
 {% endblock %}
