@@ -124,17 +124,19 @@ class TicketReportForm(forms.Form):
 class ServiceReportForm(forms.Form):
     start_date = forms.DateField(
         required=False,
-        initial=date.today().strftime('%d-%m-%Y'),
+        initial=date.today().strftime('%d-%m-%Y'),  # Текущая дата по умолчанию
         widget=forms.TextInput(attrs={'class': 'form-control datepicker', 'autocomplete': 'off'}),
         label='Начало периода',
-        input_formats=['%d-%m-%Y'],
+        help_text="Выберите начало периода",
+        input_formats=['%d-%m-%Y'],  # Указываем формат 'dd-mm-yyyy'
     )
     end_date = forms.DateField(
         required=False,
-        initial=date.today().strftime('%d-%m-%Y'),
+        initial=date.today().strftime('%d-%m-%Y'),  # Текущая дата по умолчанию
         widget=forms.TextInput(attrs={'class': 'form-control datepicker', 'autocomplete': 'off'}),
         label='Конец периода',
-        input_formats=['%d-%m-%Y'],
+        help_text="Выберите конец периода",
+        input_formats=['%d-%m-%Y'],  # Указываем формат 'dd-mm-yyyy'
     )
     services = forms.ModelMultipleChoiceField(
         queryset=Service.objects.all(),

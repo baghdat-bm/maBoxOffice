@@ -515,6 +515,10 @@ def cash_payment_process(request, ticket_sale_id):
 @csrf_exempt
 def print_ticket_view(request, ticket_sale_id):
     tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
+    if not tickets.exists():
+        ticket_sale = TicketSale.objects.filter(id=ticket_sale_id).first()
+        create_tickets_on_new_payment(ticket_sale, None, 0)
+        tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
     data = {
         'services': [
             {
@@ -1025,4 +1029,16 @@ def ticket_sales_booking_delete(request, pk):
     if request.method == 'DELETE':
         booking.delete()
         return JsonResponse({'status': 'deleted'}, status=200)
+    return HttpResponse(status=405)  # Method Not Allowed
+
+
+# Билеты льготных услуг
+@csrf_exempt
+def ticket_sales_create_discount_tickets(request, ticket_sale):
+    if request.method == 'POST':
+        try:
+            tickets_count = create_tickets_on_new_payment(ticket_sale, None, 0)
+            return JsonResponse({'tickets_count': tickets_count, 'status': 'Ok'}, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
     return HttpResponse(status=405)  # Method Not Allowed

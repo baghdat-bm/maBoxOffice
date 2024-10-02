@@ -133,13 +133,13 @@
                 Новый заказ
             {% endif %}
         </h3>
-        <div class="row">            
+        <div class="row">
             <div class="col-4">
                 Вид продажи: <strong>{{ form.instance.get_sale_type_display }}</strong>
             </div>
             <div class="col-4">
                 Статус: <strong>{{ form.instance.get_status_display }}</strong>
-            </div>            
+            </div>
         </div>
 
         <form id="ticket-sale-form" method="post" class="mt-2">
@@ -172,7 +172,7 @@
             </div>
 
             <!-- Сетка для новой строки -->
-            <div class="row mt-3">                
+            <div class="row mt-3">
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_cash.label_tag }}
@@ -391,6 +391,12 @@
                         refundPayment.disabled = false;
                     }
                 }
+                
+                {% if form.instance.status == "PP" %}
+                    // Оставляем активной кнопки оплат                    
+                    document.getElementById('start-payment').disabled = false;
+                    document.getElementById('cash-payment-button').disabled = false;                    
+                {% endif %}    
             });
         </script>
     {% endif %}

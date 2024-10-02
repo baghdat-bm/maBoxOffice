@@ -1,5 +1,7 @@
 import uuid
 
+from django.db.models import Sum
+
 from ticket_sales.helpers import get_num_val
 from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket
 from django.db import models
@@ -91,29 +93,57 @@ def update_terminal_token(terminal_settings):
 
 
 def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
-    # Переменная для нумерации билетов
-    curr_num = 1
+    # Variable for ticket numbering
+    curr_num = 0
     services = TicketSalesService.objects.filter(ticket_sale=ticket_sale)
+    if paid_sum == 0:
+        services = services.filter(total_amount=0)
 
     for service in services:
-        payment_amount = get_num_val(service.paid_amount)
-        payment_sum = service.total_amount - payment_amount
-        if payment_sum == 0:
-            continue
-        service.paid_amount = payment_amount + min(paid_sum, payment_sum)
-        service.save()
-        for _ in range(service.tickets_count):
-            ticket = TicketSalesTicket.objects.create(
-                ticket_sale=ticket_sale,
-                service=service.service,
-                event=service.event,
-                event_date=service.event_date,
-                event_time=service.event_time,
-                event_time_end=service.event_time_end,
-                amount=service.tickets_amount // service.tickets_count,
-                ticket_guid=uuid.uuid4(),  # Генерация нового уникального GUID
-                number=curr_num,
-                payment=new_payment
-            )
-            ticket.save()
-            curr_num += 1
+        # Get existing tickets related to this service
+        existing_tickets = TicketSalesTicket.objects.filter(
+            ticket_sale=ticket_sale,
+            service=service.service,
+            event=service.event,
+            event_date=service.event_date,
+            event_time=service.event_time
+        )
+
+        # Calculate the total existing amount and count of tickets
+        total_existing_amount = existing_tickets.aggregate(amount_sum=Sum('amount'))['amount_sum'] or 0
+        total_existing_count = existing_tickets.count()
+        curr_num += total_existing_count
+        # Check if tickets need to be created
+        if total_existing_amount < service.tickets_amount or total_existing_count < service.tickets_count:
+            # Calculate how many more tickets need to be created
+            tickets_to_create = service.tickets_count - total_existing_count
+            remaining_amount = service.tickets_amount - total_existing_amount
+
+            # Update the paid amount for the service
+            payment_amount = get_num_val(service.paid_amount)
+            payment_sum = service.total_amount - payment_amount
+            paid_amount = payment_amount + min(paid_sum, payment_sum)
+            if service.paid_amount != paid_amount:
+                service.paid_amount = paid_amount
+                service.save()
+
+            # Create additional tickets based on the remaining tickets and amount
+            for _ in range(tickets_to_create):
+                curr_num += 1
+                ticket_amount = remaining_amount // tickets_to_create  # Equal distribution of remaining amount
+                try:
+                    TicketSalesTicket.objects.create(
+                        ticket_sale=ticket_sale,
+                        service=service.service,
+                        event=service.event,
+                        event_date=service.event_date,
+                        event_time=service.event_time,
+                        event_time_end=service.event_time_end,
+                        amount=ticket_amount,
+                        ticket_guid=uuid.uuid4(),  # Generate a new unique GUID
+                        number=curr_num,
+                        payment=new_payment
+                    )
+                except Exception as e:
+                    print('>>>>>>> error:', e.__str__())
+    return curr_num

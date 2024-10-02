@@ -10,7 +10,7 @@ from .views import TicketSaleListView, TicketSaleUpdateView, TicketSaleDeleteVie
     create_ticket_sale_cashier, payment_process_terminal, check_payment_status_terminal, terminal_settings_terminal, \
     get_refund_tickets, refund_tickets, kiosk_sale_tickets, ticket_sales_booking_list, ticket_sales_booking_create, \
     ticket_sales_booking_update, ticket_sales_booking_delete, tickets_purchased, delete_bookings, get_refund_payments, \
-    check_payment_refund_status, bulk_delete_ticket_sales
+    check_payment_refund_status, bulk_delete_ticket_sales, ticket_sales_create_discount_tickets
 
 app_name = 'ticket_sales'
 

@@ -164,7 +164,7 @@ class TicketSalesTicket(models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     payment = models.ForeignKey(TicketSalesPayments, on_delete=models.PROTECT, verbose_name="Платеж", blank=True, null=True)
-    amount = models.IntegerField(verbose_name="Сумма билета")
+    amount = models.IntegerField(verbose_name="Сумма билета", blank=True, null=True)
     number = models.PositiveSmallIntegerField(verbose_name="Номер билета")
     ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")

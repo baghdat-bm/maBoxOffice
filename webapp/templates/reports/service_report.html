@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% load form_filters %}
 
 {% block content %}
 <div class="container">
@@ -30,14 +31,14 @@
             <div class="col-md-3 mt-4">
                 <button type="submit" class="btn btn-primary">Сформировать отчет</button>
             </div>
-            <!-- Date filters -->
+            <!-- Фильтры даты -->
             <div class="col-md-3">
                 {{ form.start_date.label_tag }}
-                {{ form.start_date }}
+                {{ form.start_date }}                    
             </div>
             <div class="col-md-3">
                 {{ form.end_date.label_tag }}
-                {{ form.end_date }}
+                {{ form.end_date }}                    
             </div>
         </div>
 
@@ -73,10 +74,18 @@
             {% for service_id in page_obj %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ services[service_id] }}</td>
+{#                    <td>{{ services[service_id] }}</td>#}
+                    {% with service_name=services|get_item:service_id %}
+                        <td>{{ service_name }}</td>
+                    {% endwith %}
                     {% for date in dates %}
                         <td>
-                            {{ report_data[service_id][date].amount }} / {{ report_data[service_id][date].count }}
+{#                            {{ report_data[service_id][date].amount }} / {{ report_data[service_id][date].count }}#}
+                            {% with report_data|get_item:service_id as service_data %}
+                                {% with service_data|get_item:date as date_data %}
+                                    {{ date_data.amount }} / {{ date_data.count }}
+                                {% endwith %}
+                            {% endwith %}
                         </td>
                     {% endfor %}
                 </tr>
