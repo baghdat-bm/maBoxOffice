@@ -16,6 +16,13 @@ class EventTemplateForm(forms.ModelForm):
         super(EventTemplateForm, self).__init__(*args, **kwargs)
         self.fields['description'].widget.attrs.update({'style': 'height:70px;'})
 
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        # Check for duplicate names
+        if EventTemplate.objects.filter(name=name).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError(f"Мероприятие с наименованием '{name}' уже существует.")
+        return name
+
 
 class EventForm(forms.ModelForm):
     begin_date = forms.DateField(
@@ -54,6 +61,13 @@ class EventForm(forms.ModelForm):
             ),
         )
 
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        # Check for duplicate names
+        if Event.objects.filter(name=name).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError(f"Сеанс мероприятия с наименованием '{name}' уже существует.")
+        return name
+
 
 class EventTimesForm(forms.ModelForm):
     begin_date = forms.TimeField(
@@ -81,6 +95,13 @@ class InventoryForm(forms.ModelForm):
         model = Inventory
         fields = ['name', 'size', 'quantity', 'cost']
 
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        # Check for duplicate names
+        if Inventory.objects.filter(name=name).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError(f"Инвентарь с наименованием '{name}' уже существует.")
+        return name
+
 
 class ServiceForm(forms.ModelForm):
     class Meta:
@@ -96,6 +117,13 @@ class ServiceForm(forms.ModelForm):
         if not self.instance.pk:
             # Set all SaleType instances as initial value
             self.fields['sale_types'].initial = SaleType.objects.all()
+
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        # Check for duplicate names
+        if Service.objects.filter(name=name).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError(f"Услуга с наименованием '{name}' уже существует.")
+        return name
 
 
 class EventTemplateServicesForm(forms.ModelForm):
