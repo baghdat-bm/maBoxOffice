@@ -9,7 +9,7 @@ from .models import TicketSale, TicketSalesService, TicketSalesPayments, TicketS
 class TicketSaleForm(forms.ModelForm):
     class Meta:
         model = TicketSale
-        fields = ['date', 'amount', 'tickets_count', 'status', 'paid_amount', 'refund_amount', 'paid_cash',
+        fields = ['date', 'time', 'amount', 'tickets_count', 'status', 'paid_amount', 'refund_amount', 'paid_cash',
                   'paid_card', 'paid_qr', 'sale_type', 'email', 'phone', 'booking_begin_date', 'booking_end_date']
         widgets = {
             'date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),

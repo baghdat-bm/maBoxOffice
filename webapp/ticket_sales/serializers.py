@@ -109,7 +109,8 @@ class TicketSaleSerializer(serializers.Serializer):
             phone=phone,
             booking_begin_date=booking_begin_date,
             booking_end_date=booking_end_date,
-            status='NP'  # Начальный статус "Не оплачен"
+            status='NP',  # Начальный статус "Не оплачен"
+            booking_guid=uuid.uuid4()
         )
 
         total_amount = 0

@@ -50,6 +50,7 @@ class PaymentMethods(enum.Enum):
 
 class TicketSale(models.Model):
     date = models.DateField(default=timezone.now, verbose_name="Дата")
+    time = models.TimeField(verbose_name="Время", blank=True, null=True)
     amount = models.IntegerField(verbose_name="Сумма итого", blank=True, default=0)
     paid_amount = models.IntegerField(verbose_name="Сумма оплаты", blank=True, default=0)
     refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
@@ -100,7 +101,8 @@ class TicketSale(models.Model):
                     self.status = SaleStatusEnum.PD.value[0]
             elif self.paid_amount < self.amount:
                 self.status = SaleStatusEnum.PP.value[0]
-
+        self.date = datetime.now().date()
+        self.time = datetime.now().time()
         super(TicketSale, self).save(*args, **kwargs)
 
 

@@ -126,26 +126,27 @@
     </div>
     
     <div class="container mt-4">
-        <h3>{% if form.instance.id %}Заказ №{{ form.instance.id }}{% else %}Новый заказ{% endif %}</h3>
-        <p>
-            <em>
-                {{ form.instance.get_sale_type_display }}
-            </em>
-        </p>
+        <h3>
+            {% if form.instance.id %}
+                Заказ {{ form.instance.id }} от {{ form.date.value|date:"d.m.Y" }} {{ form.time.value|date:"H:i:s" }}
+            {% else %}
+                Новый заказ
+            {% endif %}
+        </h3>
+        <div class="row">            
+            <div class="col-4">
+                Вид продажи: <strong>{{ form.instance.get_sale_type_display }}</strong>
+            </div>
+            <div class="col-4">
+                Статус: <strong>{{ form.instance.get_status_display }}</strong>
+            </div>            
+        </div>
 
-        <form id="ticket-sale-form" method="post">
+        <form id="ticket-sale-form" method="post" class="mt-2">
             {% csrf_token %}
-            <!-- Сетка для первой строки -->
             <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        {{ form.date.label_tag }}                        
-                        <input type="text" class="form-control" name="{{ form.date.name }}"
-                               id="id_{{ form.date.name }}" value="{{ form.date.value }}" disabled>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
+                <!-- Сетка для первой строки -->
+                <div class="col-md-4">
                     <div class="form-group">
                         {{ form.amount.label_tag }}
                         <input type="text" class="form-control" name="{{ form.amount.name }}"
@@ -153,7 +154,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_amount.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_amount.name }}"
@@ -161,7 +162,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         {{ form.refund_amount.label_tag }}
                         <input type="text" class="form-control" name="{{ form.refund_amount.name }}"
@@ -171,18 +172,8 @@
             </div>
 
             <!-- Сетка для новой строки -->
-            <div class="row mt-3">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        {{ form.status.label_tag }}
-                        <input type="text" class="form-control" 
-                               name="{{ form.status.name }}"
-                               id="id_{{ form.status.name }}" 
-                               value="{{ form.instance.get_status_display }}" disabled>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
+            <div class="row mt-3">                
+                <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_cash.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_cash.name }}"
@@ -190,7 +181,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_card.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_card.name }}"
@@ -198,7 +189,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         {{ form.paid_qr.label_tag }}
                         <input type="text" class="form-control" name="{{ form.paid_qr.name }}"

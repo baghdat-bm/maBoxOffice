@@ -35,35 +35,34 @@
     </div>
 
     <div class="container mt-4">
-        <h3>Заказ №{{ object.id }}</h3>
+        <h3>Заказ {{ object.id }} от {{ object.date|date:"d.m.Y" }} {{ object.time|date:"H:i:s" }}</h3>
         <hr class="my-3">
-
-        <p>
-            <em>
-                {{ object.get_sale_type_display }}
-            </em>
-        </p>
-        <!-- Сетка для первой строки -->
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-group">
-                    <strong>Дата:</strong> {{ object.date }}
-                </div>
+    
+        <div class="row">            
+            <div class="col-4">
+                <strong>Вид продажи:</strong> {{ object.get_sale_type_display }}
             </div>
+            <div class="col-4">
+                <strong>Статус:</strong> {{ object.get_status_display }}
+            </div>            
+        </div>
+    
+        <!-- Сетка для первой строки -->
+        <div class="row mt-2">            
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <strong>Сумма итого:</strong> {{ object.amount }}
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <strong>Сумма оплаты:</strong> {{ object.paid_amount }}
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <strong>Сумма возврата:</strong> {{ object.refund_amount }}
                 </div>
@@ -71,26 +70,21 @@
         </div>
 
         <!-- Сетка для новой строки -->
-        <div class="row mt-1">
-            <div class="col-md-3">
-                <div class="form-group">
-                    <strong>Статус:</strong> {{ object.get_status_display }}
-                </div>
-            </div>
+        <div class="row mt-1">            
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <strong>Оплачено наличкой:</strong> {{ object.paid_cash }}
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <strong>Оплачено картой:</strong> {{ object.paid_card }}
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <strong>Оплачено QR:</strong> {{ object.paid_qr }}
                 </div>

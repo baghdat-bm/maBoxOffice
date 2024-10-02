@@ -27,7 +27,8 @@
     <table class="table table-striped">
         <thead>
             <tr>                
-                <th>Заказ</th>
+                <th>Номер</th>
+                <th>Дата время</th>
                 <th>Сумма</th>
                 <th>Оплачено</th>
                 <th>Кол-во билетов</th>
@@ -41,7 +42,16 @@
             <tr>                
                 <td>
                     <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">
-                        № {{ sale.id }} от {{ sale.date }}
+                        {{ sale.id }}
+                    </a>
+                </td>
+                <td>
+                    <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">
+                        {{ sale.date|date:"d.m.Y" }} {% if sale.time %}
+                                                        {{ sale.time|date:"H:i:s" }}
+                                                    {% else %}
+                                                        00:00:00
+                                                    {% endif %}
                     </a>
                 </td>
                 <td>{{ sale.amount }} ₸</td>
