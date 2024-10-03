@@ -3,7 +3,7 @@ import uuid
 from django.db.models import Sum
 
 from ticket_sales.helpers import get_num_val
-from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket
+from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, TicketSale
 from django.db import models
 import requests
 from django.core.cache import cache
@@ -146,4 +146,8 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
                     )
                 except Exception as e:
                     print('>>>>>>> error:', e.__str__())
+
+    ticket_sale.tickets_count = curr_num
+    ticket_sale.save()
+
     return curr_num
