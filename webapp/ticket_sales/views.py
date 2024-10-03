@@ -115,9 +115,8 @@ def create_ticket_sale_terminal(request):
                     amount=total_amount,
                     booking_guid=booking_guid
                 )
-            else:
-                ticket_sale.update(amount=total_amount)
 
+            tickets_count = 0
             # Шаг 3: Создаем записи TicketSalesService для каждой брони
             for ticket in tickets:
                 booking = TicketSalesBooking.objects.get(id=ticket['id'])
@@ -132,6 +131,11 @@ def create_ticket_sale_terminal(request):
                     tickets_amount=booking.tickets_amount,
                     total_amount=booking.total_amount
                 )
+                tickets_count += booking.tickets_count
+
+            ticket_sale.amount = total_amount
+            ticket_sale.tickets_count = tickets_count
+            ticket_sale.save()
 
             return JsonResponse({'status': 'created', 'ticket_sale_id': ticket_sale.id}, status=201)
 

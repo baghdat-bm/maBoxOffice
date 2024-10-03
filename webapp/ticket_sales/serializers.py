@@ -114,6 +114,7 @@ class TicketSaleSerializer(serializers.Serializer):
         )
 
         total_amount = 0
+        tickets_count = 0
         ticket_guids = []
 
         # Создаем услуги и билеты
@@ -135,9 +136,11 @@ class TicketSaleSerializer(serializers.Serializer):
                 guids = serializer.save(ticket_sale=ticket_sale, event=event, service=service)
                 ticket_guids.extend(guids)
                 total_amount += service.cost * ticket_data['count']  # Используем поле service.cost
+                tickets_count += ticket_data['count']
 
         # Обновляем общую сумму заказа
         ticket_sale.amount = total_amount
+        ticket_sale.tickets_count = tickets_count
         ticket_sale.save()
 
         # Запуск фоновой задачи через 20 минут
