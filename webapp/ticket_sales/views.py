@@ -515,10 +515,21 @@ def cash_payment_process(request, ticket_sale_id):
 @csrf_exempt
 def print_ticket_view(request, ticket_sale_id):
     tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
+    create_tickets = False
     if not tickets.exists():
+        create_tickets = True
+    else:
+        services = TicketSalesService.objects.filter(ticket_sale_id=ticket_sale_id)
+        tickets_count = tickets.count()
+        tickets_count_by_services = services.aggregate(Sum("tickets_count", default=0))
+        if tickets_count != tickets_count_by_services:
+            create_tickets = True
+
+    if create_tickets:
         ticket_sale = TicketSale.objects.filter(id=ticket_sale_id).first()
         create_tickets_on_new_payment(ticket_sale, None, 0)
         tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
+
     data = {
         'services': [
             {

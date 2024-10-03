@@ -94,7 +94,7 @@ def update_terminal_token(terminal_settings):
 
 def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
     # Variable for ticket numbering
-    curr_num = 0
+    curr_num = TicketSalesTicket.objects.filter(ticket_sale=ticket_sale).count()
     services = TicketSalesService.objects.filter(ticket_sale=ticket_sale)
     if paid_sum == 0:
         services = services.filter(total_amount=0)
@@ -112,7 +112,7 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
         # Calculate the total existing amount and count of tickets
         total_existing_amount = existing_tickets.aggregate(amount_sum=Sum('amount'))['amount_sum'] or 0
         total_existing_count = existing_tickets.count()
-        curr_num += total_existing_count
+
         # Check if tickets need to be created
         if total_existing_amount < service.tickets_amount or total_existing_count < service.tickets_count:
             # Calculate how many more tickets need to be created
