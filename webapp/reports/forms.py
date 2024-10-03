@@ -31,6 +31,8 @@ class SalesReportForm(forms.Form):
 
         # Проверяем, что обе даты указаны
         if start_date and end_date:
+            if end_date < start_date:
+                raise forms.ValidationError("Конец периода не может быть раньше начала периода.")
             # Проверяем, что интервал не превышает 30 дней
             if end_date - start_date > timedelta(days=30):
                 raise ValidationError("Интервал дат не может превышать 30 дней.")
@@ -69,6 +71,8 @@ class SessionsReportForm(forms.Form):
 
         # Проверяем, что обе даты указаны
         if start_date and end_date:
+            if end_date < start_date:
+                raise forms.ValidationError("Конец периода не может быть раньше начала периода.")
             # Проверяем, что интервал не превышает 30 дней
             if end_date - start_date > timedelta(days=30):
                 raise ValidationError("Интервал дат не может превышать 30 дней.")
@@ -114,6 +118,8 @@ class TicketReportForm(forms.Form):
 
         # Проверяем, что обе даты указаны
         if start_date and end_date:
+            if end_date < start_date:
+                raise forms.ValidationError("Конец периода не может быть раньше начала периода.")
             # Проверяем, что интервал не превышает 30 дней
             if end_date - start_date > timedelta(days=30):
                 raise ValidationError("Интервал дат не может превышать 30 дней.")
@@ -153,5 +159,8 @@ class ServiceReportForm(forms.Form):
         if start_date and end_date:
             if end_date < start_date:
                 raise forms.ValidationError("Конец периода не может быть раньше начала периода.")
+            # Проверяем, что интервал не превышает 30 дней
+            if end_date - start_date > timedelta(days=30):
+                raise ValidationError("Интервал дат не может превышать 30 дней.")
 
         return cleaned_data

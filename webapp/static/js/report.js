@@ -58,47 +58,22 @@ function toggleEvent(checkbox) {
     }
 }
 
-function OnSessionsReportLoaded() {
-    const allCheckbox = document.getElementById('event_all');
-    const eventCheckboxes = document.querySelectorAll('input[name="event_templates"]');
 
-    // If no individual events are checked, select "all"
-    function checkDefault() {
-        const anyChecked = Array.from(eventCheckboxes).some(checkbox => checkbox.checked);
-        if (!anyChecked) {
-            allCheckbox.checked = true;
-        }
-    }
+function toggleService(checkbox) {
+    const serviceCheckboxes = document.querySelectorAll('input[name="services"]');
 
-    // When "all" is checked, uncheck all others
-    allCheckbox.addEventListener('change', function () {
-        if (allCheckbox.checked) {
-            eventCheckboxes.forEach(checkbox => checkbox.checked = false);
-        }
-    });
-
-    // When any individual event is checked, uncheck "all"
-    eventCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            if (checkbox.checked) {
-                allCheckbox.checked = false;
+    if (checkbox.value === 'service_all' && checkbox.checked) {
+        // Если выбран чекбокс "Все", снимаем отметки с остальных
+        serviceCheckboxes.forEach(cb => {
+            if (cb.value !== 'service_all') {
+                cb.checked = false;
             }
         });
-    });
-
-    // Run default check on page load
-    checkDefault();
-}
-
-
-function OnTicketsReportLoad () {
-    // Проверяем, заданы ли дополнительные фильтры
-    const orderNumber = document.querySelector('input[name="order_number"]').value;
-    const ticketNumber = document.querySelector('input[name="ticket_number"]').value;
-    const eventTemplates = document.querySelector('select[name="event_templates"]').value;
-
-    if (orderNumber || ticketNumber || eventTemplates) {
-        document.getElementById('extraFilters').style.display = 'block';  // Показываем блок, если фильтры заданы
-        document.getElementById('showHideAdditionalFiltersButton').textContent = 'Скрыть дополнительные фильтры';
+    } else {
+        // Снимаем отметку с чекбокса "Все", если любой другой выбран
+        const selectAllCheckbox = document.querySelector('input[name="services"][value="service_all"]');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
     }
 }

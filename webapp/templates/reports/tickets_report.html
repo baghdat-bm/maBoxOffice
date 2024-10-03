@@ -64,14 +64,14 @@
                        class="btn btn-success">Экспорт в Excel
                     </a>
                 </div>
-                <!-- Фильтры даты всегда видимы -->
+                <!-- Фильтры даты -->
                 <div class="col-md-3">
                     {{ form.start_date.label_tag }}
-                    {{ form.start_date }}
+                    {{ form.start_date }}                    
                 </div>
                 <div class="col-md-3">
                     {{ form.end_date.label_tag }}
-                    {{ form.end_date }}
+                    {{ form.end_date }}                    
                 </div>
             </div>
         
@@ -96,14 +96,14 @@
                 <div class="col-md-6">
                     <label>Мероприятие</label>
                     <div>
-                        <input type="checkbox" id="event_all" name="event_all" 
+                        <input type="checkbox" id="event_all" name="event_all" onchange="toggleEvent(this)" 
                                {% if 'all' in selected_events %}checked{% endif %}>
                         <label for="event_all">Все</label>
                     </div>
                     {% for event in events_list %}
                     <div>
                         <input type="checkbox" id="event_{{ event.id }}" name="event_templates" value="{{ event.id }}" 
-                               {% if event in selected_events %}checked{% endif %}>
+                               onchange="toggleEvent(this)" {% if event in selected_events %}checked{% endif %}>
                         <label for="event_{{ event.id }}">{{ event.name }}</label>
                     </div>
                     {% endfor %}
@@ -196,9 +196,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.debug.js"></script>
 
     <script>
-        
-        window.onload = OnSessionsReportLoaded;
-        
+                
         {#    JavaScript для печати #}
         
         function generatePdfOnJs(ticket_id) {
@@ -395,4 +393,38 @@
         }        
     
     </script>
+    <script>
+        window.addEventListener("load",function(){
+            const allCheckbox = document.getElementById('event_all');
+            const eventCheckboxes = document.querySelectorAll('input[name="event_templates"]');
+
+            // If no individual events are checked, select "all"
+            function checkDefault() {
+                const anyChecked = Array.from(eventCheckboxes).some(checkbox => checkbox.checked);
+                if (!anyChecked) {
+                    allCheckbox.checked = true;
+                }
+            }
+
+            // When "all" is checked, uncheck all others
+            allCheckbox.addEventListener('change', function () {
+                if (allCheckbox.checked) {
+                    eventCheckboxes.forEach(checkbox => checkbox.checked = false);
+                }
+            });
+
+            // When any individual event is checked, uncheck "all"
+            eventCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    if (checkbox.checked) {
+                        allCheckbox.checked = false;
+                    }
+                });
+            });
+
+            // Run default check on page load
+            checkDefault();    
+        });
+    </script>
+    
 {% endblock %}

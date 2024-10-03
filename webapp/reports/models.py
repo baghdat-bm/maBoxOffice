@@ -9,6 +9,7 @@ class Reports(models.Model):
             ("view_sales_report", "Может просматривать отчет по продажам"),
             ("view_events_report", "Может просматривать отчет по сеансам"),
             ("view_tickets_report", "Может просматривать отчет реестр билетов"),
+            ("view_services_report", "Может просматривать отчет реестр видов услуг"),
             # права на методы API
             ("access_available_event_dates", "Доступ к методу available-event-dates"),
             ("access_events_list", "Доступ к методу events-list"),

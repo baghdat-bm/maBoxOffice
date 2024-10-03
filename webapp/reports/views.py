@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
+from datetime import date
 # from weasyprint import HTML
 import openpyxl
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
@@ -16,8 +17,7 @@ from collections import defaultdict
 from references.models import Event, EventTemplate
 from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
 from .forms import TicketReportForm, SalesReportForm, SessionsReportForm, ServiceReportForm
-from django.db.models import F, Value, CharField
-from django.db.models.functions import Concat
+
 
 from .utils import get_filtered_sales_data, get_sessions_report_data, get_ticket_report_data
 
@@ -376,7 +376,7 @@ def ticket_print_pdf(request, ticket_id):
     return response
 
 
-@csrf_exempt
+@permission_required('reports.view_services_report', raise_exception=True)
 def services_report(request):
     form = ServiceReportForm(request.GET or None)
 

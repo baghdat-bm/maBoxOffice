@@ -9,6 +9,7 @@ python manage.py startapp appName --settings=webapp.dev-loc-settings
 python -Xutf8 manage.py dumpdata --indent=2 --exclude auth.permission --exclude contenttypes -o db.json --settings=webapp.dev-loc-settings
 python manage.py loaddata db.json --settings=webapp.dev-loc-settings
 python manage.py createsuperuser --settings=webapp.dev-loc-settings
+python manage.py collectstatic --no-input --clear --settings=webapp.dev-loc-settings
 
 
 ### Run the development environment.
