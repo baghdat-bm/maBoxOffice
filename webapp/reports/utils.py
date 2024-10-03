@@ -102,16 +102,15 @@ def get_filtered_sales_data(request, form_data):
     return tickets
 
 
-def get_sessions_report_data(form, calculate_total_summary=False):
+def get_sessions_report_data(form):
     # Get date range from form
     start_date = form.cleaned_data.get('start_date', date.today())
     end_date = form.cleaned_data.get('end_date', date.today())
 
-    # Filter TicketSales based on date range
-    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
-
-    # Retrieve tickets related to ticket sales
-    tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales).select_related('ticket_sale', 'event', 'payment')
+    # Retrieve tickets based on date range
+    tickets = (TicketSalesTicket.objects.filter(event_date__range=(start_date, end_date))
+               .exclude(ticket_sale__status='CN')
+               .select_related('ticket_sale', 'event', 'payment'))
 
     # Filter by event templates if selected
     event_templates = form.cleaned_data.get('event_templates')
@@ -140,27 +139,24 @@ def get_sessions_report_data(form, calculate_total_summary=False):
     ).order_by('event_date')
 
     # Calculate totals
-    if calculate_total_summary:
-        total_summary = tickets.aggregate(
-            total_quantity=Sum('event__quantity'),
-            total_sold=Count('id'),
-            total_left=Sum('event__quantity') - Count('id'),
-            total_card_sales_cs=Count('id', filter=Q(payment__payment_method__in=['CD', 'QR']) & Q(
-                ticket_sale__sale_type='CS')),
-            total_cash_sales_cs=Count('id', filter=Q(payment__payment_method='CH') & Q(ticket_sale__sale_type='CS')),
-            total_kiosk_sales=Count('id', filter=Q(ticket_sale__sale_type='TS')),
-            total_qr_sales_sm=Count('id', filter=Q(payment__payment_method='QR') & Q(ticket_sale__sale_type='SM')),
-            total_card_sales_sm=Count('id', filter=Q(payment__payment_method='CD') & Q(ticket_sale__sale_type='SM')),
-            total_kaspi_sales=Count('id', filter=Q(ticket_sale__sale_type='KP')),
-            total_refunds=Count('id', filter=Q(is_refund=True))
-        )
-    else:
-        total_summary = {}
+    total_summary = tickets.aggregate(
+        total_quantity=Sum('event__quantity'),
+        total_sold=Count('id'),
+        total_left=Sum('event__quantity') - Count('id'),
+        total_card_sales_cs=Count('id', filter=Q(payment__payment_method__in=['CD', 'QR']) & Q(
+            ticket_sale__sale_type='CS')),
+        total_cash_sales_cs=Count('id', filter=Q(payment__payment_method='CH') & Q(ticket_sale__sale_type='CS')),
+        total_kiosk_sales=Count('id', filter=Q(ticket_sale__sale_type='TS')),
+        total_qr_sales_sm=Count('id', filter=Q(payment__payment_method='QR') & Q(ticket_sale__sale_type='SM')),
+        total_card_sales_sm=Count('id', filter=Q(payment__payment_method='CD') & Q(ticket_sale__sale_type='SM')),
+        total_kaspi_sales=Count('id', filter=Q(ticket_sale__sale_type='KP')),
+        total_refunds=Count('id', filter=Q(is_refund=True))
+    )
 
     return tickets_grouped, total_summary
 
 
-def get_ticket_report_data(form, calculate_total_summary=False):
+def get_ticket_report_data(form):
     # Get filter values from the form
     ticket_number = form.cleaned_data.get('ticket_number')
     order_number = form.cleaned_data.get('order_number')
@@ -191,11 +187,8 @@ def get_ticket_report_data(form, calculate_total_summary=False):
     )
 
     # Calculate totals for all numeric fields
-    if calculate_total_summary:
-        total_summary = tickets.aggregate(
-            total_amount=Sum('amount')
-        )
-    else:
-        total_summary = {}
+    total_summary = tickets.aggregate(
+        total_amount=Sum('amount')
+    )
 
     return tickets, total_summary

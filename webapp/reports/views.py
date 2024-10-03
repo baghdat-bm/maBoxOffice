@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from datetime import date
 # from weasyprint import HTML
 import openpyxl
+from openpyxl.styles import Font, Border, Side
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.contrib import messages
 from django.utils.timezone import now
@@ -83,7 +84,6 @@ def sales_report_export(request):
     form = SalesReportForm(request.GET or None)
 
     if form.is_valid():
-
         tickets = get_filtered_sales_data(request, form.cleaned_data)
 
         # Создаем Excel-файл
@@ -93,15 +93,39 @@ def sales_report_export(request):
 
         # Заголовки для столбцов
         headers = [
-            "Дата", "Сумма продажи", "Касса (безнал)", "Касса (наличные)",
+            "№", "Дата", "Сумма продажи", "Касса (безнал)", "Касса (наличные)",
             "Киоск", "Muzaidyny.kz (KaspiQR)", "Muzaidyny.kz (Карта)",
             "Kaspi платежи", "Возвраты", "Мероприятие"
         ]
         sheet.append(headers)
 
+        # Make the header row bold and add borders
+        for cell in sheet[1]:
+            cell.font = Font(bold=True)
+
+        # Define the border style
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        # Variables to hold summary totals
+        total_amount = 0
+        total_cashier_card = 0
+        total_cashier_cash = 0
+        total_kiosk = 0
+        total_muzaidyny_qr = 0
+        total_muzaidyny_card = 0
+        total_kaspi = 0
+        total_refund = 0
+
+        curr_no = 1
         # Заполняем строки данными отчета
         for ticket in tickets:
-            sheet.append([
+            row = [
+                curr_no,
                 ticket.sale_date.strftime('%d.%m.%Y'),
                 ticket.amount,
                 ticket.cashier_paid_card,
@@ -112,7 +136,49 @@ def sales_report_export(request):
                 ticket.kaspi_paid,
                 ticket.refund_amount,
                 ticket.event_name,
-            ])
+            ]
+            sheet.append(row)
+
+            # Apply borders to each cell in the row
+            for cell in sheet[sheet.max_row]:
+                cell.border = thin_border
+
+            # Accumulate totals
+            total_amount += ticket.amount
+            total_cashier_card += ticket.cashier_paid_card
+            total_cashier_cash += ticket.cashier_paid_cash
+            total_kiosk += ticket.kiosk_paid
+            total_muzaidyny_qr += ticket.muzaidyny_qr_paid
+            total_muzaidyny_card += ticket.muzaidyny_card_paid
+            total_kaspi += ticket.kaspi_paid
+            total_refund += ticket.refund_amount
+
+            curr_no += 1
+
+        # Добавляем итоговую строку
+        total_row = [
+            "Итого",
+            "",  # Leave the date column empty for the summary row
+            total_amount,
+            total_cashier_card,
+            total_cashier_cash,
+            total_kiosk,
+            total_muzaidyny_qr,
+            total_muzaidyny_card,
+            total_kaspi,
+            total_refund,
+            ""  # Leave the event name column empty for the summary row
+        ]
+        sheet.append(total_row)
+
+        # Make the total row bold and add borders
+        for cell in sheet[sheet.max_row]:
+            cell.font = Font(bold=True)
+            cell.border = thin_border
+
+        # Apply borders to header row
+        for cell in sheet[1]:
+            cell.border = thin_border
 
         # Настраиваем ширину колонок
         for col_num, column_title in enumerate(headers, 1):
@@ -136,7 +202,7 @@ def sessions_report(request):
     form = SessionsReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets_grouped, total_summary = get_sessions_report_data(form, True)
+        tickets_grouped, total_summary = get_sessions_report_data(form)
 
         # Paginate the results
         paginator = Paginator(tickets_grouped, 20)
@@ -185,7 +251,17 @@ def export_sessions_report_to_excel(request):
 
         # Write headers to Excel sheet
         for col_num, header in enumerate(headers, 1):
-            ws.cell(row=1, column=col_num, value=header)
+            cell = ws.cell(row=1, column=col_num, value=header)
+            # Make headers bold
+            cell.font = Font(bold=True)
+
+        # Define border style
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
 
         # Write data rows
         for row_num, ticket in enumerate(tickets_grouped, start=2):
@@ -203,6 +279,38 @@ def export_sessions_report_to_excel(request):
             ws.cell(row=row_num, column=12, value=ticket['total_kaspi_sales'])
             ws.cell(row=row_num, column=13, value=ticket['total_refunds'])
             ws.cell(row=row_num, column=14, value=ticket['event__event_template__name'])
+
+            # Apply borders to each cell in the current row
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = thin_border
+
+        # Add total summary row
+        total_row = [
+            'Итого',
+            '', '',  # Skip date and time columns for the total row
+            total_summary['total_quantity'],
+            total_summary['total_left'],
+            total_summary['total_sold'],
+            total_summary['total_card_sales_cs'],
+            total_summary['total_cash_sales_cs'],
+            total_summary['total_kiosk_sales'],
+            total_summary['total_qr_sales_sm'],
+            total_summary['total_card_sales_sm'],
+            total_summary['total_kaspi_sales'],
+            total_summary['total_refunds'],
+            ''  # Skip event name for the total row
+        ]
+        summary_row_num = len(tickets_grouped) + 2  # Place the summary row after all data rows
+        for col_num, value in enumerate(total_row, 1):
+            cell = ws.cell(row=summary_row_num, column=col_num, value=value)
+            # Make the total row bold
+            cell.font = Font(bold=True)
+            # Apply borders to each cell in the total row
+            cell.border = thin_border
+
+        # Apply borders to the header row
+        for col_num in range(1, len(headers) + 1):
+            ws.cell(row=1, column=col_num).border = thin_border
 
         # Adjust column widths
         for col_num in range(1, len(headers) + 1):
@@ -225,7 +333,7 @@ def tickets_report(request):
     form = TicketReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets, total_summary = get_ticket_report_data(form, True)
+        tickets, total_summary = get_ticket_report_data(form)
 
         ticket_number = form.cleaned_data.get('ticket_number')
         order_number = form.cleaned_data.get('order_number')
@@ -282,7 +390,17 @@ def export_tickets_report_to_excel(request):
 
         # Write headers to Excel sheet
         for col_num, header in enumerate(headers, 1):
-            ws.cell(row=1, column=col_num, value=header)
+            cell = ws.cell(row=1, column=col_num, value=header)
+            # Make headers bold
+            cell.font = Font(bold=True)
+
+        # Define border style
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
 
         # Write data rows
         for row_num, ticket in enumerate(tickets, start=2):
@@ -297,6 +415,28 @@ def export_tickets_report_to_excel(request):
             ws.cell(row=row_num, column=9, value=ticket.ticket_sale.booking_begin_date)
             ws.cell(row=row_num, column=10, value=ticket.payment_id)
             ws.cell(row=row_num, column=11, value=ticket.ticket_sale.phone)
+
+            # Apply borders to each cell in the current row
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = thin_border
+
+        # Add total summary row
+        summary_row_num = len(tickets) + 2  # Place the summary row after all data rows
+        total_row = [
+            'Итого',
+            '', '', '', total_summary['total_amount'],
+            '', '', '', '', '', ''
+        ]
+        for col_num, value in enumerate(total_row, 1):
+            cell = ws.cell(row=summary_row_num, column=col_num, value=value)
+            # Make the total row bold
+            cell.font = Font(bold=True)
+            # Apply borders to each cell in the total row
+            cell.border = thin_border
+
+        # Apply borders to the header row
+        for col_num in range(1, len(headers) + 1):
+            ws.cell(row=1, column=col_num).border = thin_border
 
         # Adjust column widths
         for col_num in range(1, len(headers) + 1):
