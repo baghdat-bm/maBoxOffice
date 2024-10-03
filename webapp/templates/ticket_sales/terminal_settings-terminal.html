@@ -61,13 +61,14 @@
         function registerTerminal() {
             const ip_address = document.getElementById('ip_address').value;
             const username = document.getElementById('username').value;
+            const port = document.getElementById('port').value;
 
-            if (!ip_address || !username) {
-                alert('Необходимо заполнить IP-адрес и имя пользователя.');
+            if (!ip_address || !username || !port) {
+                alert('Необходимо заполнить IP-адрес, port и имя пользователя.');
                 return;
             }
 
-            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&app_type=TS`;
+            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&app_type=TS`;
 
             fetch(url)
                 .then(response => response.json())
@@ -95,10 +96,11 @@
         function refreshToken() {
             const ip_address = document.getElementById('ip_address').value;
             const username = document.getElementById('username').value;
+            const port = document.getElementById('port').value;
             const refreshToken = document.getElementById('refresh_token').value;
 
             if (!ip_address || !username) {
-                alert('Необходимо заполнить IP-адрес и имя пользователя.');
+                alert('Необходимо заполнить IP-адрес, port и имя пользователя.');
                 return;
             }
             
@@ -107,7 +109,7 @@
                 return;
             }
 
-            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&refresh_token=${refreshToken}&app_type=TS`;
+            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&refresh_token=${refreshToken}&app_type=TS`;
 
             fetch(url)
                 .then(response => response.json())

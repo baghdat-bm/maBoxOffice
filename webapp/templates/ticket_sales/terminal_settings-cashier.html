@@ -61,13 +61,14 @@
         function registerTerminal() {
             const ip_address = document.getElementById('ip_address').value;
             const username = document.getElementById('username').value;
+            const port = document.getElementById('port').value;
 
             if (!ip_address || !username) {
                 alert('Необходимо заполнить IP-адрес и имя пользователя.');
                 return;
             }
 
-            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&app_type=CS`;
+            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&app_type=CS`;
 
             fetch(url)
                 .then(response => response.json())
@@ -95,10 +96,11 @@
         function refreshToken() {
             const ip_address = document.getElementById('ip_address').value;
             const username = document.getElementById('username').value;
+            const port = document.getElementById('port').value;
             const refreshToken = document.getElementById('refresh_token').value;
 
-            if (!ip_address || !username) {
-                alert('Необходимо заполнить IP-адрес и имя пользователя.');
+            if (!ip_address || !username || !port) {
+                alert('Необходимо заполнить IP-адрес, port и имя пользователя.');
                 return;
             }
             
@@ -107,7 +109,7 @@
                 return;
             }
 
-            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&refresh_token=${refreshToken}&app_type=CS`;
+            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&refresh_token=${refreshToken}&app_type=CS`;
 
             fetch(url)
                 .then(response => response.json())
@@ -132,10 +134,11 @@
                 });
         }
 
-        function saveSettings(ip_address, username, access_token, refresh_token, expiration_date) {
+        function saveSettings(ip_address, port, username, access_token, refresh_token, expiration_date) {
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             const formData = new FormData();
             formData.append('ip_address', ip_address);
+            formData.append('port', port);
             formData.append('username', username);
             formData.append('access_token', access_token);
             formData.append('refresh_token', refresh_token);
