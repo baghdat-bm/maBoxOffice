@@ -209,6 +209,7 @@ class TicketSalesBooking(models.Model):
 
 class TerminalSettings(models.Model):
     ip_address = models.GenericIPAddressField(verbose_name="IP Address")
+    port = models.CharField(max_length=7, verbose_name="Port (8080)", default='8080')
     username = models.CharField(max_length=150, verbose_name="Username")
     access_token = models.TextField(verbose_name="Access Token")
     refresh_token = models.TextField(verbose_name="Refresh Token")

@@ -38,6 +38,7 @@ def get_terminal_settings(app_type='CS'):
         if first_item:
             data = {
                 'ip_address': first_item.ip_address,
+                'port': first_item.port,
                 'username': first_item.username,
                 'access_token': first_item.access_token,
                 'refresh_token': first_item.refresh_token,
@@ -51,13 +52,16 @@ def get_terminal_settings(app_type='CS'):
 
 def update_terminal_token(terminal_settings):
     ip_address = terminal_settings['ip_address']
+    port = terminal_settings['port']
     username = terminal_settings['username']
     refresh_token = terminal_settings['refresh_token']
+    app_type = terminal_settings['app_type']
 
-    if not ip_address or not username:
-        return {'error': 'Terminal IP address and username are not provided.', 'status': 400}
+    if not ip_address or not username or not port:
+        return {'error': 'Terminal IP address, Port and Username are not provided.', 'status': 400}
 
-    url = f"https://{ip_address}:8080/v2/revoke?name={username}&refreshToken={refresh_token}"
+    protocol = 'http' if ip_address == '127.0.0.1' else 'https'
+    url = f"{protocol}://{ip_address}:{port}/v2/revoke?name={username}&refreshToken={refresh_token}"
 
     try:
         response = requests.get(url, timeout=10, verify=False)
@@ -68,14 +72,16 @@ def update_terminal_token(terminal_settings):
 
             expiration_date = datetime.strptime(data['expirationDate'], '%b %d, %Y %H:%M:%S')
 
-            settings = TerminalSettings.objects.first()
+            settings = TerminalSettings.objects.filter(app_type=app_type).first()
             if settings:
                 settings.access_token = data['accessToken']
                 settings.refresh_token = data['refreshToken']
                 settings.expiration_date = expiration_date
             else:
                 settings = TerminalSettings(
+                    app_type=app_type,
                     ip_address=ip_address,
+                    port=port,
                     username=username,
                     access_token=data['accessToken'],
                     refresh_token=data['refreshToken'],

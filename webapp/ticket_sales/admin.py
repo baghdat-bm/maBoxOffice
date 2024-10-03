@@ -39,7 +39,7 @@ class TicketSaleAdmin(admin.ModelAdmin):
 
 class TerminalSettingsAdmin(admin.ModelAdmin):
     model = TerminalSettings
-    list_display = ('username', 'ip_address', 'refresh_token', 'expiration_date', 'app_type')
+    list_display = ('username', 'ip_address', 'port', 'refresh_token', 'expiration_date', 'app_type')
     search_fields = ('username', 'ip_address')
 
     # def has_add_permission(self, request):

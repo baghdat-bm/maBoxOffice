@@ -13,6 +13,12 @@
                 <input type="text" id="ip_address" name="ip_address" class="form-control"
                        value="{{ settings.ip_address|default_if_none:'' }}">
             </div>
+            
+            <div class="mb-3">
+                <label for="port" class="form-label">Port</label>
+                <input type="text" id="port" name="port" class="form-control"
+                       value="{{ settings.port|default_if_none:'' }}">
+            </div>
 
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
@@ -61,7 +67,7 @@
                 return;
             }
 
-            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}`;
+            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&app_type=CS`;
 
             fetch(url)
                 .then(response => response.json())
@@ -101,7 +107,7 @@
                 return;
             }
 
-            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&refresh_token=${refreshToken}`;
+            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&refresh_token=${refreshToken}&app_type=CS`;
 
             fetch(url)
                 .then(response => response.json())
