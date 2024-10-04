@@ -194,11 +194,14 @@ def event_template_service_create(request, event_template_id):
         if form.is_valid():
             service = form.save(commit=False)
             service.event_template = event_template
-            service.save()
-            return render(request, 'references/partials/event_template_services_list.html', {'event_template': event_template})
-    else:
-        form = EventTemplateServicesForm()
+            try:
+                service.save()
+            except Exception as e:
+                messages.error(request, "Не удалось добавить услугу, возможно услуга уже добавлена")
+            return render(request, 'references/partials/event_template_services_list.html',
+                          {'event_template': event_template})
 
+    form = EventTemplateServicesForm()
     return render(request, 'references/partials/event_template_service_form.html', {'form': form, 'event_template': event_template})
 
 

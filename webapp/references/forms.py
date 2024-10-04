@@ -132,5 +132,19 @@ class EventTemplateServicesForm(forms.ModelForm):
         fields = ['service',]
 
     def __init__(self, *args, **kwargs):
+        self.event_template = kwargs.pop('event_template', None)  # Capture the event template
         super().__init__(*args, **kwargs)
         self.fields['service'].widget.attrs.update({'class': 'form-control'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        service = cleaned_data.get('service')
+
+        # Check for duplicate services within the same event template
+        if EventTemplateServices.objects.filter(
+            event_template=self.event_template,
+            service=service
+        ).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError(f"Услуга '{service}' уже добавлена в мероприятие.")
+
+        return cleaned_data

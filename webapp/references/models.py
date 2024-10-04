@@ -96,12 +96,18 @@ class Service(models.Model):
 
 
 class EventTemplateServices(models.Model):
-    event_template = models.ForeignKey(EventTemplate, on_delete=models.CASCADE, verbose_name="Шаблон мероприятий")
+    event_template = models.ForeignKey(EventTemplate, on_delete=models.CASCADE, verbose_name="Мероприятие")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
 
     def __str__(self):
         return f'{self.event_template.name} / {self.service.name} ({self.id})'
 
     class Meta:
-        verbose_name = 'Услуга'
-        verbose_name_plural = 'Услуга'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['event_template', 'service'],
+                name='unique_service_per_event_template'
+            )
+        ]
+        verbose_name = 'Услуга в мероприятии'
+        verbose_name_plural = 'Услуги в мероприи'

@@ -37,16 +37,19 @@ def sales_report(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        for item in page_obj:
+            pass
+
         # Итоговые суммы по текущей странице
         totals = {
-            'total_amount': sum(item.amount for item in page_obj),
-            'total_cashier_paid_card': sum(item.cashier_paid_card for item in page_obj),
-            'total_cashier_paid_cash': sum(item.cashier_paid_cash for item in page_obj),
-            'total_kiosk_paid': sum(item.kiosk_paid for item in page_obj),
-            'total_muzaidyny_qr_paid': sum(item.muzaidyny_qr_paid for item in page_obj),
-            'total_muzaidyny_card_paid': sum(item.muzaidyny_card_paid for item in page_obj),
-            'total_kaspi_paid': sum(item.kaspi_paid for item in page_obj),
-            'total_refund_amount': sum(item.refund_amount for item in page_obj),
+            'total_amount': sum(item['total_amount'] for item in page_obj),
+            'total_cashier_paid_card': sum(item['cashier_paid_card'] for item in page_obj),
+            'total_cashier_paid_cash': sum(item['cashier_paid_cash'] for item in page_obj),
+            'total_kiosk_paid': sum(item['kiosk_paid'] for item in page_obj),
+            'total_muzaidyny_qr_paid': sum(item['muzaidyny_qr_paid'] for item in page_obj),
+            'total_muzaidyny_card_paid': sum(item['muzaidyny_card_paid'] for item in page_obj),
+            'total_kaspi_paid': sum(item['kaspi_paid'] for item in page_obj),
+            'total_refund_amount': sum(item['refund_amount'] for item in page_obj),
         }
 
         # Получаем дополнительные данные для контекста
@@ -126,16 +129,16 @@ def sales_report_export(request):
         for ticket in tickets:
             row = [
                 curr_no,
-                ticket.sale_date.strftime('%d.%m.%Y'),
-                ticket.amount,
-                ticket.cashier_paid_card,
-                ticket.cashier_paid_cash,
-                ticket.kiosk_paid,
-                ticket.muzaidyny_qr_paid,
-                ticket.muzaidyny_card_paid,
-                ticket.kaspi_paid,
-                ticket.refund_amount,
-                ticket.event_name,
+                ticket['sale_date'].strftime('%d.%m.%Y'),
+                ticket['total_amount'],
+                ticket['cashier_paid_card'],
+                ticket['cashier_paid_cash'],
+                ticket['kiosk_paid'],
+                ticket['muzaidyny_qr_paid'],
+                ticket['muzaidyny_card_paid'],
+                ticket['kaspi_paid'],
+                ticket['refund_amount'],
+                ticket['event_name'],
             ]
             sheet.append(row)
 
@@ -144,14 +147,14 @@ def sales_report_export(request):
                 cell.border = thin_border
 
             # Accumulate totals
-            total_amount += ticket.amount
-            total_cashier_card += ticket.cashier_paid_card
-            total_cashier_cash += ticket.cashier_paid_cash
-            total_kiosk += ticket.kiosk_paid
-            total_muzaidyny_qr += ticket.muzaidyny_qr_paid
-            total_muzaidyny_card += ticket.muzaidyny_card_paid
-            total_kaspi += ticket.kaspi_paid
-            total_refund += ticket.refund_amount
+            total_amount += ticket['total_amount']
+            total_cashier_card += ticket['cashier_paid_card']
+            total_cashier_cash += ticket['cashier_paid_cash']
+            total_kiosk += ticket['kiosk_paid']
+            total_muzaidyny_qr += ticket['muzaidyny_qr_paid']
+            total_muzaidyny_card += ticket['muzaidyny_card_paid']
+            total_kaspi += ticket['kaspi_paid']
+            total_refund += ticket['refund_amount']
 
             curr_no += 1
 
