@@ -37,9 +37,6 @@ def sales_report(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        for item in page_obj:
-            pass
-
         # Итоговые суммы по текущей странице
         totals = {
             'total_amount': sum(item['total_amount'] for item in page_obj),

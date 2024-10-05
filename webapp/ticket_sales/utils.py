@@ -21,7 +21,7 @@ def update_ticket_amount(ticket_sale):
     # Устанавливаем значения для ticket_sale
     ticket_sale.amount = totals['total_amount'] or 0
     ticket_sale.tickets_count = totals['total_tickets'] or 0
-    ticket_sale.save()
+    ticket_sale.save(update_date=True)
 
 
 def update_ticket_paid_amount(ticket_sale):
@@ -157,3 +157,25 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
     ticket_sale.save()
 
     return curr_num
+
+
+def refund_tickets_on_refund(ticket_sale, refund_payment, refund_amount):
+    tickets = TicketSalesTicket.objects.filter(ticket_sale=ticket_sale, payment=refund_payment)
+    tickets_count = 0
+    refund_amount_remain = refund_amount
+    ticket_ids = []
+    for ticket in tickets:
+        ticket_refund_amount = min(ticket.amount - ticket.refund_amount, refund_amount)
+        ticket.refund_amount += ticket_refund_amount
+        ticket.is_refund = True
+        ticket.save()
+        ticket_ids.append(ticket.id)
+        refund_amount_remain -= ticket_refund_amount
+        tickets_count += 1
+        if ticket_refund_amount == 0:
+            break
+
+    ticket_sale.refund_amount += refund_amount - refund_amount_remain
+    ticket_sale.save(update_date=False)
+
+    return ticket_ids

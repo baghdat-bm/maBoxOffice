@@ -24,7 +24,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView, DetailView,
 
 from .ticket_sale_utils import get_available_events_dates, get_events_data, get_filtered_services
 from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal_settings, update_terminal_token, \
-    create_tickets_on_new_payment
+    create_tickets_on_new_payment, refund_tickets_on_refund
 
 
 # TicketSale Views
@@ -45,7 +45,9 @@ class TicketSaleListView(ListView):
 
 def create_ticket_sale_cashier(request):
     # Создаем новую запись TicketSale
-    ticket_sale = TicketSale.objects.create(sale_type='CS', booking_guid=uuid.uuid4())
+    current_date = datetime.now()
+    ticket_sale = TicketSale.objects.create(sale_type='CS', booking_guid=uuid.uuid4(), date=current_date.date(),
+                                            time=current_date.time())
 
     # Перенаправляем на страницу редактирования
     return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))
@@ -56,6 +58,14 @@ class TicketSaleUpdateView(UpdateView):
     form_class = TicketSaleForm
     template_name = 'ticket_sales/ticket_sale_form.html'
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+
+    def form_valid(self, form):
+        # Получаем текущие дату и время
+        current_date = datetime.now()
+        form.instance.date = current_date.date()
+        form.instance.time = current_date.time()
+        # Далее сохраняем форму
+        return super().form_valid(form)
 
 
 def home_page_terminal(request):
@@ -133,6 +143,9 @@ def create_ticket_sale_terminal(request):
                 )
                 tickets_count += booking.tickets_count
 
+            current_date = datetime.now()
+            ticket_sale.date = current_date.date()
+            ticket_sale.time = current_date.time()
             ticket_sale.amount = total_amount
             ticket_sale.tickets_count = tickets_count
             ticket_sale.save()
@@ -150,6 +163,14 @@ class TicketSaleUpdateViewTerminal(UpdateView):
     form_class = TicketSaleForm
     template_name = 'ticket_sales/ticket_sale_form_terminal.html'
     success_url = reverse_lazy('ticket_sales:home-terminal')
+
+    def form_valid(self, form):
+        # Получаем текущие дату и время
+        current_date = datetime.now()
+        form.instance.date = current_date.date()
+        form.instance.time = current_date.time()
+        # Далее сохраняем форму
+        return super().form_valid(form)
 
 
 class TicketSaleDetailView(DetailView):
@@ -198,8 +219,10 @@ def ticket_sale_create_view(request):
     if request.method == 'POST':
         form = TicketSaleForm(request.POST)
         if form.is_valid():
-            # Сохраняем форму
-            ticket_sale = form.save()
+            # Создаем объект, но не сохраняем его в базе данных
+            ticket_sale = form.save(commit=False)
+            # Сохраняем объект в базе данных
+            ticket_sale.save(update_date=True)
             # Возвращаем JSON с информацией об ID для перенаправления в режим редактирования
             return JsonResponse({'redirect_url': reverse('ticket_sales:ticket-sale-update', args=[ticket_sale.id])})
     else:
@@ -214,7 +237,10 @@ def ticket_sale_update_view(request, pk):
     if request.method == 'POST':
         form = TicketSaleForm(request.POST, instance=ticket_sale)
         if form.is_valid():
-            form.save()
+            # Создаем объект, но не сохраняем его в базе данных
+            ticket_sale = form.save(commit=False)
+            # Сохраняем объект в базе данных
+            ticket_sale.save(update_date=True)
             return JsonResponse({'success': True})  # Возвращаем успешный ответ
     else:
         form = TicketSaleForm(instance=ticket_sale)
@@ -849,14 +875,10 @@ def refund_tickets(request, sale_id):
                     payment.refund_amount += data['amount']
                     payment.save()
                     # Помечаем возвратные билеты
-                    for ticket in data['tickets']:
-                        ticket.is_refund = True
-                        ticket.save()
-                        ticket_ids.append(ticket.id)
+                    ticket_ids = refund_tickets_on_refund(ticket_sale, payment, data['amount'])
                     # Обновляем сумму возврата в заказе
                     ticket_sale.refund_amount += data['amount']
-
-            ticket_sale.save()
+                    ticket_sale.save(update_date=False)
 
             if len(errors) > 0:
                 message = 'Произошла ошибка при выполнении возврата...'
@@ -880,7 +902,8 @@ def refund_tickets(request, sale_id):
 
 
 def check_payment_refund_status(request, process_id, ticket_sale_id):
-    terminal = get_terminal_settings()
+    ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
+    terminal = get_terminal_settings(app_type=ticket_sale.sale_type)
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -892,36 +915,16 @@ def check_payment_refund_status(request, process_id, ticket_sale_id):
         if response.status_code == 200:
             if response_data['status'] == 'success':
                 chequeInfo = response_data["chequeInfo"]
-                ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
-                new_payment = TicketSalesPayments()
-                new_payment.ticket_sale = ticket_sale
-                new_payment.process_id = process_id
-                if chequeInfo['date']:
-                    new_payment.payment_date = datetime.strptime(chequeInfo['date'], "%d.%m.%y %H:%M:%S")
-                else:
-                    new_payment.payment_date = datetime.now()
+                refund_payment = TicketSalesPayments.objects.filter(ticket_sale=ticket_sale, process_id=process_id).first()
+                refund_amount = int(re.sub(r'\D', '', chequeInfo['amount']))
+                refund_payment.refund_amount += refund_amount
+                refund_payment.response_data = response_data
+                refund_payment.save()
 
-                new_payment.amount = int(re.sub(r'\D', '', chequeInfo['amount']))
-
-                if chequeInfo['method'] == 'qr':
-                    new_payment.payment_method = "QR"
-                    ticket_sale.paid_qr += new_payment.amount
-                elif chequeInfo['method'] == 'card':
-                    new_payment.payment_method = "CD"
-                    new_payment.card_mask = chequeInfo['cardMask']
-                    new_payment.terminal = chequeInfo['terminalId']
-                    ticket_sale.paid_card += new_payment.amount
-                else:
-                    new_payment.payment_method = "CH"
-                    ticket_sale.paid_cash += new_payment.amount
-
-                new_payment.transaction_id = response_data['transactionId']
-                new_payment.response_data = response_data
-                new_payment.save()
-
+                ticket_sale.refund_amount += refund_amount
                 ticket_sale.save()
 
-                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+                refund_tickets_on_refund(ticket_sale, refund_payment, refund_amount)
 
                 return JsonResponse({'status': 'success'})
             else:

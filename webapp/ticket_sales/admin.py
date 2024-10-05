@@ -1,6 +1,7 @@
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from djangoql.admin import DjangoQLSearchMixin
+from rangefilter.filters import DateRangeFilterBuilder
 
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, \
     TicketSalesTicket, TicketSalesBooking
@@ -38,7 +39,7 @@ class TicketSalesTicketInline(admin.StackedInline):
     extra = 0
     readonly_fields = ('ticket_guid', 'amount', 'is_refund')
     fields = ('service', 'payment', 'event', 'event_date', 'event_time', 'event_time_end', 'amount', 'ticket_guid',
-              'last_event_code', 'process_id', 'is_refund')
+              'last_event_code', 'process_id', 'is_refund', 'refund_amount')
 
 
 class TicketSalesTicketAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
@@ -53,6 +54,7 @@ class TicketSaleAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     list_display = ('id', 'date', 'amount', 'paid_amount', 'refund_amount', 'tickets_count', 'status', 'sale_type')
     list_display_links = ('id', 'date')
     inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketSalesTicketInline)
+    list_filter = (("date", DateRangeFilterBuilder()), 'status', 'sale_type')
 
 
 class TerminalSettingsAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):

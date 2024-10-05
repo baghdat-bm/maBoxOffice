@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.db.models import F, Value, CharField
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Coalesce
 
 from ticket_sales.models import TicketSalesTicket, TicketSale
 
@@ -19,20 +19,19 @@ def get_filtered_sales_data(request, form_data):
     # Находим записи TicketSale в заданном интервале дат
     ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
 
-    if 'all' not in sale_types:
+    if sale_types and 'all' not in sale_types:
         ticket_sales = ticket_sales.filter(sale_type__in=sale_types)
 
     # Фильтруем записи TicketSalesTicket по найденным TicketSale
     tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
 
-    if 'all' not in events:
-        tickets = tickets.filter(event__id__in=events)
+    if events and 'all' not in events:
+        tickets = tickets.filter(event__in=events)
 
     # Агрегируем платежи на основе типа оплаты и добавляем обработанные поля
     tickets = tickets.annotate(
         sale_date=F('ticket_sale__date'),
         event_name=F('event__name'),
-
         min_payment_amount=Case(
             When(payment__amount__lte=F('amount'), then=F('payment__amount')),
             default=F('amount'),
@@ -83,13 +82,7 @@ def get_filtered_sales_data(request, form_data):
                 output_field=IntegerField()
             )
         ),
-        refund_amount=Sum(
-            Case(
-                When(payment__refund_amount__lte=F('amount'), then=F('payment__refund_amount')),
-                default=F('amount'),
-                output_field=IntegerField()
-            )
-        ),
+        refund_amount=Sum('refund_amount'),
     ).order_by('sale_date', 'event_name')
 
     return tickets

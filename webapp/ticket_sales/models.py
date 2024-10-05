@@ -84,6 +84,11 @@ class TicketSale(models.Model):
         ordering = ['-id']
 
     def save(self, *args, **kwargs):
+        update_date = kwargs.pop('update_date', False)
+        if update_date:
+            self.date = datetime.now().date()
+            self.time = datetime.now().time()
+
         # Рассчитываем сумму оплаты
         self.paid_amount = get_num_val(self.paid_cash) + get_num_val(self.paid_card) + get_num_val(self.paid_qr)
 
@@ -101,8 +106,6 @@ class TicketSale(models.Model):
                     self.status = SaleStatusEnum.PD.value[0]
             elif self.paid_amount < self.amount:
                 self.status = SaleStatusEnum.PP.value[0]
-        self.date = datetime.now().date()
-        self.time = datetime.now().time()
         super(TicketSale, self).save(*args, **kwargs)
 
 
@@ -175,6 +178,7 @@ class TicketSalesTicket(models.Model):
                                        default='')
     process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
     is_refund = models.BooleanField(verbose_name='Возвратный', default=False)
+    refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
 
     def __str__(self):
         return f'{self.number}'

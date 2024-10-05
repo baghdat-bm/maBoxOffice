@@ -18,3 +18,4 @@ django-cors-headers==4.4.0
 openpyxl==3.1.5
 django-import-export==4.1.1
 djangoql==0.18.1
+django-admin-rangefilter==0.13.2
