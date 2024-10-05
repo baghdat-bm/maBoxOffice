@@ -48,8 +48,9 @@ class TicketCheckView(APIView):
 
         # Разрешаем приход на 10 минут раньше
         early_entry_allowed = event_start - timedelta(minutes=10)
-        event_end = timezone.make_aware(
-            timezone.datetime.combine(ticket.event_date, ticket.event_time_end)) if ticket.event_time_end else None
+        event_end = ((timezone.make_aware(
+            timezone.datetime.combine(ticket.event_date, ticket.event_time_end)))
+                     + timedelta(minutes=10)) if ticket.event_time_end else None
 
         if not (early_entry_allowed <= current_datetime <= event_end):
             return Response({'result': False, 'error_code': '2', 'message': 'Билет не активен по времени мероприятия'},
