@@ -51,8 +51,8 @@ class EventTimes(models.Model):
         return f'{self.event.id}: {self.begin_date}-{self.end_date}'
 
     class Meta:
-        verbose_name = 'Время'
-        verbose_name_plural = 'Время'
+        verbose_name = 'Время сеанса мероприятия'
+        verbose_name_plural = 'Время сеансов мероприятий'
         ordering = ['begin_date']
 
 
@@ -110,4 +110,4 @@ class EventTemplateServices(models.Model):
             )
         ]
         verbose_name = 'Услуга в мероприятии'
-        verbose_name_plural = 'Услуги в мероприи'
+        verbose_name_plural = 'Услуги в мероприятиях'

@@ -123,8 +123,8 @@ class TicketSalesService(models.Model):
         return f'{self.ticket_sale.pk}-{self.pk}'
 
     class Meta:
-        verbose_name = 'Услуга'
-        verbose_name_plural = 'Услуги'
+        verbose_name = 'Услуга заказа'
+        verbose_name_plural = 'Услуги заказов'
         ordering = ['-id']
 
 
@@ -155,8 +155,8 @@ class TicketSalesPayments(models.Model):
         return f'{self.pk}-{self.ticket_sale.pk}'
 
     class Meta:
-        verbose_name = 'Платеж'
-        verbose_name_plural = 'Платежи'
+        verbose_name = 'Платеж заказа'
+        verbose_name_plural = 'Платежи заказов'
         ordering = ['-id']
 
 
@@ -180,8 +180,8 @@ class TicketSalesTicket(models.Model):
         return f'{self.number}'
 
     class Meta:
-        verbose_name = 'Билет'
-        verbose_name_plural = 'Билеты'
+        verbose_name = 'Билет в заказе'
+        verbose_name_plural = 'Билеты в заказах'
         ordering = ['number']
 
 
@@ -232,7 +232,7 @@ class TerminalSettings(models.Model):
 
     class Meta:
         verbose_name = 'Настройки терминала'
-        verbose_name_plural = 'Настройки терминала'
+        verbose_name_plural = 'Настройки терминалов'
 
     # def clean(self):
     #     if TerminalSettings.objects.exists() and not self.pk:

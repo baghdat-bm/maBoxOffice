@@ -8,6 +8,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from datetime import timedelta
 
 from reports.models import HasAvailableEventDatesPermission, HasTicketCheckPermission, HasEventsListPermission, \
     HasServicesListPermission, HasCreateTicketsPermission, HasPaymentInfoPermission
@@ -44,10 +45,13 @@ class TicketCheckView(APIView):
         # 2. Проверка даты и времени мероприятия
         current_datetime = timezone.now()
         event_start = timezone.make_aware(timezone.datetime.combine(ticket.event_date, ticket.event_time))
+
+        # Разрешаем приход на 10 минут раньше
+        early_entry_allowed = event_start - timedelta(minutes=10)
         event_end = timezone.make_aware(
             timezone.datetime.combine(ticket.event_date, ticket.event_time_end)) if ticket.event_time_end else None
 
-        if not (event_start <= current_datetime <= event_end):
+        if not (early_entry_allowed <= current_datetime <= event_end):
             return Response({'result': False, 'error_code': '2', 'message': 'Билет не активен по времени мероприятия'},
                             status=HTTP_400_BAD_REQUEST)
 

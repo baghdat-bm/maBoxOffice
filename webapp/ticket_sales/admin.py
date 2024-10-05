@@ -1,4 +1,6 @@
 from django.contrib import admin
+from import_export.admin import ImportExportActionModelAdmin
+from djangoql.admin import DjangoQLSearchMixin
 
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, \
     TicketSalesTicket, TicketSalesBooking
@@ -12,14 +14,23 @@ class TicketSalesServiceInline(admin.StackedInline):
         'discount', 'total_amount', 'paid_amount')
 
 
+class TicketSalesServiceAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+    model = TicketSalesService
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 class TicketSalesPaymentsInline(admin.StackedInline):
     model = TicketSalesPayments
     extra = 0
 
 
-# class TicketsSoldInline(admin.StackedInline):
-#     model = TicketsSold
-#     extra = 0
+class TicketSalesPaymentsAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+    model = TicketSalesPayments
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 class TicketSalesTicketInline(admin.StackedInline):
@@ -30,14 +41,21 @@ class TicketSalesTicketInline(admin.StackedInline):
               'last_event_code', 'process_id', 'is_refund')
 
 
-class TicketSaleAdmin(admin.ModelAdmin):
+class TicketSalesTicketAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+    model = TicketSalesTicket
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class TicketSaleAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     model = TicketSale
-    list_display = ('id', 'date', 'amount', 'paid_amount', 'tickets_count', 'status', 'sale_type')
+    list_display = ('id', 'date', 'amount', 'paid_amount', 'refund_amount', 'tickets_count', 'status', 'sale_type')
     list_display_links = ('id', 'date')
     inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketSalesTicketInline)
 
 
-class TerminalSettingsAdmin(admin.ModelAdmin):
+class TerminalSettingsAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     model = TerminalSettings
     list_display = ('username', 'ip_address', 'port', 'refresh_token', 'expiration_date', 'app_type')
     search_fields = ('username', 'ip_address')
@@ -51,7 +69,7 @@ class TerminalSettingsAdmin(admin.ModelAdmin):
     #     return False
 
 
-class TicketSalesBookingAdmin(admin.ModelAdmin):
+class TicketSalesBookingAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     model = TicketSalesBooking
     list_display = ('id', 'service', 'event', 'event_date', 'event_time', 'tickets_count', 'total_amount',
                     'created_date')
@@ -62,3 +80,6 @@ class TicketSalesBookingAdmin(admin.ModelAdmin):
 admin.site.register(TicketSale, TicketSaleAdmin)
 admin.site.register(TerminalSettings, TerminalSettingsAdmin)
 admin.site.register(TicketSalesBooking, TicketSalesBookingAdmin)
+admin.site.register(TicketSalesService, TicketSalesServiceAdmin)
+admin.site.register(TicketSalesPayments, TicketSalesPaymentsAdmin)
+admin.site.register(TicketSalesTicket, TicketSalesTicketAdmin)
