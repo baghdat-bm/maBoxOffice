@@ -180,8 +180,12 @@ class TicketSalesTicket(models.Model):
     is_refund = models.BooleanField(verbose_name='Возвратный', default=False)
     refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)
 
+    @property
+    def payment_method(self):
+        return self.payment.payment_method if self.payment else None
+
     def __str__(self):
-        return f'{self.number}'
+        return f'{self.ticket_sale.id}-{self.number} от {self.ticket_sale.date}'
 
     class Meta:
         verbose_name = 'Билет в заказе'

@@ -276,10 +276,14 @@ CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
-# Настройка Celery Beat для выполнения задачи каждые 60 секунд
+# Настройка Celery Beat для выполнения регламентных задач
 CELERY_BEAT_SCHEDULE = {
     'cancel-expired-tickets-every-60-seconds': {
-        'task': 'ticket_sales.tasks.cancel_expired_tickets',  # Укажите путь к задаче
+        'task': 'ticket_sales.tasks.cancel_expired_tickets',  # путь к задаче
         'schedule': 60.0,  # Запускать каждые 60 секунд
+    },
+    'cancel-expired-bookings-every-60-minutes': {
+        'task': 'ticket_sales.tasks.delete_expired_ticket_bookings',  # путь к задаче
+        'schedule': 3600.0,  # Запускать каждые 60 минут
     },
 }

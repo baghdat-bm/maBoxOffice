@@ -29,6 +29,9 @@ class TicketSalesPaymentsInline(admin.StackedInline):
 
 class TicketSalesPaymentsAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     model = TicketSalesPayments
+    list_display = ('id', 'payment_date', 'payment_method', 'amount', 'refund_amount', 'transaction_id', 'process_id',)
+    list_filter = (("ticket_sale__date", DateRangeFilterBuilder()), 'ticket_sale__sale_type', 'payment_method')
+    search_fields = ('id', 'transaction_id', 'process_id', 'amount', 'payment_date')
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -44,8 +47,10 @@ class TicketSalesTicketInline(admin.StackedInline):
 
 class TicketSalesTicketAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     model = TicketSalesTicket
+    list_display = ('id', 'number', 'event_date', 'event_time', 'payment_method', 'amount', 'refund_amount')
+    list_filter = (("ticket_sale__date", DateRangeFilterBuilder()), 'ticket_sale__sale_type', 'event', 'service',)
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, reqsuest, obj=None):
         return False
 
 

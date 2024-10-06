@@ -202,12 +202,26 @@ def sessions_report(request):
     form = SessionsReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets_grouped, total_summary = get_sessions_report_data(form)
+        tickets_grouped = get_sessions_report_data(form)
 
         # Paginate the results
         paginator = Paginator(tickets_grouped, 20)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+
+        # Calculate total summary for paginated results
+        total_summary = {
+            'total_quantity': sum(item['event_quantity'] for item in page_obj.object_list),
+            'total_sold': sum(item['total_tickets_sold'] for item in page_obj.object_list),
+            'total_left': sum(item['total_tickets_left'] for item in page_obj.object_list),
+            'total_card_sales_cs': sum(item['total_card_sales_cs'] for item in page_obj.object_list),
+            'total_cash_sales_cs': sum(item['total_cash_sales_cs'] for item in page_obj.object_list),
+            'total_kiosk_sales': sum(item['total_kiosk_sales'] for item in page_obj.object_list),
+            'total_qr_sales_sm': sum(item['total_qr_sales_sm'] for item in page_obj.object_list),
+            'total_card_sales_sm': sum(item['total_card_sales_sm'] for item in page_obj.object_list),
+            'total_kaspi_sales': sum(item['total_kaspi_sales'] for item in page_obj.object_list),
+            'total_refunds': sum(item['total_refunds'] for item in page_obj.object_list),
+        }
 
         events_list = EventTemplate.objects.all()
         selected_events = form.cleaned_data.get('event_templates', ['all'])
@@ -235,7 +249,7 @@ def export_sessions_report_to_excel(request):
     form = SessionsReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets_grouped, total_summary = get_sessions_report_data(form)
+        tickets_grouped = get_sessions_report_data(form)
 
         # Create a new Excel workbook and worksheet
         wb = openpyxl.Workbook()
@@ -266,9 +280,9 @@ def export_sessions_report_to_excel(request):
         # Write data rows
         for row_num, ticket in enumerate(tickets_grouped, start=2):
             ws.cell(row=row_num, column=1, value=row_num-1)  # №
-            ws.cell(row=row_num, column=2, value=ticket['event_date'].strftime('%d.%m.%Y'))
+            ws.cell(row=row_num, column=2, value=ticket['sale_date'].strftime('%d.%m.%Y'))
             ws.cell(row=row_num, column=3, value=ticket['event_time'].strftime('%H:%M'))
-            ws.cell(row=row_num, column=4, value=ticket['event__quantity'])
+            ws.cell(row=row_num, column=4, value=ticket['event_quantity'])
             ws.cell(row=row_num, column=5, value=ticket['total_tickets_left'])
             ws.cell(row=row_num, column=6, value=ticket['total_tickets_sold'])
             ws.cell(row=row_num, column=7, value=ticket['total_card_sales_cs'])
@@ -278,11 +292,25 @@ def export_sessions_report_to_excel(request):
             ws.cell(row=row_num, column=11, value=ticket['total_card_sales_sm'])
             ws.cell(row=row_num, column=12, value=ticket['total_kaspi_sales'])
             ws.cell(row=row_num, column=13, value=ticket['total_refunds'])
-            ws.cell(row=row_num, column=14, value=ticket['event__event_template__name'])
+            ws.cell(row=row_num, column=14, value=ticket['event_name'])
 
             # Apply borders to each cell in the current row
             for col_num in range(1, len(headers) + 1):
                 ws.cell(row=row_num, column=col_num).border = thin_border
+
+        # Calculate total summary for paginated results
+        total_summary = {
+            'total_quantity': sum(item['event_quantity'] for item in tickets_grouped),
+            'total_sold': sum(item['total_tickets_sold'] for item in tickets_grouped),
+            'total_left': sum(item['total_tickets_left'] for item in tickets_grouped),
+            'total_card_sales_cs': sum(item['total_card_sales_cs'] for item in tickets_grouped),
+            'total_cash_sales_cs': sum(item['total_cash_sales_cs'] for item in tickets_grouped),
+            'total_kiosk_sales': sum(item['total_kiosk_sales'] for item in tickets_grouped),
+            'total_qr_sales_sm': sum(item['total_qr_sales_sm'] for item in tickets_grouped),
+            'total_card_sales_sm': sum(item['total_card_sales_sm'] for item in tickets_grouped),
+            'total_kaspi_sales': sum(item['total_kaspi_sales'] for item in tickets_grouped),
+            'total_refunds': sum(item['total_refunds'] for item in tickets_grouped),
+        }
 
         # Add total summary row
         total_row = [
@@ -333,7 +361,7 @@ def tickets_report(request):
     form = TicketReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets, total_summary = get_ticket_report_data(form)
+        tickets = get_ticket_report_data(form)
 
         ticket_number = form.cleaned_data.get('ticket_number')
         order_number = form.cleaned_data.get('order_number')
@@ -344,10 +372,14 @@ def tickets_report(request):
                 messages.warning(request, f'По номеру заказа {order_number} данных не найдено')
 
         # Добавляем пагинацию
-        paginator = Paginator(tickets, 10)  # 10 билетов на страницу
+        paginator = Paginator(tickets, 20)  # 10 билетов на страницу
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        # Calculate totals for all numeric fields
+        total_summary = {
+            'total_amount': sum(item.amount for item in page_obj.object_list),
+        }
         events_list = EventTemplate.objects.all()
         selected_events = form.cleaned_data.get('event_templates', ['all'])
 
@@ -374,7 +406,7 @@ def export_tickets_report_to_excel(request):
     form = TicketReportForm(request.GET or None)
 
     if form.is_valid():
-        tickets, total_summary = get_ticket_report_data(form)
+        tickets = get_ticket_report_data(form)
 
         # Create a new Excel workbook and worksheet
         wb = openpyxl.Workbook()
@@ -419,6 +451,10 @@ def export_tickets_report_to_excel(request):
             # Apply borders to each cell in the current row
             for col_num in range(1, len(headers) + 1):
                 ws.cell(row=row_num, column=col_num).border = thin_border
+
+        total_summary = tickets.aggregate(
+            total_amount=Sum('amount')
+        )
 
         # Add total summary row
         summary_row_num = len(tickets) + 2  # Place the summary row after all data rows

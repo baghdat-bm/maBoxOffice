@@ -110,9 +110,9 @@
             {% for ticket in page_obj %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ ticket.event_date|date:"d.m.Y" }}</td>
+                <td>{{ ticket.sale_date|date:"d.m.Y" }}</td>
                 <td>{{ ticket.event_time|time:"H:i" }}</td>
-                <td>{{ ticket.event__quantity }}</td>
+                <td>{{ ticket.event_quantity }}</td>
                 <td>{{ ticket.total_tickets_left }}</td>
                 <td>{{ ticket.total_tickets_sold }}</td>
                 <td>{{ ticket.total_card_sales_cs }}</td>
@@ -122,7 +122,7 @@
                 <td>{{ ticket.total_card_sales_sm }}</td>
                 <td>{{ ticket.total_kaspi_sales }}</td>
                 <td>{{ ticket.total_refunds }}</td>
-                <td>{{ ticket.event__event_template__name }}</td>
+                <td>{{ ticket.event_name }}</td>
             </tr>
             {% empty %}
             <tr>

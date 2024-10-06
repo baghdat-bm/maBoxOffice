@@ -1,6 +1,6 @@
 from celery import shared_task
 from django.utils import timezone
-from .models import TicketSale
+from .models import TicketSale, TicketSalesBooking
 from datetime import timedelta
 
 
@@ -35,3 +35,17 @@ def cancel_expired_tickets():
         ticket_sale.save()
 
     return f"Отменено {expired_sales.count()} заказов"
+
+
+@shared_task
+def delete_expired_ticket_bookings():
+    expired_date = timezone.now() - timedelta(minutes=60)
+    # Получаем все брони, у которых истекло время бронирования
+    expired_bookings = TicketSalesBooking.objects.filter(created_date__lte=expired_date)
+
+    count = 0
+    for booking in expired_bookings:
+        booking.delete()
+        count += 1
+
+    return f"Удалено {count} броней"
