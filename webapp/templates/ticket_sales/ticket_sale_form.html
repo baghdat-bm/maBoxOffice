@@ -287,9 +287,15 @@
                 alert('Пожалуйста, выберите хотя бы один билет для возврата.');
                 return;
             }
-    
+            
+            const ticketSaleId = {{ form.instance.pk }};
+            const progressBar = document.getElementById('main-progress-bar');
+            const progressText = document.getElementById('progress-bar-text');
+            
+                        
             // Отправляем запрос на сервер для возврата выбранных билетов
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            console.log('start fetch...');
             fetch("{% url 'ticket_sales:refund_tickets' form.instance.pk %}", {
                 method: 'POST',
                 headers: {
@@ -299,35 +305,44 @@
                 body: JSON.stringify({
                     tickets: selectedTickets
                 })
-            }).then(response => response.json()).then(data => {
+            }).then(response => response.json()).then(data => {                
+                console.log(data);
                 if (data.success) {
                     if (data.status === 200) {
                         alert(data.message);
                         location.reload();
                     }
-                    else if (data.status === 202) {
-                        const ticketSaleId = this.getAttribute('data-ticket-sale-id');
-                        const progressBar = document.getElementById('main-progress-bar');
-                        const progressText = document.getElementById('progress-bar-text');
-        
+                    else if (data.status === 202) {                                
                         // Отобразить прогресс-бар
+                        console.log('Отобразить прогресс-бар...');                        
+                        
+                        // Закрываем модальное окно после завершения операции
+                        var refundModalEl = document.getElementById('refundModal');
+                        var refundModal = bootstrap.Modal.getInstance(refundModalEl);
+                        if (refundModal) {
+                            refundModal.hide();
+                        }
+                        
                         progressBar.classList.remove('d-none');
                         progressText.textContent = data.message;
                         data.process_ids.forEach((process_id) => {
                             checkRefundStatus(process_id, ticketSaleId, 1);
-                        });
-                    }                        
+                        });                        
+                    }
+                    else {
+                        alert(data.message);
+                    }
                 } else {
                     alert(data.message);
                 }
-            });
+            }).catch(err => console.error(err.toString()));
         }
         
         function checkRefundStatus(processId, ticketSaleId, count) {
             const progressBar = document.getElementById('main-progress-bar');
             const progressText = document.getElementById('progress-bar-text');
             
-            if (count === 10) {
+            if (count === 40) {
                 progressText.textContent = 'Не удалось выполнить возврат';
                 setTimeout(() => progressBar.classList.add('d-none'), 5000);
                 return;

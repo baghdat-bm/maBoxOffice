@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -856,37 +857,73 @@ def refund_tickets(request, sale_id):
             process_ids = []
             ticket_ids = []
             errors = []
+            headers = {'accesstoken': terminal['access_token']}
+            protocol = 'https' if terminal['use_https'] else 'http'
+
             # Обрабатываем платежи к возврату
             for payment, data in payment_refund_map.items():
                 if payment.payment_method == 'QR' or payment.payment_method == 'CD':
+                    url = ''
+                    error = ''
+                    response = None
                     try:
-                        headers = {'accesstoken': terminal['access_token']}
-                        protocol = 'https' if terminal['use_https'] else 'http'
                         method = "card" if payment.payment_method == 'CD' else "qr"
                         url = f'{protocol}://{terminal['ip_address']}:{terminal['port']}/v2/refund?method={method}'
                         url += f'&amount={data['amount']}&transactionId={payment.transaction_id}'
                         if protocol == 'http':
-                            response = requests.get(url, verify=False, timeout=1000)
+                            response = requests.get(url, verify=False, timeout=2000)
                         else:
-                            response = requests.get(url, headers=headers, verify=False, timeout=1000)
-                        response_data = response.json()
-                        if response_data:
-                            if response.status_code == 200 and response_data['status'] == 'wait':
-                                payment.process_id = response_data['processId']
-                                payment.save()
-                                process_ids.append(payment.process_id)
-                                for ticket in data['tickets']:
-                                    ticket.process_id = response_data['processId']
-                                    ticket.save()
-                            else:
-                                errors.append(response_data['errorText'])
-                        else:
-                            errors.append(response_data['errorText'])
-                            return JsonResponse({'success': False, 'message': response_data['errorText']}, status=400)
+                            response = requests.get(url, headers=headers, verify=False, timeout=2000)
+                    except requests.exceptions.HTTPError as http_err:
+                        # Обработка исключений статуса HTTP
+                        error = f"HTTP error occurred: {http_err}"
+                    except requests.exceptions.Timeout:
+                        error = "Request timed out"
+                    except requests.exceptions.TooManyRedirects:
+                        error = 'Request error'
+                    except requests.exceptions.ConnectionError:
+                        error = 'Connection error'
+                    except requests.exceptions.RequestException as req_err:
+                        error = f"Request error occurred: {req_err}"
                     except Exception as e:
                         error = e.__str__()
+                        if error == '"status"':
+                            error = ''
+
+                    if response and error == '':
+                        try:
+                            response_json = response.json()
+                        except json.JSONDecodeError:
+                            error = 'Терминал возвратил не корректные данные'
+                            return JsonResponse({'success': False, 'message': error}, status=500)
+                        if response_json:
+                            if response.status_code == 200:
+                                response_data = response_json.get('data', None)
+                                error = response_json.get('errorText', '')
+                                if error == '' and response_data and response_data['status'] == 'wait':
+                                    payment.process_id = response_data['processId']
+                                    payment.save()
+                                    process_ids.append(payment.process_id)
+                                    for ticket in data['tickets']:
+                                        ticket.process_id = payment.process_id
+                                        ticket.save()
+                                elif error:
+                                    errors.append(error)
+                            else:
+                                errors.append(response_json['errorText'])
+                        else:
+                            error = response_json.get('errorText', '')
+                            if error:
+                                errors.append(response_json['errorText'])
+                                print(f'url: {url}')
+                                return JsonResponse({'success': False, 'message': response_json['errorText']}, status=400)
+
+                    else:
                         print('error >> ', error)
-                        return JsonResponse({'success': False, 'message': e.__str__()}, status=500)
+                        print(f'url: {url}')
+                        error = error if error else 'Ошибка соединения с терминалом оплаты'
+                        return JsonResponse({'success': False, 'message': error}, status=500)
+
                 else:  # Возврат наличной оплаты
                     payment.refund_amount += data['amount']
                     payment.save()
@@ -898,6 +935,7 @@ def refund_tickets(request, sale_id):
 
             if len(errors) > 0:
                 message = str(errors)  # 'Произошла ошибка при выполнении возврата...'
+                print('error >> ', message)
                 status = 400
                 success = False
             elif len(process_ids) == 0:
@@ -907,9 +945,10 @@ def refund_tickets(request, sale_id):
             else:
                 message = 'Возврат обрабатывается...'
                 status = 202
-                success = False
+                success = True
+
             return JsonResponse({'success': success, 'message': message, 'process_ids': process_ids,
-                                 'ticket_ids': ticket_ids, 'errors': errors}, status=status)
+                                 'ticket_ids': ticket_ids, 'errors': errors, 'status': status}, status=status)
 
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Не корректные данные'}, status=400)
