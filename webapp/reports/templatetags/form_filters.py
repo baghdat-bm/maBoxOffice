@@ -5,12 +5,12 @@ register = template.Library()
 
 @register.filter
 def get_total_amount_for_date(summary, date):
-    return sum(data['amount'] for data in summary.values() if date in data)
+    return sum(data['total_amount'] for data in summary.values() if date in data)
 
 
 @register.filter
 def get_total_count_for_date(summary, date):
-    return sum(data['count'] for data in summary.values() if date in data)
+    return sum(data['total_count'] for data in summary.values() if date in data)
 
 
 @register.filter
@@ -27,3 +27,11 @@ def get_nested_item(dictionary, keys):
         if value is None:
             break
     return value
+
+
+@register.filter
+def multiply(value, arg):
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return ''

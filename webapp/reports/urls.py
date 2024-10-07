@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path
 from .views import tickets_report, sales_report, sessions_report, sales_report_export, export_sessions_report_to_excel, \
-    export_tickets_report_to_excel, ticket_print_data, ticket_print_pdf, services_report
+    export_tickets_report_to_excel, ticket_print_data, ticket_print_pdf, services_report, services_report_excel_export
 
 app_name = 'reports'
 
@@ -15,5 +15,5 @@ urlpatterns = [
     path('ticket-print-data/<int:ticket_id>/', ticket_print_data, name='ticket-print-data'),
     path('ticket-print-pdf/<int:ticket_id>/', ticket_print_pdf, name='ticket-print-pdf'),
     path('services/', services_report, name='services_report'),
-
+    path('services-export/', services_report_excel_export, name='services_report_export'),
 ]

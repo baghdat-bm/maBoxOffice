@@ -13,14 +13,14 @@ from django.contrib import messages
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from openpyxl.utils import get_column_letter
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from references.models import Event, EventTemplate
 from ticket_sales.models import TicketSalesTicket, TicketSalesPayments, TicketSalesService, TicketSale, SaleTypeEnum
 from .forms import TicketReportForm, SalesReportForm, SessionsReportForm, ServiceReportForm
 
 
-from .utils import get_filtered_sales_data, get_sessions_report_data, get_ticket_report_data
+from .utils import get_filtered_sales_data, get_sessions_report_data, get_ticket_report_data, get_services_report_data
 
 
 @permission_required('reports.view_sales_report', raise_exception=True)
@@ -557,41 +557,7 @@ def services_report(request):
     form = ServiceReportForm(request.GET or None)
 
     if form.is_valid():
-        # Filter dates
-        start_date = form.cleaned_data.get('start_date')
-        end_date = form.cleaned_data.get('end_date')
-
-        # Filter ticket sales
-        ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
-
-        # Filter TicketSalesService based on ticket_sales
-        services_data = TicketSalesService.objects.filter(ticket_sale__in=ticket_sales)
-
-        # Filter by selected services
-        selected_services = form.cleaned_data.get('services')
-        if selected_services:
-            services_data = services_data.filter(service__in=selected_services)
-
-        # Group by service and date, aggregate tickets_amount and tickets_count
-        grouped_data = services_data.values(
-            'service__id',
-            'service__name',
-            'ticket_sale__date'
-        ).annotate(
-            total_amount=Sum('tickets_amount'),
-            total_count=Sum('tickets_count')
-        ).order_by('ticket_sale__date')
-
-        # Prepare the report data
-        report_data = defaultdict(lambda: defaultdict(lambda: {'amount': 0, 'count': 0}))
-        dates = sorted({entry['ticket_sale__date'] for entry in grouped_data})
-        services = {entry['service__id']: entry['service__name'] for entry in grouped_data}
-
-        for entry in grouped_data:
-            report_data[entry['service__id']][entry['ticket_sale__date']] = {
-                'amount': entry['total_amount'],
-                'count': entry['total_count']
-            }
+        report_data, services, dates = get_services_report_data(form)
 
         # Paginate services
         paginator = Paginator(list(services.keys()), 10)
@@ -600,10 +566,16 @@ def services_report(request):
 
         # Summary calculations (across all dates and services)
         summary = defaultdict(lambda: {'total_amount': 0, 'total_count': 0})
-        for service_id, date_data in report_data.items():
-            for date, data in date_data.items():
-                summary[service_id]['total_amount'] += data['amount']
-                summary[service_id]['total_count'] += data['count']
+
+        for service_id in page_obj.object_list:
+            if service_id in report_data:
+                date_data = report_data[service_id]
+                for date, data in date_data.items():
+                    summary[date]['total_amount'] += data['amount']
+                    summary[date]['total_count'] += data['count']
+
+        # Преобразуем summary в OrderedDict, отсортированный по ключу (дате)
+        summary = OrderedDict(sorted(summary.items()))
     else:
         page_obj = None
         report_data = {}
@@ -622,3 +594,105 @@ def services_report(request):
     }
 
     return render(request, 'reports/service_report.html', context)
+
+
+@permission_required('reports.view_services_report', raise_exception=True)
+def services_report_excel_export(request):
+    form = ServiceReportForm(request.GET or None)
+
+    if not form.is_valid():
+        messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
+        return redirect('reports:services_report')  # Замените на ваш URL-адрес
+
+    report_data, services, dates = get_services_report_data(form)
+
+    # Создаем Excel файл
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Services Report"
+
+    # Стиль для заголовка и итогов
+    bold_font = Font(bold=True)
+
+    # Создаем первый и второй ряды заголовков
+    date_headers = ['№', 'Наименование услуги']
+    metric_headers = ['', '']
+
+    for date in dates:
+        date_headers.extend([date, None])  # Пара "дата, пустая ячейка"
+        metric_headers.extend(["Количество", "Сумма"])  # Заголовки "количество, сумма"
+
+    # Добавляем заголовки в два ряда
+    sheet.append(date_headers)
+    sheet.append(metric_headers)
+
+    # Применяем стиль к заголовкам
+    for cell in sheet[1] + sheet[2]:  # Первая и вторая строки - заголовки
+        if cell:
+            cell.font = bold_font
+
+    # Объединяем ячейки дат с последующими пустыми ячейками
+    col_index = 3  # Первая ячейка с датой находится в колонке 3
+    for _ in dates:
+        sheet.merge_cells(start_row=1, start_column=col_index, end_row=1, end_column=col_index + 1)
+        col_index += 2  # Переходим к следующей паре ячеек
+
+    # Готовим стиль границы ячеек
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Заполняем строки данных
+    row_number = 1  # Нумерация строк начинается с 1
+    for service_id, service_name in services.items():
+        row_number += 1  # Увеличиваем номер строки
+        row = [row_number - 1, service_name]  # Добавляем номер строки и наименование услуги
+
+        # Заполняем строки данных по датам
+        for date in dates:
+            # Количество билетов и сумма для каждой даты
+            count = report_data[service_id][date]['count']
+            amount = report_data[service_id][date]['amount']
+            row.extend([count, amount])
+
+        sheet.append(row)
+
+    # Добавляем итоговую строку
+    summary = defaultdict(lambda: {'total_amount': 0, 'total_count': 0})
+    for service_id, date_data in report_data.items():
+        for date, data in date_data.items():
+            summary[date]['total_amount'] += data['amount']
+            summary[date]['total_count'] += data['count']
+
+    # Преобразуем summary в OrderedDict, отсортированный по ключу (дате)
+    summary = OrderedDict(sorted(summary.items()))
+
+    # Итоговая строка
+    total_row = ['', 'Итого']
+    for date in dates:
+        total_row.append(summary[date]['total_count'])
+        total_row.append(summary[date]['total_amount'])
+    sheet.append(total_row)
+
+    # Применяем стиль к итоговой строке
+    for cell in sheet[sheet.max_row]:  # Последняя строка - итоги
+        cell.font = bold_font
+
+    # Применяем границы ко всем ячейкам
+    for row in sheet.iter_rows():
+        for cell in row:
+            if cell:  # Убедиться, что ячейка не None
+                cell.border = thin_border
+
+    # Подготовка HTTP ответа
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename=services_report.xlsx'
+
+    # Сохраняем Excel файл в HTTP ответ
+    workbook.save(response)
+    return response

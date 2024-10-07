@@ -36,6 +36,14 @@
             <div class="col-md-3 mt-4">
                 <button type="submit" class="btn btn-primary">Сформировать отчет</button>
             </div>
+            
+            <div class="col-md-3 mt-4">
+                <a href="{% url 'reports:services_report_export' %}?{{ request.GET.urlencode }}"
+                   class="btn btn-success">
+                    Экспорт в Excel
+                </a>
+            </div>
+            
             <!-- Фильтры даты -->
             <div class="col-md-3">
                 {{ form.start_date.label_tag }}
@@ -79,12 +87,18 @@
 
     <!-- Таблица отчета -->
     <table class="table table-striped mt-4">
-        <thead>
+        <thead class="table-header-center">
             <tr>
-                <th>№</th>
-                <th>Наименование услуги</th>
+                <th rowspan="2">№</th>
+                <th rowspan="2">Наименование услуги</th>
                 {% for date in dates %}
-                    <th>{{ date|date:"d.m.Y" }}</th>
+                    <th colspan="2">{{ date|date:"d.m.Y" }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for date in dates %}
+                    <th>кол-во</th>
+                    <th>сумма</th>
                 {% endfor %}
             </tr>
         </thead>
@@ -92,24 +106,21 @@
             {% for service_id in page_obj %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-{#                    <td>{{ services[service_id] }}</td>#}
                     {% with service_name=services|get_item:service_id %}
                         <td>{{ service_name }}</td>
                     {% endwith %}
                     {% for date in dates %}
-                        <td>
-{#                            {{ report_data[service_id][date].amount }} / {{ report_data[service_id][date].count }}#}
-                            {% with report_data|get_item:service_id as service_data %}
-                                {% with service_data|get_item:date as date_data %}
-                                    {{ date_data.amount }} / {{ date_data.count }}
-                                {% endwith %}
+                        {% with report_data|get_item:service_id as service_data %}
+                            {% with service_data|get_item:date as date_data %}
+                                <td>{{ date_data.count }}</td>
+                                <td>{{ date_data.amount }}</td>
                             {% endwith %}
-                        </td>
+                        {% endwith %}                        
                     {% endfor %}
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="{{ dates|length|add:"2" }}">Нет данных для отображения.</td>
+                    <td colspan="{{ dates|length|multiply:2|add:"2" }}">Нет данных для отображения.</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -117,15 +128,18 @@
         <tfoot>
             <tr>
                 <td colspan="2"><strong>Итого:</strong></td>
-                {% for date in dates %}
+                {% for date, data in summary.items %}
                     <td>
-                        {{ summary|get_total_amount_for_date:date }} / {{ summary|get_total_count_for_date:date }}
+                        <strong>{{ data.total_count }}</strong>                        
+                    </td>
+                    <td>                        
+                        <strong>{{ data.total_amount }}</strong>
                     </td>
                 {% endfor %}
             </tr>
         </tfoot>
     </table>
-
+    
     <!-- Пагинация -->
     {% include 'reports/partials/paginator.html' %}
 </div>

@@ -3,8 +3,9 @@ from datetime import date, timedelta
 from django.db.models import Count, Q, Sum, Case, When, F, Value, IntegerField, OuterRef, Subquery
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat, Coalesce
+from collections import defaultdict, OrderedDict
 
-from ticket_sales.models import TicketSalesTicket, TicketSale
+from ticket_sales.models import TicketSalesTicket, TicketSale, TicketSalesService
 
 
 def get_filtered_sales_data(request, form_data):
@@ -171,3 +172,43 @@ def get_ticket_report_data(form):
     ).order_by('-event_date', '-event_time', '-ticket_number')
 
     return tickets
+
+
+def get_services_report_data(form):
+    # Filter dates
+    start_date = form.cleaned_data.get('start_date')
+    end_date = form.cleaned_data.get('end_date')
+
+    # Filter ticket sales
+    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+
+    # Filter TicketSalesService based on ticket_sales
+    services_data = TicketSalesService.objects.filter(ticket_sale__in=ticket_sales)
+
+    # Filter by selected services
+    selected_services = form.cleaned_data.get('services')
+    if selected_services:
+        services_data = services_data.filter(service__in=selected_services)
+
+    # Group by service and date, aggregate tickets_amount and tickets_count
+    grouped_data = services_data.values(
+        'service__id',
+        'service__name',
+        'ticket_sale__date'
+    ).annotate(
+        total_amount=Sum('tickets_amount'),
+        total_count=Sum('tickets_count')
+    ).order_by('ticket_sale__date')
+
+    # Prepare the report data
+    report_data = defaultdict(lambda: defaultdict(lambda: {'amount': 0, 'count': 0}))
+    dates = sorted({entry['ticket_sale__date'] for entry in grouped_data})
+    services = {entry['service__id']: entry['service__name'] for entry in grouped_data}
+
+    for entry in grouped_data:
+        report_data[entry['service__id']][entry['ticket_sale__date']] = {
+            'amount': entry['total_amount'],
+            'count': entry['total_count']
+        }
+
+    return report_data, services, dates
