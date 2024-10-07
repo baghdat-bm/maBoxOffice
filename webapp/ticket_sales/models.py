@@ -32,6 +32,7 @@ class SaleStatusEnum(enum.Enum):
     RT = "RT", "Возврат"
     PT = "PT", "Частичный возврат"
     CN = "CN", "Отменен"
+    IS = "IS", "Оформлен"
 
     @classmethod
     def choices(cls):
@@ -93,7 +94,8 @@ class TicketSale(models.Model):
         self.paid_amount = get_num_val(self.paid_cash) + get_num_val(self.paid_card) + get_num_val(self.paid_qr)
 
         # Обновляем статус заказа в зависимости от суммы оплаты и возврата
-        if self.status != 'CN':  # если заказ не отменен
+        update_status = kwargs.pop('update_status', True)
+        if update_status and self.status != 'CN':  # если заказ не отменен
             if self.paid_amount == 0:
                 self.status = SaleStatusEnum.NP.value[0]
             elif self.paid_amount >= self.amount:

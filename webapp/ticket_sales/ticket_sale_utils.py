@@ -150,7 +150,7 @@ def get_filtered_services(event_id, sale_type):
             services = EventTemplateServices.objects.filter(
                 event_template=event.event_template,
                 service__sale_types__code=sale_type
-            )
+            ).order_by('service__name')
             services_data = [{"id": service.service.id, "name": service.service.name, "price": service.service.cost}
                              for service in services]
             return services_data
