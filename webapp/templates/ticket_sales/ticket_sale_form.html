@@ -592,7 +592,7 @@
         function checkPaymentStatus(processId, ticketSaleId, count) {
             const progressBar = document.getElementById('main-progress-bar');
             const progressText = document.getElementById('progress-bar-text');
-            if (count === 10) {
+            if (count === 30) {
                 progressText.textContent = 'Не удалось выполнить оплату';
                 setTimeout(() => progressBar.classList.add('d-none'), 5000);
                 return;

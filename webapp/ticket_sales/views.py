@@ -366,9 +366,9 @@ def payment_process_cashier(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/payment?amount={ticket_sale.amount}',
-                                headers=headers, verify=False, timeout=100)
+                                headers=headers, verify=False, timeout=1000)
         response_data = response.json()
         if response_data:
             if response.status_code == 200 and response_data['status'] == 'wait':
@@ -390,9 +390,9 @@ def payment_process_terminal(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/payment?amount={ticket_sale.amount}',
-                                headers=headers, verify=False, timeout=100)
+                                headers=headers, verify=False, timeout=1000)
         response_data = response.json()
         if response_data:
             if response.status_code == 200 and response_data['status'] == 'wait':
@@ -412,9 +412,9 @@ def check_payment_status_cashier(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}',
-                                headers=headers, verify=False, timeout=100)
+                                headers=headers, verify=False, timeout=1000)
         response_data = response.json()
         if response.status_code == 200:
             if response_data['status'] == 'success':
@@ -468,9 +468,9 @@ def check_payment_status_terminal(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}',
-                                headers=headers, verify=False, timeout=100)
+                                headers=headers, verify=False, timeout=1000)
         response_data = response.json()
         if response.status_code == 200:
             if response_data['status'] == 'success':
@@ -632,6 +632,7 @@ def terminal_settings_cashier(request):
     if request.method == 'POST':
         ip_address = request.POST.get('ip_address')
         port = request.POST.get('port')
+        use_https = request.POST.get('use_https') == 'on'
         username = request.POST.get('username')
         access_token = request.POST.get('access_token')
         refresh_token = request.POST.get('refresh_token')
@@ -645,6 +646,7 @@ def terminal_settings_cashier(request):
             settings = TerminalSettings(
                 ip_address=ip_address,
                 port=port,
+                use_https=use_https,
                 username=username,
                 access_token=access_token,
                 refresh_token=refresh_token,
@@ -654,6 +656,7 @@ def terminal_settings_cashier(request):
         else:
             settings.ip_address = ip_address
             settings.port = port
+            settings.use_https = use_https
             settings.username = username
             settings.access_token = access_token
             settings.refresh_token = refresh_token
@@ -676,6 +679,7 @@ def terminal_settings_terminal(request):
     if request.method == 'POST':
         ip_address = request.POST.get('ip_address')
         port = request.POST.get('port')
+        use_https = request.POST.get('use_https') == 'on'
         username = request.POST.get('username')
         access_token = request.POST.get('access_token')
         refresh_token = request.POST.get('refresh_token')
@@ -689,6 +693,7 @@ def terminal_settings_terminal(request):
             settings = TerminalSettings(
                 ip_address=ip_address,
                 port=port,
+                use_https=use_https,
                 username=username,
                 access_token=access_token,
                 refresh_token=refresh_token,
@@ -698,6 +703,7 @@ def terminal_settings_terminal(request):
         else:
             settings.ip_address = ip_address
             settings.port = port
+            settings.use_https = use_https
             settings.username = username
             settings.access_token = access_token
             settings.refresh_token = refresh_token
@@ -717,6 +723,7 @@ def terminal_settings_terminal(request):
 def register_terminal(request):
     ip_address = request.GET.get('ip_address')
     port = request.GET.get('port')
+    use_https = request.POST.get('use_https') == 'on'
     username = request.GET.get('username')
     app_type = request.GET.get('app_type')
 
@@ -725,7 +732,7 @@ def register_terminal(request):
         messages.error(request, message)
         return JsonResponse({'error': message}, status=400)
 
-    protocol = 'http' if ip_address == '127.0.0.1' else 'https'
+    protocol = 'https' if use_https else 'http'
     url = f"{protocol}://{ip_address}:{port}/register?name={username}"
 
     try:
@@ -737,6 +744,8 @@ def register_terminal(request):
             settings = TerminalSettings.objects.filter(app_type=app_type).first()
             if settings:
                 settings.ip_address = ip_address
+                settings.port = port
+                settings.use_https = use_https
                 settings.username = username
                 settings.access_token = data['accessToken']
                 settings.refresh_token = data['refreshToken']
@@ -745,6 +754,8 @@ def register_terminal(request):
                 settings = TerminalSettings(
                     app_type=app_type,
                     ip_address=ip_address,
+                    port=port,
+                    use_https=use_https,
                     username=username,
                     access_token=data['accessToken'],
                     refresh_token=data['refreshToken'],
@@ -764,6 +775,7 @@ def register_terminal(request):
 def refresh_terminal_token(request):
     ip_address = request.GET.get('ip_address')
     port = request.GET.get('port')
+    use_https = request.POST.get('use_https') == 'on'
     app_type = request.GET.get('app_type')
     username = request.GET.get('username')
     refresh_token = request.GET.get('refresh_token')
@@ -774,6 +786,7 @@ def refresh_terminal_token(request):
             app_type=app_type,
             ip_address=ip_address,
             port=port,
+            use_https=use_https,
             username=username,
             access_token='',
             refresh_token=refresh_token
@@ -848,11 +861,14 @@ def refund_tickets(request, sale_id):
                 if payment.payment_method == 'QR' or payment.payment_method == 'CD':
                     try:
                         headers = {'accesstoken': terminal['access_token']}
-                        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+                        protocol = 'https' if terminal['use_https'] else 'http'
                         method = "card" if payment.payment_method == 'CD' else "qr"
                         url = f'{protocol}://{terminal['ip_address']}:{terminal['port']}/v2/refund?method={method}'
-                        url += f'"&amount={data['amount']}&transactionId={payment.transaction_id}'
-                        response = requests.get(url, headers=headers, verify=False, timeout=100)
+                        url += f'&amount={data['amount']}&transactionId={payment.transaction_id}'
+                        if protocol == 'http':
+                            response = requests.get(url, verify=False, timeout=1000)
+                        else:
+                            response = requests.get(url, headers=headers, verify=False, timeout=1000)
                         response_data = response.json()
                         if response_data:
                             if response.status_code == 200 and response_data['status'] == 'wait':
@@ -881,7 +897,7 @@ def refund_tickets(request, sale_id):
                     ticket_sale.save(update_date=False)
 
             if len(errors) > 0:
-                message = 'Произошла ошибка при выполнении возврата...'
+                message = str(errors)  # 'Произошла ошибка при выполнении возврата...'
                 status = 400
                 success = False
             elif len(process_ids) == 0:
@@ -908,9 +924,9 @@ def check_payment_refund_status(request, process_id, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
-        protocol = 'http' if terminal['ip_address'] == '127.0.0.1' else 'https'
+        protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}',
-                                headers=headers, verify=False, timeout=100)
+                                headers=headers, verify=False, timeout=1000)
         response_data = response.json()
         if response.status_code == 200:
             if response_data['status'] == 'success':

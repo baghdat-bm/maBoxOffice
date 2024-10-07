@@ -39,6 +39,7 @@ def get_terminal_settings(app_type='CS'):
             data = {
                 'ip_address': first_item.ip_address,
                 'port': first_item.port,
+                'use_https': first_item.use_https,
                 'username': first_item.username,
                 'access_token': first_item.access_token,
                 'refresh_token': first_item.refresh_token,
@@ -53,6 +54,7 @@ def get_terminal_settings(app_type='CS'):
 def update_terminal_token(terminal_settings):
     ip_address = terminal_settings['ip_address']
     port = terminal_settings['port']
+    use_https = terminal_settings['use_https']
     username = terminal_settings['username']
     refresh_token = terminal_settings['refresh_token']
     app_type = terminal_settings['app_type']
@@ -60,7 +62,7 @@ def update_terminal_token(terminal_settings):
     if not ip_address or not username or not port:
         return {'error': 'Terminal IP address, Port and Username are not provided.', 'status': 400}
 
-    protocol = 'http' if ip_address == '127.0.0.1' else 'https'
+    protocol = 'https' if use_https else 'http'
     url = f"{protocol}://{ip_address}:{port}/v2/revoke?name={username}&refreshToken={refresh_token}"
 
     try:
@@ -77,11 +79,15 @@ def update_terminal_token(terminal_settings):
                 settings.access_token = data['accessToken']
                 settings.refresh_token = data['refreshToken']
                 settings.expiration_date = expiration_date
+                settings.ip_address = ip_address
+                settings.port = port
+                settings.use_https = use_https
             else:
                 settings = TerminalSettings(
                     app_type=app_type,
                     ip_address=ip_address,
                     port=port,
+                    use_https=use_https,
                     username=username,
                     access_token=data['accessToken'],
                     refresh_token=data['refreshToken'],

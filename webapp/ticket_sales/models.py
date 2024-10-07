@@ -231,6 +231,7 @@ class TerminalSettings(models.Model):
                                 blank=True,
                                 null=True,
                                 unique=True)
+    use_https = models.BooleanField(verbose_name='Use https', default=False, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
 

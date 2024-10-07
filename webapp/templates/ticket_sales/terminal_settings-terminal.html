@@ -19,6 +19,12 @@
                 <input type="text" id="port" name="port" class="form-control"
                        value="{{ settings.port|default_if_none:'' }}">
             </div>
+            
+            <div class="mb-3">
+                <label for="use_https" class="form-label">Use https</label>
+                <input type="checkbox" id="use_https" name="use_https" class="form-check-input"
+                        {% if settings.use_https %}checked{% endif %}>
+            </div>
 
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
