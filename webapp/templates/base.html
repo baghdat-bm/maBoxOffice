@@ -6,7 +6,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" type="image/x-icon" href="{% static '/images/favicon.ico' %}">
     <title>
         {% block title %}
@@ -37,64 +37,51 @@
             color: #d9534f;
         }
     </style>
-
-    <!-- CSS -->
+    
+    <!-- Navbar styles -->
     <style>
-        /* Убираем у меню Продажи стрелку сбоку */
-        .accordion-button.no-arrow::after {
-            display: none;
+        body {
+        display: flex;
+        }
+        .vertical-nav {
+        min-width: 250px;
+        height: 100vh;
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        }
+        .nav-item {
+            width: 100%;
+            font-size: medium;                   
+        }
+        .razdel {
+            padding-top: 2px;
+        }
+        .nav-link {
+            color: #333;
+            padding: 3px;            
+        }
+  
+        .nav-link:hover {
+            background-color: #e9ecef;
         }
 
-        /* Убираем постоянное выделение */
-        .accordion-button.no-arrow {
-            background-color: transparent;
-            color: inherit;
-            border: none;
+        a {
+            color: darkslategrey;
         }
 
-        /* Выделение при наведении */
-        .accordion-button.no-arrow:hover {
-            background-color: #e7f3ff; /* светло-голубой цвет */
+        a.nav-link.active {
+            /* color: darkblue; */
+            background-color: #e9ecef;
+            font-weight: bold;
         }
-
-        /* Выделение при активации (нажатии) */
-        .accordion-button.no-arrow:active, .accordion-button.no-arrow:focus {
-            background-color: #e7f3ff; /* светло-голубой цвет */
-            box-shadow: none;
+        .nested-nav {
+        padding-left: 1rem;
         }
-
-        /* Убираем обводку и фон для заголовков аккордеона */
-        .accordion-button {
-            border: none;
-            box-shadow: none;
-        }
-
-        /* Убираем обводку при активации и фокусе */
-        .accordion-button:focus, .accordion-button:not(.collapsed) {
-            box-shadow: none;
-            border: none;
-        }
-
-        /* Убираем границу вокруг самого аккордеона */
-        .accordion-item {
-            border: none;
-        }
-
-        /* Стили для текста ссылок внутри аккордеона */
-        .accordion-body .nav-link {
-            color: inherit; /* Наследовать цвет от родителя */
-            text-decoration: none; /* Убираем подчеркивание */
-        }
-
-        /* Цвет текста при наведении */
-        .accordion-body .nav-link:hover {
-            color: #0d6efd; /* Стандартный цвет ссылки при наведении */
-        }
-
-        /* Убираем постоянное выделение */
-        .accordion-body .nav-link:focus, .accordion-body .nav-link:active {
-            color: #0d6efd;
-            text-decoration: none;
+        .content {
+            flex-grow: 1;
+            padding: 2rem;
+            padding-top: 60px;
+            background-color: #ffffff;
         }
     </style>
 
@@ -107,29 +94,28 @@
 {% get_available_languages as LANGUAGES %}
 {% get_language_info_list for LANGUAGES as languages %}
 
-<div>
-    <!-- HEADER -->
-    {% include 'site/header.html' %}
 
-    <!-- NAVBAR -->
-    {% include 'site/navbar.html' %}
+<!-- HEADER -->
+{% include 'site/header.html' %}
 
-    <div class="content" style="margin-left: 250px; padding-top: 60px;">
+<!-- NAVBAR -->
+{% include 'site/navbar.html' %}
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert {{ message.tags }} alert-dismissible shadow fade show" role="alert">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    {{ message|safe }}
-                </div>
-            {% endfor %}
-        {% endif %}
+<div class="content">
 
-        <main>
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.tags }} alert-dismissible shadow fade show" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
 </div>
 
 <!-- Bootstrap JavaScript -->
