@@ -1486,12 +1486,12 @@
         // Если пользователь подтвердил оплату
         confirmPay.addEventListener('click', function() {
             payModal.style.display = 'none';
-
+        
             const kioskGuid = document.getElementById('kioskGuid').value;
-
+        
             // Показ модального окна процесса оплаты
             showPaymentProgress('Начинаем обработку оплаты...');
-
+        
             // Шаг 2. Создание заказа TicketSale на сервере
             fetch('/ticket-sales/create-sale-terminal/', {
                 method: 'POST',
@@ -1506,26 +1506,39 @@
                     booking_guid: kioskGuid
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка создания заказа: ' + response.statusText);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.status === 'created') {
                     const ticketSaleId = data.ticket_sale_id;
-
+        
                     // Шаг 4. Запускаем процесс оплаты
                     updatePaymentProgress('Обработка оплаты...', 30);
-
+        
                     fetch(`/ticket-sales/payment-process-terminal/${ticketSaleId}/`, {
                         method: 'GET'
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Ошибка соединения с терминалом: ' + response.statusText);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.status === 'wait') {
                             updatePaymentProgress('Обработка оплаты в терминале оплаты...', 50);
                             checkPaymentStatus(data.process_id, ticketSaleId);
+                        } else {
+                            throw new Error('Ошибка процесса оплаты: ' + data.error || 'неизвестная ошибка');
                         }
                     })
-                    .catch(() => {
+                    .catch(error => {
                         updatePaymentProgress('Ошибка соединения. Попробуйте снова.', 0);
+                        console.error(error); // Логирование ошибки для отладки
                         setTimeout(() => {
                             hidePaymentProgress();
                         }, 500);
@@ -1537,13 +1550,15 @@
                     }, 500);
                 }
             })
-            .catch(() => {
+            .catch(error => {
                 updatePaymentProgress('Ошибка создания заказа. Попробуйте снова.', 0);
+                console.error(error); // Логирование ошибки для отладки
                 setTimeout(() => {
                     hidePaymentProgress();
                 }, 500);
             });
         });
+
 
         // Функция проверки статуса оплаты
         function checkPaymentStatus(processId, ticketSaleId) {
