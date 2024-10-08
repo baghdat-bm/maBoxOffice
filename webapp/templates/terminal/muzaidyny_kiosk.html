@@ -1489,19 +1489,28 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'wait') {
-                            updatePaymentProgress('Пожалуйста, подождите...', 50);
+                            updatePaymentProgress('Обработка оплаты в терминале оплаты...', 50);
                             checkPaymentStatus(data.process_id, ticketSaleId);
                         }
                     })
                     .catch(() => {
                         updatePaymentProgress('Ошибка соединения. Попробуйте снова.', 0);
+                        setTimeout(() => {
+                            hidePaymentProgress();
+                        }, 500);
                     });
                 } else {
                     updatePaymentProgress('Ошибка создания заказа: ' + data.error, 0);
+                    setTimeout(() => {
+                        hidePaymentProgress();
+                    }, 500);
                 }
             })
             .catch(() => {
                 updatePaymentProgress('Ошибка создания заказа. Попробуйте снова.', 0);
+                setTimeout(() => {
+                    hidePaymentProgress();
+                }, 500);
             });
         });
 

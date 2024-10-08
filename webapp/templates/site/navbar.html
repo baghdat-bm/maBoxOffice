@@ -10,7 +10,8 @@
         </a>
     </li>
     {% endif %}
-
+    
+    {% if perms.references.add_eventtemplate or perms.references.add_event or perms.references.add_inventory or perms.references.add_service %}
     <li class="part-nav-item">
         <a class="nav-link razdel disabled" href="#">Справочники</a>
 
@@ -52,7 +53,9 @@
             {% endif %}
         </ul>    
     </li>
-
+    {% endif %}
+    
+    {% if perms.reports.view_sales_report or perms.reports.view_events_report or perms.reports.view_tickets_report or perms.reports.view_services_report %}
     <li class="part-nav-item">
         <a class="nav-link razdel disabled" href="#">Отчеты</a>
 
@@ -94,12 +97,13 @@
             {% endif %}
         </ul>
     </li>
+    {% endif %}
 
+    {% if perms.ticket_sales.change_terminalsettings %}
     <li class="part-nav-item">
         <a class="nav-link razdel disabled" href="#">Настройки</a>
         
-        <ul class="nav flex-column nested-nav">
-            {% if perms.ticket_sales.change_terminalsettings %}
+        <ul class="nav flex-column nested-nav">            
             <li class="nav-item">
                 <a href="{% url 'ticket_sales:terminal-settings-cashier' %}"
                 class="nav-link {% if 'terminal-settings-cashier' in request.path %}active{% endif %}">
@@ -112,10 +116,10 @@
                 class="nav-link {% if 'terminal-settings-terminal' in request.path %}active{% endif %}">
                     <i class="bi bi-gear-wide-connected"></i> Настройки терминала для киоска
                 </a>        
-            </li>
-            {% endif %}
+            </li>            
         </ul>
     </li>
+    {% endif %}
 
     </ul>
 </nav>

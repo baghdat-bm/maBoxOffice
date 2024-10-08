@@ -159,12 +159,13 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
                 except Exception as e:
                     print('>>>>>>> error:', e.__str__())
 
-    ticket_sale.tickets_count = curr_num
-    if paid_sum == 0 and ticket_sale.paid_amount == 0:
-        ticket_sale.status = 'IS'
-        ticket_sale.save(update_status=False)
-    else:
-        ticket_sale.save()
+    if len(services) > 0:
+        ticket_sale.tickets_count = curr_num
+        if paid_sum == 0 and ticket_sale.paid_amount == 0:
+            ticket_sale.status = 'IS'
+            ticket_sale.save(update_status=False)
+        else:
+            ticket_sale.save()
 
     return curr_num
 
