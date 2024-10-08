@@ -784,8 +784,8 @@
 <div class="header">
     <div class="container-header">
         <div class="current-time">
-            <span id="currentDate">вторник, 24 сентября 2024 г.</span><br>
-            <span id="currentTime">10:39</span>
+            <span id="currentDate"></span><br>
+            <span id="currentTime"></span>
         </div>
 
         <img src="{% static '/images/logo_terminal.png' %}" alt="МУЗ Айдыны" class="logo">
@@ -854,7 +854,7 @@
             </table>
             <!-- Футер таблицы билетов -->
             <div class="ticket-footer">
-                Итого к оплате: <span id="totalAmount">1200 теңге</span>
+                Итого к оплате: <span id="totalAmount"></span>
             </div>
         </div>
     </div>
@@ -1228,14 +1228,14 @@
                     <td>${formatDate(ticket.date)} ${ticket.beginTime}</td>
                     <td>${ticket.service}</td>
                     <td>${ticket.quantity}</td>
-                    <td>${ticket.total} теңге</td> <!-- Добавляем "теңге" только один раз -->
+                    <td>${ticket.total} тенге</td> <!-- Добавляем "теңге" только один раз -->
                     <td><button class="btn btn-danger" onclick="confirmDeleteTicket(${index})">Удалить</button></td>
                   </tr>
                 `;
                 ticketList.innerHTML += row;
             });
 
-            document.getElementById('totalAmount').innerText = totalAmount + ' теңге'; // "теңге" только один раз
+            document.getElementById('totalAmount').innerText = totalAmount + ' тенге'; // "теңге" только один раз
             document.getElementById('payButton').disabled = tickets.length <= 0;
 
             updateFooterPosition(); // Убедимся, что футер корректно позиционирован
@@ -1270,10 +1270,41 @@
         }
 
         function removeTicket(index) {
-            totalAmount -= tickets[index].total;
-            tickets.splice(index, 1);
-            updateTicketList();
-            updateFooterPosition();
+            const bookingId = tickets[index].id; // Получаем id удаляемой брони
+            //const url = `/bookings/${bookingId}/delete/`; // Формируем URL для удаления
+            const url = `{% url 'ticket_sales:booking_delete' 0 %}`.replace("0", bookingId.toString());
+            console.log('url >>>> ', url);
+        
+            // Отправляем запрос на удаление
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Получаем CSRF токен
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); // Получаем JSON ответ от сервера
+                } else {
+                    throw new Error('Ошибка при удалении брони');
+                }
+            })
+            .then(data => {
+                if (data.status === 'deleted') {
+                    // Если бронь успешно удалена, удаляем из массива
+                    totalAmount -= tickets[index].total;
+                    tickets.splice(index, 1);
+        
+                    updateTicketList();
+                    updateFooterPosition();
+                }
+                else {
+                    console.error(data);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
         }
 
         // Закрыть модальное окно предупреждения
