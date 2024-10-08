@@ -195,16 +195,19 @@ def get_available_services(event_id, date, sale_types):
                 event_template=event.event_template,
                 service__sale_types__code__in=sale_types
             )
-            services_data = []
+            services_data = {}
 
             for service in services:
                 service_item = service.service
-                service_data = {
-                    "id": service_item.id,
-                    "name": service_item.name,
-                    "cost": service_item.cost,
-                    "times": []
-                }
+                service_id = service_item.id
+
+                if service_id not in services_data:
+                    services_data[service_id] = {
+                        "id": service_item.id,
+                        "name": service_item.name,
+                        "cost": service_item.cost,
+                        "times": []
+                    }
 
                 # Получаем доступные EventTimes для данного мероприятия
                 times = EventTimes.objects.filter(event=event, is_active=True)
@@ -224,12 +227,12 @@ def get_available_services(event_id, date, sale_types):
 
                     if event.quantity > sold_tickets_count:
                         # Добавляем время мероприятия если не все билеты проданы
-                        service_data['times'].append({
+                        services_data[service_id]['times'].append({
                             'begin_date': time.begin_date.strftime('%H:%M'),
                             'end_date': time.end_date.strftime('%H:%M')
                         })
-                if len(service_data['times']) > 0:
-                    services_data.append(service_data)
 
-            return services_data
+            # Возвращаем уникальные услуги с временем
+            return list(services_data.values())
     return []
+
