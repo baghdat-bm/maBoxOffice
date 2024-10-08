@@ -6,7 +6,8 @@
             <th>Метод оплаты</th>
             <th>Сумма</th>
             <th>ID процесса</th>
-            <th>ID транзакции</th>            
+            <th>ID транзакции</th>  
+            <th>ID транз. возврата</th>
         </tr>
     </thead>
     <tbody>
@@ -24,7 +25,8 @@
             </td>
             <td>{{ payment.amount }} ₸</td>
             <td>{{ payment.process_id|default:"---" }}</td>
-            <td>{{ payment.transaction_id|default:"---" }}</td>            
+            <td>{{ payment.transaction_id|default:"---" }}</td>  
+            <td>{{ payment.refund_transaction_id|default:"---" }}</td>
         </tr>        
         {% endfor %}
     </tbody>

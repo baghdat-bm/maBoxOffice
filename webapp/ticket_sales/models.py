@@ -148,6 +148,8 @@ class TicketSalesPayments(models.Model):
     error_text = models.CharField(max_length=450, verbose_name='Текст ошибки', null=True, blank=True)
     transaction_id = models.CharField(max_length=50, verbose_name='Идентификатор успешной транзакции', null=True,
                                       blank=True)
+    refund_transaction_id = models.CharField(max_length=50, verbose_name='Идентификатор транзакции возврата',
+                                             null=True, blank=True)
     currency = models.CharField(max_length=3, verbose_name='Валюта', null=True, blank=True)
     description = models.CharField(max_length=250, verbose_name='Описание', null=True, blank=True)
     card_mask = models.CharField(max_length=25, verbose_name='Маска карты', null=True, blank=True)

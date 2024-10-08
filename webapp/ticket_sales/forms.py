@@ -36,7 +36,7 @@ class TicketSalesPaymentsForm(forms.ModelForm):
         model = TicketSalesPayments
         fields = ['payment_date', 'payment_method', 'amount', 'refund_amount', 'process_id', 'last_status',
                   'error_text', 'transaction_id', 'response_data', 'currency', 'description', 'card_mask',
-                  'terminal' ]
+                  'terminal', 'refund_transaction_id']
 
 
 class TicketSalesBookingForm(forms.ModelForm):

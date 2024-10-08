@@ -973,6 +973,7 @@ def check_payment_refund_status(request, process_id, ticket_sale_id):
                 refund_payment = TicketSalesPayments.objects.filter(ticket_sale=ticket_sale, process_id=process_id).first()
                 refund_amount = int(re.sub(r'\D', '', chequeInfo['amount']))
                 refund_payment.refund_amount += refund_amount
+                refund_payment.refund_transaction_id = chequeInfo['processId']
                 refund_payment.response_data = response_data
                 refund_payment.save()
 
