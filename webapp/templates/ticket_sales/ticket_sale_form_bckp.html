@@ -1,0 +1,729 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load form_filters %}
+
+{% block title %}{% if form.instance.id %}Изменение{% else %}Создание{% endif %} заказа{% endblock %}
+
+{% block header %}
+	<style>
+        .small-spacing {
+            margin-top: 5px;  /* Задаем меньший отступ, вместо обычного 10-20px */
+            margin-bottom: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    
+    <!-- Модальное окно для прогрессбара -->
+    <div class="modal" id="paymentProgressModal" tabindex="-1" aria-labelledby="paymentProgressTitle"
+         aria-hidden="true">
+{#        <div class="modal-dialog modal-xl">#}
+            <div class="modal-content">
+                <h3 id="paymentProgressTitle">Пожалуйста, подождите...</h3>
+                <p id="paymentProgressMessage">Идет обработка оплаты.</p>
+                <div class="progress">
+                    <div id="paymentProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+{#        </div>#}
+    </div>
+    
+    <!-- Модальное окно Добавление услуги -->
+    <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl"> <!-- Изменено на modal-xl для более широкого окна -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editServiceModalLabel">Выбор сеанса</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            onclick="hideServiceModal();"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Сюда будет загружена форма с помощью HTMX -->
+                    <div id="modal-body-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно оплаты -->
+    <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPaymentModalLabel">Оплата</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            onclick="hideServiceModal();"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Сюда будет загружена форма с помощью HTMX -->
+                    <div id="modal-payment-body-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для оплаты наличными -->
+    <div class="modal fade" id="cashPaymentModal" tabindex="-1" aria-labelledby="cashPaymentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cashPaymentModalLabel">Оплата наличными</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            id="cancel-cash-payment"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cash-amount" class="form-label">Сумма к оплате</label>
+                        <input type="text" id="cash-amount" class="form-control"
+                               value="{{ form.amount.value }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cash-received" class="form-label">Сумма наличкой</label>
+                        <input type="number" id="cash-received" class="form-control" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="change-amount" class="form-label">Сдача</label>
+                        <input type="text" id="change-amount" class="form-control" disabled>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="submit-cash-payment">Принять к оплате</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancel-cash-payment">
+                        Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для печати -->
+    <div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Увеличим ширину окна -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printTicketModalLabel">Печать заказа</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="print-area">
+                    <!-- Здесь будет формироваться содержимое для печати -->
+                    <div id="print-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="print-button">Печать</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для возврата билетов -->
+    <div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="refundModalLabel">Выберите билеты для возврата</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="refund-tickets-list">
+            <!-- Список билетов будет загружен через HTMX -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-warning" id="confirm-refund" onclick="submitRefund()">Возврат</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+        <h3>
+            {% if form.instance.id %}
+                Заказ {{ form.instance.id }} от {{ form.date.value|date:"d.m.Y" }} {{ form.time.value|date:"H:i:s" }}
+            {% else %}
+                Новый заказ
+            {% endif %}
+        </h3>
+        <div class="row">
+            <div class="col-4">
+                Вид продажи: <strong>{{ form.instance.get_sale_type_display }}</strong>
+            </div>
+            <div class="col-4">
+                Статус: <strong>{{ form.instance.get_status_display }}</strong>
+            </div>
+        </div>
+
+        <form id="ticket-sale-form" method="post" class="mt-2">
+            {% csrf_token %}
+            <div class="row">
+                <!-- Сетка для первой строки -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.amount.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.amount.name }}"
+                               id="id_{{ form.amount.name }}" value="{{ form.amount.value }}" disabled>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_amount.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.paid_amount.name }}"
+                               id="id_{{ form.paid_amount.name }}" value="{{ form.paid_amount.value }}" disabled>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.refund_amount.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.refund_amount.name }}"
+                               id="id_{{ form.refund_amount.name }}" value="{{ form.refund_amount.value }}" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Сетка для новой строки -->
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_cash.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.paid_cash.name }}"
+                               id="id_{{ form.paid_cash.name }}" value="{{ form.paid_cash.value }}" disabled>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_card.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.paid_card.name }}"
+                               id="id_{{ form.paid_card.name }}" value="{{ form.paid_card.value }}" disabled>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ form.paid_qr.label_tag }}
+                        <input type="text" class="form-control" name="{{ form.paid_qr.name }}"
+                               id="id_{{ form.paid_qr.name }}" value="{{ form.paid_qr.value }}" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-3">
+            <div id="ticket-sales-service-list">
+                {% if form.instance.id %}
+                    {% include 'ticket_sales/partials/ticket_sales_service_list.html' with ticket_sale=form.instance %}
+                {% endif %}
+            </div>
+            {% if form.instance.id %}
+                <button type="button" class="btn btn-primary"
+                        hx-get="{% url 'ticket_sales:ticket-sales-service-create' form.instance.id %}"
+                        hx-target="#modal-body-content"
+                        hx-trigger="click" data-bs-toggle="modal" data-bs-target="#editServiceModal"
+                >
+                    {% if form.instance.ticketsalesservice_set.exists %}
+                        Добавить сеанс
+                    {% else %}
+                        Выбрать сеанс
+                    {% endif %}
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-outline-primary" disabled>
+                    Добавить услугу
+                </button>
+                Перед добавлением услуги необходимо сохранить заказ
+            {% endif %}
+
+            <hr class="my-3">
+            <div id="ticket-sales-payments-list">
+                {% if form.instance.id %}
+                    {% include 'ticket_sales/partials/ticket_sales_payments_list.html' with ticket_sale=form.instance %}
+                {% endif %}
+            </div>
+
+            <!-- Кнопки для оплаты -->
+            {% if form.instance.amount > 0 %}
+                <button type="button" class="btn btn-success mt-2" id="start-payment"
+                        data-ticket-sale-id="{{ form.instance.id }}">
+                    Оплата картой
+                </button>
+
+                <button type="button" class="btn btn-info mt-2" id="cash-payment-button"
+                        data-ticket-sale-id="{{ form.instance.id }}">
+                    Оплата наличными
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-success mt-2" id="start-payment" disabled>
+                    Оплата картой
+                </button>
+
+                <button type="button" class="btn btn-info mt-2" id="cash-payment-button" disabled>
+                    Оплата наличными
+                </button>
+            {% endif %}
+        
+            <button type="button" class="btn btn-warning mt-2" id="refund-payment" data-bs-toggle="modal" 
+                    data-bs-target="#refundModal" hx-get="{% url 'ticket_sales:refund_tickets_list' form.instance.pk %}"
+                    hx-target="#refund-tickets-list" hx-swap="innerHTML"
+                    {% if form.instance.paid_amount <= form.instance.refund_amount %} disabled {% endif %}>
+                Возврат билета
+            </button>
+            <hr class="my-3">
+
+            <div class="mt-2">
+                {% if form.instance.id %}
+                    <button type="button" class="btn btn-outline-secondary" id="print-ticket-button"
+                            data-ticket-sale-id="{{ form.instance.id }}" onclick="printTicket()">
+                        Печать
+                    </button>
+                {% endif %}                
+
+                <a href="{% url 'ticket_sales:ticket-sale-list' %}" id="back-to-list"
+                   class="btn btn-secondary">Закрыть</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+
+    <script>
+        // Функция для подтверждения возврата
+        function submitRefund() {
+            const selectedTickets = Array.from(document.querySelectorAll('input[name="tickets"]:checked'))
+                                         .map(el => el.value);
+    
+            if (selectedTickets.length === 0) {
+                alert('Пожалуйста, выберите хотя бы один билет для возврата.');
+                return;
+            }
+            
+            const ticketSaleId = {{ form.instance.pk }};
+            const progressBar = document.getElementById('main-progress-bar');
+            const progressText = document.getElementById('progress-bar-text');
+            
+                        
+            // Отправляем запрос на сервер для возврата выбранных билетов
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            console.log('start fetch...');
+            fetch("{% url 'ticket_sales:refund_tickets' form.instance.pk %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickets: selectedTickets
+                })
+            }).then(response => response.json()).then(data => {                
+                console.log(data);
+                if (data.success) {
+                    if (data.status === 200) {
+                        alert(data.message);
+                        location.reload();
+                    }
+                    else if (data.status === 202) {                                
+                        // Отобразить прогресс-бар
+                        console.log('Отобразить прогресс-бар...');                        
+                        
+                        // Закрываем модальное окно после завершения операции
+                        var refundModalEl = document.getElementById('refundModal');
+                        var refundModal = bootstrap.Modal.getInstance(refundModalEl);
+                        if (refundModal) {
+                            refundModal.hide();
+                        }
+                        
+                        progressBar.classList.remove('d-none');
+                        progressText.textContent = data.message;
+                        data.process_ids.forEach((process_id) => {
+                            checkRefundStatus(process_id, ticketSaleId, 1);
+                        });                        
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                } else {
+                    alert(data.message);
+                }
+            }).catch(err => console.error(err.toString()));
+        }
+        
+        function checkRefundStatus(processId, ticketSaleId, count) {
+            const progressBar = document.getElementById('main-progress-bar');            
+            const progressText = document.getElementById('progress-bar-text');
+            
+            if (count === 40) {
+                progressText.textContent = 'Не удалось выполнить возврат';
+                setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                return;
+            }
+
+            fetch(`{% url 'ticket_sales:check-refund-status' process_id='$1' ticket_sale_id='$2' %}`
+                .replace('$1', processId)
+                .replace('$2', ticketSaleId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'wait') {
+                        // Отобразить прогресс-бар
+                        progressBar.classList.remove('d-none');
+                        setTimeout(() => checkRefundStatus(processId, ticketSaleId, count+1), 1000);
+                    } else if (data.status === 'success') {
+                        progressText.textContent = 'Возврат успешно обработан';
+                        setTimeout(() => {
+                            progressBar.classList.add('d-none');
+                            window.location.reload(); // Полное обновление страницы
+                        }, 3000);
+                    } else {
+                        progressText.textContent = `Ошибка: ${data.error_text || 'Неизвестная ошибка'}`;
+                        setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                    }
+                })
+                .catch(() => {
+                    progressText.textContent = 'Ошибка при выполнении возврата';
+                    setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                });
+        }
+    </script>
+    
+    <!-- Проверяем статус -->
+    {% if form.instance.status != "NP" %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Делаем все элементы формы неактивными
+                const formElements = document.querySelectorAll('#ticket-sale-form input, #ticket-sale-form select, #ticket-sale-form textarea, #ticket-sale-form button');
+                formElements.forEach(element => {
+                    element.disabled = true;
+                });
+
+                // Оставляем активной кнопку "Распечатать"
+                const printButton = document.getElementById('print-ticket-button');
+                if (printButton) {
+                    printButton.disabled = false;
+                }
+
+                // Оставляем активной кнопку "Закрыть"
+                const backToList = document.getElementById('back-to-list');
+                if (backToList) {
+                    backToList.disabled = false;
+                }
+                
+                // Оставляем активной кнопку "Возврат билета"
+                const paidAmount = parseFloat('{{ form.paid_amount.value|default_if_none:0 }}');
+                const refundAmount = parseFloat('{{ form.refund_amount.value|default_if_none:0 }}');
+                if (paidAmount > refundAmount) {
+                    const refundPayment = document.getElementById('refund-payment');
+                    if (refundPayment) {
+                        refundPayment.disabled = false;
+                    }
+                }
+                
+                {% if form.instance.status == "PP" %}
+                    // Оставляем активной кнопки оплат                    
+                    document.getElementById('start-payment').disabled = false;
+                    document.getElementById('cash-payment-button').disabled = false;                    
+                {% endif %}    
+            });
+        </script>
+    {% endif %}
+
+    {#    JavaScript для печати #}
+    <script>
+        function printTicket() {
+            // Запрос на получение данных для печати (TicketSalesService)
+            fetch("{% if form.instance.id %}{% url 'ticket_sales:ticket-print-data' form.instance.id %}{% endif %}", {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const printContent = document.getElementById('print-content');
+                printContent.innerHTML = '';  // Очистить старый контент
+        
+                data.services.forEach(service => {
+                    for (let i = 0; i < service.tickets_count; i++) {
+                        printContent.innerHTML += `
+                            <div class="ticket" style="width: 360px; font-size: 20px; page-break-after: always;">
+                                <!-- Центрируем QR-код -->
+                                <div style="text-align: center;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}" 
+                                        alt="QR Code" style="display: inline-block;">
+                                </div>
+                                <div class="small-spacing"></div>
+                                Билет № <strong>${service.sale_id}</strong>-<strong>${service.number}</strong>
+                                <div class="small-spacing"></div>
+                                <div>Количество билетов: <strong>1</strong></div>
+                                <div class="small-spacing"></div>
+                                <strong>Дата и время сеанса:</strong>
+                                <div>${service.event_date}    ${service.event_time}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Услуга:</strong>
+                                <div>${service.service_name}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Мероприятие:</strong>
+                                <div>${service.event_name}</div>
+                                <div class="small-spacing"></div>
+                                <strong>Стоимость билета:</strong>
+                                <div>${service.amount} ₸</div>
+                                <div class="small-spacing"></div>
+                                <strong>Подробная информация:</strong>
+                                <div>www.muzaidyny.kz <i class="bi bi-telephone-fill"></i> 8(7172) 242424</div>
+                                <hr>
+                            </div>
+                        `;
+                    }
+                });
+        
+                if (!data.services || data.services.length === 0) {
+                    printContent.innerHTML = "<p>Заказ не оплачен</p>"
+                }
+        
+                // Открыть модальное окно для печати
+                const printTicketModal = new bootstrap.Modal(document.getElementById('printTicketModal'));
+                printTicketModal.show();
+            });
+        }
+        
+
+        document.getElementById('print-button').addEventListener('click', function () {
+            const printContent = document.getElementById('print-content').innerHTML;
+            const originalContent = document.body.innerHTML;
+
+            // Заменить содержимое body на контент для печати
+            document.body.innerHTML = printContent;
+
+            window.print();
+
+            // Восстановить исходное содержимое после печати
+            document.body.innerHTML = originalContent;
+            location.reload();  // Обновить страницу после печати
+        });
+    </script>
+
+    {#    Скрипт для обработки наличной оплаты:#}
+    <script>
+        document.getElementById('cash-payment-button').addEventListener('click', function () {
+            // Получаем значения полей
+            const amount = parseFloat('{{ form.amount.value|default_if_none:0 }}');
+            const paidAmount = parseFloat('{{ form.paid_amount.value|default_if_none:0 }}');
+            const refundAmount = parseFloat('{{ form.refund_amount.value|default_if_none:0 }}');
+
+            // Рассчитываем сумму к оплате
+            const sumToPay = amount - paidAmount + refundAmount;
+
+            // Устанавливаем значение в поле "Сумма к оплате"
+            document.getElementById('cash-amount').value = sumToPay.toFixed(2);
+            document.getElementById('cash-received').value = sumToPay.toFixed(2);
+
+            // Открываем модальное окно
+            const cashPaymentModal = new bootstrap.Modal(document.getElementById('cashPaymentModal'));
+            cashPaymentModal.show();
+        });
+
+        document.getElementById('cash-received').addEventListener('input', function () {
+            const cashAmount = parseFloat(document.getElementById('cash-amount').value);
+            const cashReceived = parseFloat(this.value);
+
+            if (cashReceived > cashAmount) {
+                const change = cashReceived - cashAmount;
+                document.getElementById('change-amount').value = change.toFixed(2);
+            } else {
+                document.getElementById('change-amount').value = '';
+            }
+        });
+
+        document.getElementById('submit-cash-payment').addEventListener('click', function () {
+            const cashAmount = parseFloat(document.getElementById('cash-amount').value);
+            const cashReceived = parseFloat(document.getElementById('cash-received').value);
+
+            if (isNaN(cashReceived) || cashReceived < cashAmount) {
+                alert('Сумма налички не достаточно к оплате!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('paid_cash', cashAmount);
+
+            fetch("{% if form.instance.id %}{% url 'ticket_sales:cash-payment-process' form.instance.id %}{% endif %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
+                        cashPaymentModal.hide();
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при оплате');
+                    }
+                }).catch(error => {
+                console.error('Ошибка:', error);
+                alert('Ошибка при оплате');
+            });
+        });
+
+        document.getElementById('cancel-cash-payment').addEventListener('click', function () {
+            const cashPaymentModal = bootstrap.Modal.getInstance(document.getElementById('cashPaymentModal'));
+            cashPaymentModal.hide();
+        });
+    </script>
+
+    <script>
+        function hideServiceModal() {
+            //window.location.reload();
+        }
+
+        if (document.getElementById('start-payment')) {
+            document.getElementById('start-payment').addEventListener('click', function () {
+                //const progressBar = document.getElementById('main-progress-bar');
+                //const progressText = document.getElementById('progress-bar-text');
+                
+                // Получаем элементы модального окна и его части
+                const paymentProgressModal = document.getElementById('paymentProgressModal');
+                const paymentProgressTitle = document.getElementById('paymentProgressTitle');
+                const paymentProgressMessage = document.getElementById('paymentProgressMessage');
+                const paymentProgressBar = document.getElementById('paymentProgressBar');
+                
+                const progressBarModal = new bootstrap.Modal(document.getElementById('paymentProgressModal'));
+                
+                // Функция для отображения прогресс-бар модального окна
+                function showPaymentProgress(message) {                    
+                    //progressBarModal.show();
+                    paymentProgressModal.classList.add('show');
+                    paymentProgressMessage.textContent = message;
+                    paymentProgressBar.style.width = '0%';
+                }
+        
+                // Функция для обновления прогресс-бара
+                function updatePaymentProgress(message, progress) {
+                    paymentProgressMessage.textContent = message;
+                    paymentProgressBar.style.width = `${progress}%`;
+                }
+        
+                // Функция для скрытия модального окна
+                function hidePaymentProgress() {
+                    paymentProgressModal.classList.remove('show');
+                    //progressBarModal.hide();
+                }
+        
+                // Отобразить прогресс-бар
+                //progressBar.classList.remove('d-none');
+                showPaymentProgress('Соединение с терминалом...');
+                
+                // Отправка данных на терминал
+                //progressText.textContent = 'Соединение с терминалом...';
+                updatePaymentProgress('Соединение с терминалом...', 10);
+
+                const paymentFormData = new FormData(document.querySelector('form'));
+
+                // Получаем значения из атрибутов данных
+                const ticketSaleId = this.getAttribute('data-ticket-sale-id');
+
+                fetch(`/ticket-sales/payment-process/${ticketSaleId}/`, {
+                    method: 'POST',
+                    body: paymentFormData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'wait') {
+                            //progressText.textContent = 'Проводим оплату...';
+                            updatePaymentProgress('Ожидание оплаты в терминале...', 40);
+                            checkPaymentStatus(data.process_id, ticketSaleId, 1);
+                        } else {
+                            //progressText.textContent = 'Ошибка соединения';
+                            updatePaymentProgress('Ошибка соединения...', 20);
+                            //setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                            setTimeout(() => hidePaymentProgress(), 3000);
+                        }
+                    })
+                    .catch(() => {
+                        //progressText.textContent = 'Ошибка соединения';
+                        updatePaymentProgress('Ошибка соединения...', 20);
+                        //setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                        setTimeout(() => hidePaymentProgress(), 3000);
+                    });
+            })
+        }
+
+        function checkPaymentStatus(processId, ticketSaleId, count) {
+            // Получаем элементы модального окна и его части
+            const paymentProgressModal = document.getElementById('paymentProgressModal');
+            const paymentProgressTitle = document.getElementById('paymentProgressTitle');
+            const paymentProgressMessage = document.getElementById('paymentProgressMessage');
+            const paymentProgressBar = document.getElementById('paymentProgressBar');
+            
+            const progressBarModal = new bootstrap.Modal(document.getElementById('paymentProgressModal'));
+            
+            // Функция для отображения прогресс-бар модального окна
+            function showPaymentProgress(message) {
+                paymentProgressModal.classList.add('show');
+                //progressBarModal.show();
+                paymentProgressMessage.textContent = message;
+                paymentProgressBar.style.width = '0%';
+            }
+    
+            // Функция для обновления прогресс-бара
+            function updatePaymentProgress(message, progress) {
+                paymentProgressMessage.textContent = message;
+                paymentProgressBar.style.width = `${progress}%`;
+            }
+    
+            // Функция для скрытия модального окна
+            function hidePaymentProgress() {
+                paymentProgressModal.classList.remove('show');
+                //progressBarModal.hide();
+            }
+            
+            const progressBar = document.getElementById('main-progress-bar');
+            const progressText = document.getElementById('progress-bar-text');
+            if (count === 30) {
+                //progressText.textContent = 'Не удалось выполнить оплату';
+                updatePaymentProgress('Не удалось выполнить оплату', 50);
+                //setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                setTimeout(() => hidePaymentProgress(), 5000);
+                return;
+            }
+            
+            fetch(`{% url 'ticket_sales:check-payment-status' process_id='$1' ticket_sale_id='$2' %}`
+                .replace('$1', processId)
+                .replace('$2', ticketSaleId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'wait') {
+                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1), 1000);
+                    } else if (data.status === 'success') {
+                        //progressText.textContent = 'Заказ оплачен';
+                        updatePaymentProgress('Билеты оплачены', 100);
+                        setTimeout(() => {
+                            //progressBar.classList.add('d-none');
+                            hidePaymentProgress()
+                            window.location.reload(); // Полное обновление страницы
+                        }, 3000);
+                    } else {
+                        textContent = `Ошибка: ${data.error_text || 'Неизвестная ошибка'}`;
+                        //progressText.textContent = textContent;
+                        updatePaymentProgress(textContent, 100);
+                        //setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                        setTimeout(() => hidePaymentProgress(), 3000);
+                    }
+                })
+                .catch(() => {
+                    //progressText.textContent = 'Ошибка при выполнении оплаты';
+                    updatePaymentProgress('Ошибка при выполнении оплаты', 100);
+                    //setTimeout(() => progressBar.classList.add('d-none'), 5000);
+                    setTimeout(() => hidePaymentProgress(), 3000);
+                });
+        }
+
+    </script>
+
+{% endblock %}
