@@ -12,6 +12,7 @@
     <title>Киоск Ледовый Дворец</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+
         body {
             background-color: #f0f2f5;
             color: #000;
@@ -245,6 +246,30 @@
         .rules-link:hover {
             color: #0c5ab9;
         }
+
+        /* Ограничиваем высоту и добавляем прокрутку в модальное окно */
+        #print-area {
+            max-height: 400px; /* Задайте подходящую максимальную высоту */
+            overflow-y: auto;  /* Включаем вертикальную прокрутку */
+        }
+        
+        .modal-lg {
+            max-width: 1200px; /* Увеличиваем ширину модального окна, если нужно */
+        }
+        
+        @media print {
+            body {
+                font-size: 36px; /* Увеличиваем размер шрифта для печати */
+                zoom: 2; /* Увеличиваем масштаб страницы */
+            }
+            .ticket {
+                width: 700px; /* Увеличиваем ширину билета для печати */
+            }
+            img {
+                max-width: 100%; /* Убедитесь, что изображения не выходят за пределы */
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -253,8 +278,8 @@
 <div class="header">
     <div class="container-header">
         <div class="current-time">
-            <span id="currentDate">вторник, 24 сентября 2024 г.</span><br>
-            <span id="currentTime">10:39</span>
+            <span id="currentDate"></span><br>
+            <span id="currentTime"></span>
         </div>
 
         <img src="{% static '/images/logo_terminal.png' %}" alt="МУЗ Айдыны" class="logo">
@@ -325,6 +350,7 @@
 
     <!-- Скрытое поле для хранения sale_id -->
     <input type="hidden" id="saleId" value="{{ sale_id }}">
+    <input type="hidden" id="printImmediately" value="{{ print_immediately }}">
 
 </div>
 
@@ -385,7 +411,6 @@
                 }
             })
             .then(response => {
-                console.log('Response:', response);
                 return response.json()
             })
             .then(data => {
@@ -398,7 +423,7 @@
                             <div class="ticket" style="width: 360px; font-size: 20px; page-break-after: always;">
                                 <!-- Центрируем QR-код -->
                                 <div style="text-align: center;">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}"
+                                    <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${service.ticket_guid}"
                                         alt="QR Code" style="display: inline-block;">
                                 </div>
                                 <div class="small-spacing"></div>
@@ -430,15 +455,45 @@
                     printContent.innerHTML = "<p>Заказ не оплачен</p>"
                 }
 
-                // Выполняем печать сразу
-                const originalContent = document.body.innerHTML;
-                document.body.innerHTML = printContent.innerHTML;
+                // Ожидаем загрузки всех QR-кодов перед печатью
+                const images = printContent.querySelectorAll('.qr-code');
+                const totalImages = images.length;
+                let loadedImages = 0;
 
-                window.print();  // Печать без модального окна
+                images.forEach(img => {
+                    img.onload = () => {
+                        loadedImages++;
+                        if (loadedImages === totalImages) {
+                            printAfterImagesLoad();
+                        }
+                    };
+                    img.onerror = () => {
+                        loadedImages++;
+                        if (loadedImages === totalImages) {
+                            printAfterImagesLoad();
+                        }
+                    };
+                });
 
-                // Восстановить содержимое после печати
-                document.body.innerHTML = originalContent;
-                location.reload();  // Обновить страницу после печати
+                function printAfterImagesLoad() {
+                    const printImmediately = document.getElementById('printImmediately').value;
+
+                    if (printImmediately === "True") {
+                        const originalContent = document.body.innerHTML;
+                        document.body.innerHTML = printContent.innerHTML;
+                        window.print();  // Выполняем печать после загрузки всех изображений
+
+                        // Восстанавливаем исходное содержимое страницы
+                        document.body.innerHTML = originalContent;
+                        location.reload();  // Обновляем страницу после печати
+                    }
+                    else {
+                        // Открыть модальное окно для печати
+                        const printTicketModal = document.getElementById('printTicketModal');
+                        printTicketModal.classList.add('show');
+                        printTicketModal.style.display = 'flex';
+                    }
+                }
             });
         }
 

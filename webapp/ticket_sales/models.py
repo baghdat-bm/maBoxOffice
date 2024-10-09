@@ -170,7 +170,8 @@ class TicketSalesPayments(models.Model):
 class TicketSalesTicket(models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
-    payment = models.ForeignKey(TicketSalesPayments, on_delete=models.PROTECT, verbose_name="Платеж", blank=True, null=True)
+    payment = models.ForeignKey(TicketSalesPayments, on_delete=models.PROTECT, verbose_name="Платеж", blank=True,
+                                null=True)
     amount = models.IntegerField(verbose_name="Сумма билета", blank=True, null=True)
     number = models.PositiveSmallIntegerField(verbose_name="Номер билета")
     ticket_guid = models.UUIDField(default=uuid.uuid4, editable=False, verbose_name="Идентификатор билета")
@@ -257,3 +258,26 @@ class TerminalSettings(models.Model):
 
     def __str__(self):
         return f"Terminal settings for {self.username} to {self.ip_address} for {self.get_app_type_display()}"
+
+
+class AppSettings(models.Model):
+    print_immediately = models.BooleanField(verbose_name='В киоске печать сразу отправлять на принтер', default=False)
+    minutes_before = models.PositiveSmallIntegerField(verbose_name="Допустимое количество минут до начала сеанса",
+                                                      default=10)
+    minutes_after = models.PositiveSmallIntegerField(verbose_name="Допустимое количество минут после окончания сеанса",
+                                                     default=10)
+
+    class Meta:
+        verbose_name = 'Настройки приложения'
+        verbose_name_plural = 'Настройки приложения'
+
+    def __str__(self):
+        return 'Настройки приложения'
+
+    def clean(self):
+        if AppSettings.objects.exists() and not self.pk:
+            raise ValidationError("Можно создать только одну запись Настройки приложения.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super(AppSettings, self).save(*args, **kwargs)

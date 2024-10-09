@@ -12,7 +12,7 @@ from datetime import timedelta
 
 from reports.models import HasAvailableEventDatesPermission, HasTicketCheckPermission, HasEventsListPermission, \
     HasServicesListPermission, HasCreateTicketsPermission, HasPaymentInfoPermission
-from .models import TicketSalesTicket, TicketSalesPayments, TicketSale
+from .models import TicketSalesTicket, TicketSalesPayments, TicketSale, AppSettings
 from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer, TicketSaleSerializer, \
     PaymentDataSerializer
 from .ticket_sale_utils import get_available_events_dates, get_events_data, get_available_services
@@ -27,6 +27,13 @@ class TicketCheckView(APIView):
         responses={200: 'Успешная проверка билета', 400: 'Неверные данные'},  # Пример ответов
     )
     def post(self, request, *args, **kwargs):
+        app_settings = AppSettings.objects.all().first()
+        minutes_before = 10
+        minutes_after = 10
+        if app_settings:
+            minutes_before = app_settings.minutes_before
+            minutes_after = app_settings.minutes_after
+
         serializer = TicketCheckSerializer(data=request.data)
         if not serializer.is_valid():
             return Response({'result': False, 'error_code': '1', 'message': 'Неверные данные'},
@@ -47,10 +54,10 @@ class TicketCheckView(APIView):
         event_start = timezone.make_aware(timezone.datetime.combine(ticket.event_date, ticket.event_time))
 
         # Разрешаем приход на 10 минут раньше
-        early_entry_allowed = event_start - timedelta(minutes=10)
+        early_entry_allowed = event_start - timedelta(minutes=minutes_before)
         event_end = ((timezone.make_aware(
             timezone.datetime.combine(ticket.event_date, ticket.event_time_end)))
-                     + timedelta(minutes=10)) if ticket.event_time_end else None
+                     + timedelta(minutes=minutes_after)) if ticket.event_time_end else None
 
         if not (early_entry_allowed <= current_datetime <= event_end):
             return Response({'result': False, 'error_code': '2', 'message': 'Билет не активен по времени мероприятия'},

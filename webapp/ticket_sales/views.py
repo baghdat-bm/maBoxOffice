@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, \
-    SaleTypeEnum, TicketSalesBooking
+    SaleTypeEnum, TicketSalesBooking, AppSettings
 from .forms import TicketSaleForm, TicketSalesServiceForm, TicketSalesPaymentsForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
@@ -84,7 +84,12 @@ def kiosk_sale_tickets(request, kiosk_guid):
 
 
 def tickets_purchased(request, sale_id):
-    return render(request, 'terminal/tickets_purchased.html', {'sale_id': sale_id})
+    app_settings = AppSettings.objects.all().first()
+    print_immediately = True
+    if app_settings:
+        print_immediately = app_settings.print_immediately
+    return render(request, 'terminal/tickets_purchased.html',
+                  {'sale_id': sale_id, 'print_immediately': print_immediately})
 
 
 @csrf_exempt

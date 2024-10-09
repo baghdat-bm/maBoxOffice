@@ -4,7 +4,7 @@ from djangoql.admin import DjangoQLSearchMixin
 from rangefilter.filters import DateRangeFilterBuilder
 
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, \
-    TicketSalesTicket, TicketSalesBooking
+    TicketSalesTicket, TicketSalesBooking, AppSettings
 
 
 class TicketSalesServiceInline(admin.StackedInline):
@@ -84,9 +84,22 @@ class TicketSalesBookingAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin)
     search_fields = ('service__name', 'event__name')
 
 
+class AppSettingsAdmin(admin.ModelAdmin):
+    model = AppSettings
+
+    def has_add_permission(self, request):
+        # Разрешить добавление записи, только если её еще нет
+        return not AppSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Запретить удаление записи
+        return False
+
+
 admin.site.register(TicketSale, TicketSaleAdmin)
 admin.site.register(TerminalSettings, TerminalSettingsAdmin)
 admin.site.register(TicketSalesBooking, TicketSalesBookingAdmin)
 admin.site.register(TicketSalesService, TicketSalesServiceAdmin)
 admin.site.register(TicketSalesPayments, TicketSalesPaymentsAdmin)
 admin.site.register(TicketSalesTicket, TicketSalesTicketAdmin)
+admin.site.register(AppSettings, AppSettingsAdmin)
