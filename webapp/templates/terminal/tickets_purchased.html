@@ -416,7 +416,8 @@
             .then(data => {
                 const printContent = document.getElementById('print-content');
                 printContent.innerHTML = '';  // Очистить старый контент
-
+                
+                let servicesCount = 0;
                 data.services.forEach(service => {
                     for (let i = 0; i < service.tickets_count; i++) {
                         printContent.innerHTML += `
@@ -448,6 +449,7 @@
                                 <hr>
                             </div>
                         `;
+                        servicesCount++;
                     }
                 });
 
@@ -464,18 +466,20 @@
                     img.onload = () => {
                         loadedImages++;
                         if (loadedImages === totalImages) {
-                            printAfterImagesLoad();
+                            setTimeout(()=> {printAfterImagesLoad()}, servicesCount*100)
+                            //printAfterImagesLoad();
                         }
                     };
                     img.onerror = () => {
                         loadedImages++;
                         if (loadedImages === totalImages) {
-                            printAfterImagesLoad();
+                            setTimeout(()=> {printAfterImagesLoad()}, servicesCount*100)
+                            //printAfterImagesLoad();
                         }
                     };
                 });
 
-                function printAfterImagesLoad() {
+                function printAfterImagesLoad() {                    
                     const printImmediately = document.getElementById('printImmediately').value;
 
                     if (printImmediately === "True") {

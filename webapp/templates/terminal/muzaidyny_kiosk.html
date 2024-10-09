@@ -1563,7 +1563,7 @@
         // Функция проверки статуса оплаты
         function checkPaymentStatus(processId, ticketSaleId, count) {
             
-            if (count === 15) {                
+            if (count === 20) {                
                 updatePaymentProgress('Не удалось выполнить оплату', 0);
                 setTimeout(() => hidePaymentProgress(), 3000);
                 return;
