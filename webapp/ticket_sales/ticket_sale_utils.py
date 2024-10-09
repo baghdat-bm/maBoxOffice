@@ -209,6 +209,9 @@ def get_available_services(event_id, date, sale_types):
                         "times": []
                     }
 
+                # Используем множество для уникальных времен
+                unique_times = set()
+
                 # Получаем доступные EventTimes для данного мероприятия
                 times = EventTimes.objects.filter(event=event, is_active=True)
                 for time in times:
@@ -226,13 +229,15 @@ def get_available_services(event_id, date, sale_types):
                     sold_tickets_count = sold_tickets['total_sold_tickets'] or 0
 
                     if event.quantity > sold_tickets_count:
-                        # Добавляем время мероприятия если не все билеты проданы
-                        services_data[service_id]['times'].append({
-                            'begin_date': time.begin_date.strftime('%H:%M'),
-                            'end_date': time.end_date.strftime('%H:%M')
-                        })
+                        time_key = (time.begin_date, time.end_date)
+                        if time_key not in unique_times:
+                            # Добавляем уникальное время мероприятия
+                            services_data[service_id]['times'].append({
+                                'begin_date': time.begin_date.strftime('%H:%M'),
+                                'end_date': time.end_date.strftime('%H:%M')
+                            })
+                            unique_times.add(time_key)  # Добавляем в множество уникальных времен
 
             # Возвращаем уникальные услуги с временем
             return list(services_data.values())
     return []
-
