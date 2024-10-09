@@ -201,6 +201,7 @@ def get_available_services(event_id, date, sale_types):
                 service_item = service.service
                 service_id = service_item.id
 
+                # Если услуга уже есть в services_data, используем существующий список times
                 if service_id not in services_data:
                     services_data[service_id] = {
                         "id": service_item.id,
@@ -209,8 +210,11 @@ def get_available_services(event_id, date, sale_types):
                         "times": []
                     }
 
+                # Получаем список времён для текущей услуги
+                current_times = services_data[service_id]['times']
+
                 # Используем множество для уникальных времен
-                unique_times = set()
+                unique_times = set((time['begin_date'], time['end_date']) for time in current_times)
 
                 # Получаем доступные EventTimes для данного мероприятия
                 times = EventTimes.objects.filter(event=event, is_active=True)
@@ -230,16 +234,17 @@ def get_available_services(event_id, date, sale_types):
 
                     if event.quantity > sold_tickets_count:
                         # Форматируем времена для проверки уникальности
-                        formatted_time = (time.begin_date.strftime('%H:%M'), time.end_date.strftime('%H:%M'))
+                        time_key = (time.begin_date.strftime('%H:%M'), time.end_date.strftime('%H:%M'))
 
-                        if formatted_time not in unique_times:
+                        if time_key not in unique_times:
                             # Добавляем уникальное время мероприятия
-                            services_data[service_id]['times'].append({
-                                'begin_date': formatted_time[0],
-                                'end_date': formatted_time[1]
+                            current_times.append({
+                                'begin_date': time_key[0],
+                                'end_date': time_key[1]
                             })
-                            unique_times.add(formatted_time)  # Добавляем в множество уникальных времен
+                            unique_times.add(time_key)  # Добавляем в множество уникальные времена
 
             # Возвращаем уникальные услуги с временем
             return list(services_data.values())
     return []
+
