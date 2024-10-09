@@ -398,7 +398,7 @@ def payment_process_terminal(request, ticket_sale_id):
         headers = {'accesstoken': terminal['access_token']}
         protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/payment?amount={ticket_sale.amount}',
-                                headers=headers, verify=False, timeout=1000)
+                                headers=headers, verify=False, timeout=30)
         response_data = response.json()
         if response_data:
             if response.status_code == 200 and response_data['status'] == 'wait':
@@ -420,7 +420,7 @@ def check_payment_status_cashier(request, process_id, ticket_sale_id):
         headers = {'accesstoken': terminal['access_token']}
         protocol = 'https' if terminal['use_https'] else 'http'
         response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}',
-                                headers=headers, verify=False, timeout=1000)
+                                headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response.status_code == 200:
             if response_data['status'] == 'success':

@@ -107,6 +107,8 @@
             <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Закрыть</a>
         </div>
     </div>
+    
+    <iframe id="printf" name="printf" style="display: none"></iframe>
 {% endblock %}
 
 {% block scripts %}
@@ -123,7 +125,17 @@
                 .then(response => response.json())
                 .then(data => {
                     const printContent = document.getElementById('print-content');
-                    printContent.innerHTML = '';  // Очистить старый контент
+                    printContent.innerHTML = `
+                    <style>
+                        .small-spacing {
+                            margin-top: 5px;  /* Задаем меньший отступ, вместо обычного 10-20px */
+                            margin-bottom: 5px;            
+                        }
+                        
+                        /* Добавляем разрыв после элемента */
+                        .pb-after { page-break-after: always; }
+                    </style>
+                    `; 
 
                     data.services.forEach(service => {
                         for (let i = 0; i < service.tickets_count; i++) {
@@ -171,16 +183,22 @@
 
         document.getElementById('print-button').addEventListener('click', function () {
             const printContent = document.getElementById('print-content').innerHTML;
-            const originalContent = document.body.innerHTML;
+            //const originalContent = document.body.innerHTML;
 
+            var newWin = window.frames["printf"]; //document.getElementById('printf').contentWindow;
+            newWin.document.write(printContent);
+            newWin.document.close(); //important!
+            newWin.focus(); //IE fix
+            newWin.print();
+            
             // Заменить содержимое body на контент для печати
-            document.body.innerHTML = printContent;
+            //document.body.innerHTML = printContent;
 
-            window.print();
+            //window.print();
 
             // Восстановить исходное содержимое после печати
-            document.body.innerHTML = originalContent;
-            location.reload();  // Обновить страницу после печати
+            //document.body.innerHTML = originalContent;
+            //location.reload();  // Обновить страницу после печати
         });
     </script>
 

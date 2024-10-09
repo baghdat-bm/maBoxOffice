@@ -1274,7 +1274,7 @@
             //const url = `/bookings/${bookingId}/delete/`; // Формируем URL для удаления
             const url = `{% url 'ticket_sales:booking_delete' 0 %}`.replace("0", bookingId.toString());
             console.log('url >>>> ', url);
-        
+
             // Отправляем запрос на удаление
             fetch(url, {
                 method: 'DELETE',
@@ -1294,7 +1294,7 @@
                     // Если бронь успешно удалена, удаляем из массива
                     totalAmount -= tickets[index].total;
                     tickets.splice(index, 1);
-        
+
                     updateTicketList();
                     updateFooterPosition();
                 }
@@ -1486,12 +1486,12 @@
         // Если пользователь подтвердил оплату
         confirmPay.addEventListener('click', function() {
             payModal.style.display = 'none';
-        
+
             const kioskGuid = document.getElementById('kioskGuid').value;
-        
+
             // Показ модального окна процесса оплаты
             showPaymentProgress('Начинаем обработку оплаты...');
-        
+
             // Шаг 2. Создание заказа TicketSale на сервере
             fetch('/ticket-sales/create-sale-terminal/', {
                 method: 'POST',
@@ -1515,10 +1515,10 @@
             .then(data => {
                 if (data.status === 'created') {
                     const ticketSaleId = data.ticket_sale_id;
-        
+
                     // Шаг 4. Запускаем процесс оплаты
                     updatePaymentProgress('Обработка оплаты...', 30);
-        
+
                     fetch(`/ticket-sales/payment-process-terminal/${ticketSaleId}/`, {
                         method: 'GET'
                     })
@@ -1531,7 +1531,7 @@
                     .then(data => {
                         if (data.status === 'wait') {
                             updatePaymentProgress('Обработка оплаты в терминале оплаты...', 50);
-                            checkPaymentStatus(data.process_id, ticketSaleId);
+                            checkPaymentStatus(data.process_id, ticketSaleId, 1);
                         } else {
                             throw new Error('Ошибка процесса оплаты: ' + data.error || 'неизвестная ошибка');
                         }
@@ -1561,7 +1561,14 @@
 
 
         // Функция проверки статуса оплаты
-        function checkPaymentStatus(processId, ticketSaleId) {
+        function checkPaymentStatus(processId, ticketSaleId, count) {
+            
+            if (count === 15) {                
+                updatePaymentProgress('Не удалось выполнить оплату', 0);
+                setTimeout(() => hidePaymentProgress(), 3000);
+                return;
+            }
+            
             fetch(`{% url 'ticket_sales:check-payment-status-terminal' process_id='$1' ticket_sale_id='$2' %}`
                 .replace('$1', processId)
                 .replace('$2', ticketSaleId))
@@ -1569,7 +1576,7 @@
                 .then(data => {
                     if (data.status === 'wait') {
                         updatePaymentProgress('Платеж обрабатывается...', 70);
-                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId), 1000);
+                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1), 1000);
                     } else if (data.status === 'success') {
                         updatePaymentProgress('Заказ оплачен! Завершаем...', 100);
                         setTimeout(() => {
@@ -1581,10 +1588,13 @@
                         }, 500);
                     } else {
                        updatePaymentProgress(`Ошибка: ${data.error_text || 'Неизвестная ошибка'}`, 0);
+                       setTimeout(() => hidePaymentProgress(), 3000);
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.error(error);
                     updatePaymentProgress('Ошибка проверки статуса. Попробуйте снова.', 0);
+                    setTimeout(() => hidePaymentProgress(), 3000);
                 });
         }
 
