@@ -32,7 +32,7 @@ def update_ticket_paid_amount(ticket_sale):
 
 
 def get_terminal_settings(app_type='CS'):
-    data = cache.get("terminal_settings")
+    data = cache.get(f"terminal_settings_{app_type}")
     if data is None:
         first_item = TerminalSettings.objects.filter(app_type=app_type).first()
         if first_item:
@@ -45,7 +45,7 @@ def get_terminal_settings(app_type='CS'):
                 'refresh_token': first_item.refresh_token,
                 'expiration_date': first_item.expiration_date
             }
-            cache.set("terminal_settings", data, 300)
+            cache.set(f"terminal_settings_{app_type}", data, 300)
     if not data:
         return None
     return data
