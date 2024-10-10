@@ -904,6 +904,9 @@ def refund_tickets(request, sale_id):
                         if response_json:
                             if response.status_code == 200:
                                 response_data = response_json.get('data', None)
+                                if not response_data:
+                                    error = 'Терминал возвратил не корректные данные'
+                                    return JsonResponse({'success': False, 'message': error}, status=500)
                                 error = response_json.get('errorText', '')
                                 if error == '' and response_data and response_data['status'] == 'wait':
                                     payment.process_id = response_data['processId']
@@ -967,6 +970,8 @@ def refund_tickets(request, sale_id):
 
 
 def check_payment_refund_status(request, process_id, ticket_sale_id):
+    print('>>> process_id >>>', process_id)
+    print('>>> ticket_sale_id >>>', ticket_sale_id)
     ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
     terminal = get_terminal_settings(app_type=ticket_sale.sale_type)
     if not terminal:
@@ -983,7 +988,7 @@ def check_payment_refund_status(request, process_id, ticket_sale_id):
                 refund_payment = TicketSalesPayments.objects.filter(ticket_sale=ticket_sale, process_id=process_id).first()
                 refund_amount = int(re.sub(r'\D', '', chequeInfo['amount']))
                 refund_payment.refund_amount += refund_amount
-                refund_payment.refund_transaction_id = chequeInfo['processId']
+                refund_payment.refund_transaction_id = response_data['transactionId']
                 refund_payment.response_data = response_data
                 refund_payment.save()
 
