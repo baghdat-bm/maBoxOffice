@@ -111,7 +111,11 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
     if paid_sum == 0:
         services = services.filter(total_amount=0)
 
+    created_tickets = []
     for service in services:
+        # Получаем список id созданных билетов
+        created_ticket_ids = [ticket.id for ticket in created_tickets]
+
         # Get existing tickets related to this service
         existing_tickets = TicketSalesTicket.objects.filter(
             ticket_sale=ticket_sale,
@@ -119,7 +123,7 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
             event=service.event,
             event_date=service.event_date,
             event_time=service.event_time
-        )
+        ).exclude(id__in=created_ticket_ids)
 
         # Calculate the total existing amount and count of tickets
         total_existing_amount = existing_tickets.aggregate(amount_sum=Sum('amount'))['amount_sum'] or 0
@@ -144,7 +148,7 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
                 curr_num += 1
                 ticket_amount = remaining_amount // tickets_to_create  # Equal distribution of remaining amount
                 try:
-                    TicketSalesTicket.objects.create(
+                    new_ticket = TicketSalesTicket.objects.create(
                         ticket_sale=ticket_sale,
                         service=service.service,
                         event=service.event,
@@ -156,6 +160,7 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
                         number=curr_num,
                         payment=new_payment
                     )
+                    created_tickets.append(new_ticket)
                 except Exception as e:
                     print('>>>>>>> error:', e.__str__())
 

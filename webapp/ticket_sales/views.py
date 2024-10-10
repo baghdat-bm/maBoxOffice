@@ -550,7 +550,7 @@ def cash_payment_process(request, ticket_sale_id):
 # печать заказа
 @csrf_exempt
 def print_ticket_view(request, ticket_sale_id):
-    tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
+    tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id, is_refund=False)
     create_tickets = False
     if not tickets.exists():
         create_tickets = True
@@ -564,7 +564,7 @@ def print_ticket_view(request, ticket_sale_id):
     if create_tickets:
         ticket_sale = TicketSale.objects.filter(id=ticket_sale_id).first()
         create_tickets_on_new_payment(ticket_sale, None, 0)
-        tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id)
+        tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id, is_refund=False)
 
     data = {
         'services': [
@@ -911,6 +911,8 @@ def refund_tickets(request, sale_id):
                                     process_ids.append(payment.process_id)
                                     for ticket in data['tickets']:
                                         ticket.process_id = payment.process_id
+                                        ticket.refund_amount = ticket.amount
+                                        ticket.is_refund = True
                                         ticket.save()
                                 elif error:
                                     errors.append(error)
@@ -933,7 +935,10 @@ def refund_tickets(request, sale_id):
                     payment.refund_amount += data['amount']
                     payment.save()
                     # Помечаем возвратные билеты
-                    ticket_ids = refund_tickets_on_refund(ticket_sale, payment, data['amount'])
+                    for ticket in data['tickets']:
+                        ticket.refund_amount = ticket.amount
+                        ticket.is_refund = True
+                        ticket.save()
                     # Обновляем сумму возврата в заказе
                     ticket_sale.refund_amount += data['amount']
                     ticket_sale.save(update_date=False)

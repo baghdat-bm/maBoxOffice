@@ -107,7 +107,7 @@
             <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Закрыть</a>
         </div>
     </div>
-    
+
     <iframe id="printf" name="printf" style="display: none"></iframe>
 {% endblock %}
 
@@ -129,13 +129,13 @@
                     <style>
                         .small-spacing {
                             margin-top: 5px;  /* Задаем меньший отступ, вместо обычного 10-20px */
-                            margin-bottom: 5px;            
+                            margin-bottom: 5px;
                         }
-                        
+
                         /* Добавляем разрыв после элемента */
                         .pb-after { page-break-after: always; }
                     </style>
-                    `; 
+                    `;
 
                     data.services.forEach(service => {
                         for (let i = 0; i < service.tickets_count; i++) {
@@ -172,7 +172,7 @@
                     });
 
                     if (!data.services || data.services.length === 0) {
-                        printContent.innerHTML = "<p>Нет данных для печати</p>"
+                        printContent.innerHTML = "<p>Заказ не оплачен</p>"
                     }
 
                     // Открыть модальное окно для печати
@@ -182,24 +182,57 @@
         });
 
         document.getElementById('print-button').addEventListener('click', function () {
-            const printContent = document.getElementById('print-content').innerHTML;
-            //const originalContent = document.body.innerHTML;
+            const printContentString = document.getElementById('print-content').innerHTML;
 
+            // Создаем временный элемент div для преобразования строки в DOM-элемент
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = printContentString;
+
+            // Ожидаем загрузки всех QR-кодов перед печатью
+            const images = tempDiv.querySelectorAll('img'); // Находим все изображения (в том числе QR-коды)
+            const totalImages = images.length;
+            let loadedImages = 0;
+
+            images.forEach(img => {
+                img.onload = () => {
+                    loadedImages++;
+                    if (loadedImages === totalImages) {
+                        setTimeout(() => { printAfterImagesLoad(tempDiv.innerHTML); }, loadedImages * 100);
+                    }
+                };
+                img.onerror = () => {
+                    loadedImages++;
+                    if (loadedImages === totalImages) {
+                        setTimeout(() => { printAfterImagesLoad(tempDiv.innerHTML); }, loadedImages * 100);
+                    }
+                };
+            });
+
+            // Если нет изображений, сразу вызываем функцию печати
+            if (totalImages === 0) {
+                printAfterImagesLoad(tempDiv.innerHTML);
+            }
+        });
+
+        function printAfterImagesLoad(printContent) {
             var newWin = window.frames["printf"]; //document.getElementById('printf').contentWindow;
-            newWin.document.write(printContent);
+            newWin.document.write(`
+                <html>
+                <head>
+                    <title>Печать билетов</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .ticket { page-break-after: always; }
+                    </style>
+                </head>
+                <body>${printContent}</body>
+                </html>
+            `);
             newWin.document.close(); //important!
             newWin.focus(); //IE fix
             newWin.print();
-            
-            // Заменить содержимое body на контент для печати
-            //document.body.innerHTML = printContent;
+        }
 
-            //window.print();
-
-            // Восстановить исходное содержимое после печати
-            //document.body.innerHTML = originalContent;
-            //location.reload();  // Обновить страницу после печати
-        });
     </script>
 
 {% endblock %}

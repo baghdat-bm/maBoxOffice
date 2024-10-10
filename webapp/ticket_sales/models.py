@@ -64,7 +64,6 @@ class TicketSale(models.Model):
                               blank=True,
                               default=SaleStatusEnum.NP.value[0])
     tickets_count = models.PositiveSmallIntegerField(verbose_name="Всего билетов", blank=True, default=0)
-    tickets_made = models.BooleanField(verbose_name="Билеты сформированы", blank=True, default=False)
     sale_type = models.CharField(max_length=2,
                                  verbose_name="Тип продажи",
                                  choices=SaleTypeEnum.choices(),

@@ -490,20 +490,49 @@
             });
         }
         
-
         document.getElementById('print-button').addEventListener('click', function () {
-            const printContent = document.getElementById('print-content').innerHTML;
-            //const originalContent = document.body.innerHTML;
-
-            var newWin = window.frames["printf"]; //document.getElementById('printf').contentWindow;
-            newWin.document.write(printContent);
-            newWin.document.close(); //important!
-            newWin.focus(); //IE fix
-            newWin.print();
+            const printContentString = document.getElementById('print-content').innerHTML;
             
+            // Создаем временный элемент div для преобразования строки в DOM-элемент
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = printContentString;
+        
+            // Ожидаем загрузки всех QR-кодов перед печатью
+            const images = tempDiv.querySelectorAll('img'); // Находим все изображения (в том числе QR-коды)
+            const totalImages = images.length;
+            let loadedImages = 0;
+        
+            images.forEach(img => {
+                img.onload = () => {
+                    loadedImages++;
+                    if (loadedImages === totalImages) {
+                        setTimeout(() => { printAfterImagesLoad(tempDiv.innerHTML); }, loadedImages * 100);
+                    }
+                };
+                img.onerror = () => {
+                    loadedImages++;
+                    if (loadedImages === totalImages) {
+                        setTimeout(() => { printAfterImagesLoad(tempDiv.innerHTML); }, loadedImages * 100);
+                    }
+                };
+            });
+        
+            // Если нет изображений, сразу вызываем функцию печати
+            if (totalImages === 0) {
+                printAfterImagesLoad(tempDiv.innerHTML);
+            }
+            
+            // новая версия печати
+            //var newWin = window.frames["printf"]; //document.getElementById('printf').contentWindow;
+            //newWin.document.write(printContent);
+            //newWin.document.close(); //important!
+            //newWin.focus(); //IE fix
+            //newWin.print();
+                        
             //newWin.document.write('');
             //newWin.document.close(); //important!
             
+            // старая версия печати
             // Заменить содержимое body на контент для печати
             //document.body.innerHTML = printContent;
 
@@ -513,6 +542,26 @@
             //document.body.innerHTML = originalContent;
             //location.reload();  // Обновить страницу после печати
         });
+                        
+        function printAfterImagesLoad(printContent) {
+            var newWin = window.frames["printf"]; //document.getElementById('printf').contentWindow;
+            newWin.document.write(`
+                <html>
+                <head>
+                    <title>Печать билетов</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .ticket { page-break-after: always; }
+                    </style>
+                </head>
+                <body>${printContent}</body>
+                </html>
+            `);            
+            newWin.document.close(); //important!
+            newWin.focus(); //IE fix
+            newWin.print();
+        }
+        
     </script>
 
     {#    Скрипт для обработки наличной оплаты:#}
