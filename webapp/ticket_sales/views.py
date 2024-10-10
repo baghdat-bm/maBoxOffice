@@ -367,7 +367,7 @@ def payment_detail_view(request, ticket_sale_id, pk):
 
 def payment_process_cashier(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
-    terminal = get_terminal_settings()
+    terminal = get_terminal_settings(app_type='CS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -413,7 +413,7 @@ def payment_process_terminal(request, ticket_sale_id):
 
 
 def check_payment_status_cashier(request, process_id, ticket_sale_id):
-    terminal = get_terminal_settings()
+    terminal = get_terminal_settings(app_type='CS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
