@@ -17,6 +17,8 @@ class TicketSalesServiceInline(admin.StackedInline):
 
 class TicketSalesServiceAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     model = TicketSalesService
+    list_display = ('id', 'event_date', 'event_time', 'tickets_count', 'total_amount', 'paid_amount')
+    list_filter = (("ticket_sale__date", DateRangeFilterBuilder()), 'ticket_sale__sale_type', 'event', 'service',)
 
     def has_change_permission(self, request, obj=None):
         return False
