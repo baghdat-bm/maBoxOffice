@@ -765,7 +765,7 @@ def register_terminal(request):
     url = f"{protocol}://{ip_address}:{port}/register?name={username}"
 
     try:
-        response = requests.get(url, timeout=10, verify=False)
+        response = requests.get(url, timeout=40, verify=False)
 
         if response.status_code == 200:
             data = response.json()
