@@ -180,6 +180,7 @@ class TicketSalesTicket(models.Model):
     event_time_end = models.TimeField(verbose_name="Время окончания мероприятия", blank=True, null=True)
     last_event_code = models.CharField(max_length=1, verbose_name="Код последнего события", blank=True, null=True,
                                        default='')
+    activated_date = models.DateTimeField(verbose_name="Дата активации", blank=True, null=True)
     process_id = models.CharField(max_length=20, verbose_name='Идентификатор процесса', null=True, blank=True)
     is_refund = models.BooleanField(verbose_name='Возвратный', default=False)
     refund_amount = models.IntegerField(verbose_name="Сумма возврата", blank=True, default=0)

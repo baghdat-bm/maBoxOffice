@@ -1,3 +1,5 @@
+import datetime
+
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.views import APIView
@@ -86,6 +88,8 @@ class TicketCheckView(APIView):
         # Если все проверки пройдены успешно
         # тогда обновляем статус билета
         ticket.last_event_code = event_code
+        if event_code == "1":
+            ticket.activated_date = datetime.datetime.now()
         ticket.save()
 
         # Возвращаем успешный ответ
