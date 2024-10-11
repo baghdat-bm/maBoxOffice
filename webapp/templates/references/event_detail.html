@@ -45,7 +45,9 @@
         </div>
 
         <div class="mt-2">
-            <a href="{% url 'references:event-update' object.id %}" class="btn btn-primary">Изменить</a>
+            {% if perms.references.change_event %}
+                <a href="{% url 'references:event-update' object.id %}" class="btn btn-primary">Изменить</a>
+            {% endif %}
             <a href="{% url 'references:event-list' %}" class="btn btn-secondary">Закрыть</a>
         </div>
     </div>

@@ -14,8 +14,10 @@
         <div id="event-template-services-list">            
             {% include 'references/partials/event_template_services_list_view.html' with event_template=event_template %}            
         </div>
-    
-        <a href="{% url 'references:event_template_update' event_template.id %}" class="btn btn-primary">Изменить</a>
+        
+        {% if perms.references.change_eventtemplate %}
+            <a href="{% url 'references:event_template_update' event_template.id %}" class="btn btn-primary">Изменить</a>
+        {% endif %}
         <a href="{% url 'references:event_template_list' %}" class="btn btn-secondary">Закрыть</a>
     </div>
 {% endblock %}

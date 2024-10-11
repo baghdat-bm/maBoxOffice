@@ -26,20 +26,22 @@
     <h3>Заказы</h3>
     
     <div class="row mb-4">
-        <div class="col-md-6">
-            <form action="{% url 'ticket_sales:ticket-sale-create' %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary">Новый заказ</button>
-            </form>
-            <!-- Button to select unpaid orders -->
-            <button type="button" class="btn btn-secondary btn-sm mt-2" id="select-unpaid">
-                Выбрать не оплаченные
-            </button>
-            <!-- Button to delete selected orders -->
-            <button type="button" class="btn btn-danger btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                Удалить выбранные
-            </button>        
-        </div>
+        {% if perms.ticket_sales.add_ticketsale %}
+            <div class="col-md-6">            
+                <form action="{% url 'ticket_sales:ticket-sale-create' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Новый заказ</button>
+                </form>
+                <!-- Button to select unpaid orders -->
+                <button type="button" class="btn btn-secondary btn-sm mt-2" id="select-unpaid">
+                    Выбрать не оплаченные
+                </button>
+                <!-- Button to delete selected orders -->
+                <button type="button" class="btn btn-danger btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                    Удалить выбранные
+                </button>        
+            </div>
+        {% endif %}
         <div class="col-md-6">
             <form method="GET" action="{% url 'ticket_sales:ticket-sale-list' %}" class="mb-4">
                 <div class="input-group">
@@ -54,7 +56,9 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th><input type="checkbox" id="select-all"></th>
+                {% if perms.ticket_sales.delete_ticketsale %}
+                    <th><input type="checkbox" id="select-all"></th>
+                {% endif %}
                 <th>Номер</th>
                 <th>Дата время</th>
                 <th>Сумма</th>
@@ -62,13 +66,17 @@
                 <th>Кол-во билетов</th>
                 <th>Статус</th>
                 <th>Тип продажи</th>
+                {% if perms.ticket_sales.change_ticketsale %}
                 <th></th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             {% for sale in object_list %}
             <tr> 
-                <td><input type="checkbox" class="order-checkbox" value="{{ sale.id }}"></td>
+                {% if perms.ticket_sales.delete_ticketsale %}
+                    <td><input type="checkbox" class="order-checkbox" value="{{ sale.id }}"></td>
+                {% endif %}
                 <td>
                     <a href="{% url 'ticket_sales:ticket-sale-detail' sale.id %}">
                         {{ sale.id }}
@@ -89,12 +97,16 @@
                 <td>{{ sale.get_status_display }}</td>
                 <td>{{ sale.get_sale_type_display }}</td>
                 <td>
+                    {% if perms.ticket_sales.change_ticketsale %}
                     <a href="{% url 'ticket_sales:ticket-sale-update' sale.id %}" class="btn btn-sm btn-primary">
                         <i class="bi bi-pencil-square"></i>
                     </a>
+                    {% endif %}
+                    {% if perms.ticket_sales.delete_ticketsale %}
                     <a href="{% url 'ticket_sales:ticket-sale-delete' sale.id %}" class="btn btn-sm btn-danger">
                         <i class="bi bi-x-circle"></i>
                     </a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

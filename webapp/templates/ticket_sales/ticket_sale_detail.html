@@ -101,7 +101,7 @@
                     data-ticket-sale-id="{{ object.id }}">
                 Печать
             </button>
-            {% if object.status != "PD" and object.status != "RT" %}
+            {% if perms.ticket_sales.change_ticketsale and object.status != "PD" and object.status != "RT" %}
                 <a href="{% url 'ticket_sales:ticket-sale-update' object.id %}" class="btn btn-primary">Изменить</a>
             {% endif %}
             <a href="{% url 'ticket_sales:ticket-sale-list' %}" class="btn btn-secondary">Закрыть</a>

@@ -4,7 +4,9 @@
 {% block content %}
     <div class="container">
         <h3>Сеансы мероприятий</h3>
-        <a href="{% url 'references:event-create' %}" class="btn btn-primary mb-3">Добавить сеанс мероприятия</a>
+        {% if perms.references.add_event %}
+            <a href="{% url 'references:event-create' %}" class="btn btn-primary mb-3">Добавить сеанс мероприятия</a>
+        {% endif %}
         <table class="table table-striped">
             <thead>
             <tr>
@@ -12,7 +14,9 @@
                 <th>Наименование</th>
                 <th>Дата начала</th>
                 <th>Дата окончания</th>
-                <th></th>
+                {% if perms.references.change_event %}
+                    <th></th>
+                {% endif %}
             </tr>
             </thead>
             <tbody>
@@ -25,8 +29,12 @@
                     <td>{{ event.begin_date }}</td>
                     <td>{{ event.end_date }}</td>
                     <td>
-                        <a href="{% url 'references:event-update' event.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i></a>
-                        <a href="{% url 'references:event-delete' event.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i></a>
+                        {% if perms.references.change_event %}
+                            <a href="{% url 'references:event-update' event.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i></a>
+                        {% endif %}
+                        {% if perms.references.delete_event %}
+                            <a href="{% url 'references:event-delete' event.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i></a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}

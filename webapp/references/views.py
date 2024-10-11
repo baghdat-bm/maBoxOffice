@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import HttpResponseServerError
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 from .forms import EventTemplateForm, EventForm, EventTimesForm, InventoryForm, ServiceForm, EventTemplateServicesForm
 from .models import Event, EventTemplate, EventTimes, Service, Inventory, EventTemplateServices
@@ -12,6 +14,7 @@ def home_page(request):
     return render(request, 'site/home.html')
 
 
+@permission_required('references.add_eventtemplate', raise_exception=True)
 def event_template_create_view(request):
     if request.method == 'POST':
         form = EventTemplateForm(request.POST, request.FILES)
@@ -23,6 +26,7 @@ def event_template_create_view(request):
     return render(request, 'references/event_template_form.html', {'form': form})
 
 
+@permission_required('references.change_eventtemplate', raise_exception=True)
 def event_template_update_view(request, pk):
     event_template = get_object_or_404(EventTemplate, pk=pk)
     if request.method == 'POST':
@@ -35,16 +39,19 @@ def event_template_update_view(request, pk):
     return render(request, 'references/event_template_form.html', {'form': form})
 
 
+@permission_required('references.view_eventtemplate', raise_exception=True)
 def event_template_list_view(request):
     event_templates = EventTemplate.objects.all()
     return render(request, 'references/event_template_list.html', {'event_templates': event_templates})
 
 
+@permission_required('references.view_eventtemplate', raise_exception=True)
 def event_template_detail_view(request, pk):
     event_template = get_object_or_404(EventTemplate, pk=pk)
     return render(request, 'references/event_template_detail.html', {'event_template': event_template})
 
 
+@permission_required('references.delete_eventtemplate', raise_exception=True)
 def event_template_delete_view(request, pk):
     event_template = get_object_or_404(EventTemplate, pk=pk)
     if request.method == 'POST':
@@ -55,35 +62,40 @@ def event_template_delete_view(request, pk):
 
 # Event CRUD
 
-class EventListView(ListView):
+class EventListView(PermissionRequiredMixin, ListView):
     model = Event
     # form_class = EventForm
     template_name = 'references/event_list.html'
+    permission_required = 'references.view_event'
 
 
-class EventCreateView(CreateView):
+class EventCreateView(PermissionRequiredMixin, CreateView):
     model = Event
     form_class = EventForm
     template_name = 'references/event_form.html'
     success_url = reverse_lazy('references:event-list')
+    permission_required = 'references.add_event'
 
 
-class EventUpdateView(UpdateView):
+class EventUpdateView(PermissionRequiredMixin, UpdateView):
     model = Event
     form_class = EventForm
     template_name = 'references/event_form.html'
     success_url = reverse_lazy('references:event-list')
+    permission_required = 'references.change_event'
 
 
-class EventDeleteView(DeleteView):
+class EventDeleteView(PermissionRequiredMixin, DeleteView):
     model = Event
     template_name = 'references/event_confirm_delete.html'
     success_url = reverse_lazy('references:event-list')
+    permission_required = 'references.delete_event'
 
 
-class EventDetailView(DetailView):
+class EventDetailView(PermissionRequiredMixin, DetailView):
     model = Event
     template_name = 'references/event_detail.html'
+    permission_required = 'references.view_event'
 
 
 # EventTimes CRUD via HTMX
@@ -125,65 +137,75 @@ def event_times_delete(request, event_id, pk):
 
 
 # Inventory Views
-class InventoryListView(ListView):
+class InventoryListView(PermissionRequiredMixin, ListView):
     model = Inventory
     template_name = 'references/inventory_list.html'
+    permission_required = 'references.view_inventory'
 
 
-class InventoryCreateView(CreateView):
+class InventoryCreateView(PermissionRequiredMixin, CreateView):
     model = Inventory
     form_class = InventoryForm
     template_name = 'references/inventory_form.html'
     success_url = reverse_lazy('references:inventory-list')
+    permission_required = 'references.add_inventory'
 
 
-class InventoryUpdateView(UpdateView):
+class InventoryUpdateView(PermissionRequiredMixin, UpdateView):
     model = Inventory
     form_class = InventoryForm
     template_name = 'references/inventory_form.html'
     success_url = reverse_lazy('references:inventory-list')
+    permission_required = 'references.change_inventory'
 
 
-class InventoryDeleteView(DeleteView):
+class InventoryDeleteView(PermissionRequiredMixin, DeleteView):
     model = Inventory
     template_name = 'references/inventory_confirm_delete.html'
     success_url = reverse_lazy('references:inventory-list')
+    permission_required = 'references.delete_inventory'
 
 
-class InventoryDetailView(DetailView):
+class InventoryDetailView(PermissionRequiredMixin, DetailView):
     model = Inventory
     template_name = 'references/inventory_detail.html'
+    permission_required = 'references.view_inventory'
 
 
 # Service Views
-class ServiceListView(ListView):
+class ServiceListView(PermissionRequiredMixin, ListView):
     model = Service
     template_name = 'references/service_list.html'
+    permission_required = 'references.view_service'
 
 
-class ServiceCreateView(CreateView):
+class ServiceCreateView(PermissionRequiredMixin, CreateView):
     model = Service
     form_class = ServiceForm
     template_name = 'references/service_form.html'
     success_url = reverse_lazy('references:service-list')
+    permission_required = 'references.add_service'
 
 
-class ServiceUpdateView(UpdateView):
+class ServiceUpdateView(PermissionRequiredMixin, UpdateView):
     model = Service
     form_class = ServiceForm
     template_name = 'references/service_form.html'
     success_url = reverse_lazy('references:service-list')
+    permission_required = 'references.change_service'
 
 
-class ServiceDeleteView(DeleteView):
+class ServiceDeleteView(PermissionRequiredMixin, DeleteView):
     model = Service
     template_name = 'references/service_confirm_delete.html'
     success_url = reverse_lazy('references:service-list')
+    permission_required = 'references.delete_service'
 
 
-class ServiceDetailView(DetailView):
+class ServiceDetailView(PermissionRequiredMixin, DetailView):
     model = Service
     template_name = 'references/service_detail.html'
+    permission_required = 'references.view_service'
 
 
 def event_template_service_create(request, event_template_id):

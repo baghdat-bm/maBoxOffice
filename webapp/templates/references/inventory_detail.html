@@ -9,7 +9,9 @@
     <p>Размер: {{ object.size }}</p>
     <p>Количество: {{ object.quantity }}</p>
     <p>Стоимость: {{ object.cost }}</p>
-    <a href="{% url 'references:inventory-update' object.id %}" class="btn btn-primary">Изменить</a>
+    {% if perms.references.change_inventory %}
+        <a href="{% url 'references:inventory-update' object.id %}" class="btn btn-primary">Изменить</a>
+    {% endif %}
     <a href="{% url 'references:inventory-list' %}" class="btn btn-secondary">Закрыть</a>
 </div>
 {% endblock %}

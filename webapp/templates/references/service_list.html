@@ -5,7 +5,9 @@
 {% block content %}
 <div class="container">
     <h3>Услуги</h3>
-    <a href="{% url 'references:service-create' %}" class="btn btn-primary mb-2">Добавить услугу</a>
+    {% if perms.references.add_service %}
+        <a href="{% url 'references:service-create' %}" class="btn btn-primary mb-2">Добавить услугу</a>
+    {% endif %}
 
     <table class="table table-striped">
         <thead>
@@ -14,7 +16,9 @@
                 <th>Стоимость</th>
                 <th>Инвентарь</th>
                 <th>Учитывать в подсчете билетов</th>
-                <th></th>
+                {% if perms.references.change_service %}
+                    <th></th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -41,8 +45,12 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'references:service-update' service.id %}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a>
-                    <a href="{% url 'references:service-delete' service.id %}" class="btn btn-sm btn-danger"><i class="bi bi-x-circle"></i></a>
+                    {% if perms.references.change_service %}
+                        <a href="{% url 'references:service-update' service.id %}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a>
+                    {% endif %}
+                    {% if perms.references.delete_service %}
+                        <a href="{% url 'references:service-delete' service.id %}" class="btn btn-sm btn-danger"><i class="bi bi-x-circle"></i></a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

@@ -28,7 +28,9 @@
         </div>
         
         <div class="mt-2">
-            <a href="{% url 'references:service-update' object.id %}" class="btn btn-primary">Изменить</a>
+            {% if perms.references.change_service %}
+                <a href="{% url 'references:service-update' object.id %}" class="btn btn-primary">Изменить</a>
+            {% endif %}
             <a href="{% url 'references:service-list' %}" class="btn btn-secondary">Закрыть</a>
         </div>
     </div>

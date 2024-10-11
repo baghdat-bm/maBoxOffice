@@ -16,6 +16,8 @@ from django.utils.dateparse import parse_datetime
 from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 from references.models import Event, EventTimes, EventTemplateServices, Service
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, \
@@ -30,11 +32,12 @@ from .utils import update_ticket_amount, update_ticket_paid_amount, get_terminal
 
 # TicketSale Views
 
-class TicketSaleListView(ListView):
+class TicketSaleListView(PermissionRequiredMixin, ListView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_list.html'
     context_object_name = 'object_list'
     paginate_by = 20  # Пагинация по 20 записей
+    permission_required = 'ticket_sales.view_ticketsale'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -44,6 +47,7 @@ class TicketSaleListView(ListView):
         return queryset
 
 
+@permission_required('ticket_sales.add_ticketsale', raise_exception=True)
 def create_ticket_sale_cashier(request):
     # Создаем новую запись TicketSale
     current_date = datetime.now()
@@ -54,11 +58,12 @@ def create_ticket_sale_cashier(request):
     return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))
 
 
-class TicketSaleUpdateView(UpdateView):
+class TicketSaleUpdateView(PermissionRequiredMixin, UpdateView):
     model = TicketSale
     form_class = TicketSaleForm
     template_name = 'ticket_sales/ticket_sale_form.html'
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+    permission_required = 'ticket_sales.change_ticketsale'
 
     def form_valid(self, form):
         # Получаем текущие дату и время
@@ -106,6 +111,7 @@ def delete_bookings(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+@permission_required('ticket_sales.add_ticketsale', raise_exception=True)
 @csrf_exempt
 def create_ticket_sale_terminal(request):
     if request.method == 'POST':
@@ -164,11 +170,12 @@ def create_ticket_sale_terminal(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-class TicketSaleUpdateViewTerminal(UpdateView):
+class TicketSaleUpdateViewTerminal(PermissionRequiredMixin, UpdateView):
     model = TicketSale
     form_class = TicketSaleForm
     template_name = 'ticket_sales/ticket_sale_form_terminal.html'
     success_url = reverse_lazy('ticket_sales:home-terminal')
+    permission_required = 'ticket_sales.change_ticketsale'
 
     def form_valid(self, form):
         # Получаем текущие дату и время
@@ -179,15 +186,17 @@ class TicketSaleUpdateViewTerminal(UpdateView):
         return super().form_valid(form)
 
 
-class TicketSaleDetailView(DetailView):
+class TicketSaleDetailView(PermissionRequiredMixin, DetailView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_detail.html'
+    permission_required = 'ticket_sales.view_ticketsale'
 
 
-class TicketSaleDeleteView(DeleteView):
+class TicketSaleDeleteView(PermissionRequiredMixin, DeleteView):
     model = TicketSale
     template_name = 'ticket_sales/ticket_sale_confirm_delete.html'
     success_url = reverse_lazy('ticket_sales:ticket-sale-list')
+    permission_required = 'ticket_sales.delete_ticketsale'
 
     def post(self, request, *args, **kwargs):
         # Получаем объект заказа, который пытаемся удалить
@@ -205,6 +214,7 @@ class TicketSaleDeleteView(DeleteView):
         return super().post(request, *args, **kwargs)
 
 
+@permission_required('ticket_sales.delete_ticketsale', raise_exception=True)
 def bulk_delete_ticket_sales(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -221,6 +231,7 @@ def bulk_delete_ticket_sales(request):
     return JsonResponse({'success': False}, status=400)
 
 
+@permission_required('ticket_sales.add_ticketsale', raise_exception=True)
 def ticket_sale_create_view(request):
     if request.method == 'POST':
         form = TicketSaleForm(request.POST)
@@ -237,6 +248,7 @@ def ticket_sale_create_view(request):
     return render(request, 'ticket_sales/ticket_sale_form.html', {'form': form})
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def ticket_sale_update_view(request, pk):
     ticket_sale = get_object_or_404(TicketSale, pk=pk)
 
@@ -255,6 +267,7 @@ def ticket_sale_update_view(request, pk):
 
 
 # TicketSalesService HTMX Views
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 @csrf_exempt
 def ticket_sales_service_create(request, ticket_sale_id):
     ticket_sale = get_object_or_404(TicketSale, id=ticket_sale_id)
@@ -273,6 +286,7 @@ def ticket_sales_service_create(request, ticket_sale_id):
                   {'form': form, 'ticket_sale': ticket_sale})
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 @csrf_exempt
 def ticket_sales_service_update(request, ticket_sale_id, pk):
     service = get_object_or_404(TicketSalesService, id=pk, ticket_sale_id=ticket_sale_id)
@@ -290,6 +304,7 @@ def ticket_sales_service_update(request, ticket_sale_id, pk):
                   {'form': form, 'ticket_sale': service.ticket_sale})
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def ticket_sales_service_delete(request, ticket_sale_id, pk):
     service = get_object_or_404(TicketSalesService, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
@@ -304,6 +319,7 @@ def ticket_sales_service_delete(request, ticket_sale_id, pk):
 
 # TicketSalesPayments HTMX Views
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 @csrf_exempt
 def ticket_sales_payments_create(request, ticket_sale_id):
     ticket_sale = get_object_or_404(TicketSale, id=ticket_sale_id)
@@ -322,6 +338,7 @@ def ticket_sales_payments_create(request, ticket_sale_id):
                   {'form': form, 'ticket_sale': ticket_sale})
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 @csrf_exempt
 def ticket_sales_payments_update(request, ticket_sale_id, pk):
     payment = get_object_or_404(TicketSalesPayments, id=pk, ticket_sale_id=ticket_sale_id)
@@ -337,6 +354,7 @@ def ticket_sales_payments_update(request, ticket_sale_id, pk):
     return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'form': form})
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def ticket_sales_payments_delete(request, ticket_sale_id, pk):
     payment = get_object_or_404(TicketSalesPayments, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
@@ -365,6 +383,7 @@ def payment_detail_view(request, ticket_sale_id, pk):
     return render(request, 'ticket_sales/partials/ticket_sales_payments_form.html', {'object': payment})
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def payment_process_cashier(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
     terminal = get_terminal_settings(app_type='CS')
@@ -524,6 +543,7 @@ def check_payment_status_terminal(request, process_id, ticket_sale_id):
 
 
 # обработка наличной оплаты
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def cash_payment_process(request, ticket_sale_id):
     if request.method == 'POST':
         ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
@@ -632,6 +652,7 @@ def get_service_cost(request):
     return JsonResponse({'cost': 0})
 
 
+@permission_required('ticket_sales.change_terminalsettings', raise_exception=True)
 def terminal_settings_cashier(request):
     settings = TerminalSettings.objects.filter(app_type='CS').first()
 
@@ -679,6 +700,7 @@ def terminal_settings_cashier(request):
     return render(request, 'ticket_sales/terminal_settings-cashier.html', context)
 
 
+@permission_required('ticket_sales.change_terminalsettings', raise_exception=True)
 def terminal_settings_terminal(request):
     settings = TerminalSettings.objects.filter(app_type='TS').first()
 
@@ -726,6 +748,7 @@ def terminal_settings_terminal(request):
     return render(request, 'ticket_sales/terminal_settings-terminal.html', context)
 
 
+@permission_required('ticket_sales.change_terminalsettings', raise_exception=True)
 def register_terminal(request):
     ip_address = request.GET.get('ip_address')
     port = request.GET.get('port')
@@ -830,6 +853,7 @@ def get_refund_tickets(request, sale_id):
     return render(request, 'ticket_sales/partials/refund_ticket_list.html', context=context)
 
 
+@permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def refund_tickets(request, sale_id):
     if request.method == "POST":
         # Получаем заказ

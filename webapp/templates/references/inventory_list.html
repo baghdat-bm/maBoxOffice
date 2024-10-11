@@ -6,7 +6,9 @@
 {% block content %}
 <div class="container">
     <h3>Инвентарь</h3>
-    <a href="{% url 'references:inventory-create' %}" class="btn btn-primary mb-2">Добавить инвентарь</a>
+    {% if perms.references.add_inventory %}
+        <a href="{% url 'references:inventory-create' %}" class="btn btn-primary mb-2">Добавить инвентарь</a>
+    {% endif %}
 
     <table class="table table-striped">
         <thead>
@@ -14,7 +16,9 @@
                 <th>Наименование</th>
                 <th>Размер</th>
                 <th>Количество</th>
-                <th></th>
+                {% if perms.references.change_inventory %}
+                    <th></th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -28,8 +32,12 @@
                 <td>{{ inventory.size }}</td>
                 <td>{{ inventory.quantity }}</td>
                 <td>
-                    <a href="{% url 'references:inventory-update' inventory.id %}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a>
-                    <a href="{% url 'references:inventory-delete' inventory.id %}" class="btn btn-sm btn-danger"><i class="bi bi-x-circle"></i></a>
+                    {% if perms.references.change_inventory %}
+                        <a href="{% url 'references:inventory-update' inventory.id %}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a>
+                    {% endif %}
+                    {% if perms.references.delete_inventory %}
+                        <a href="{% url 'references:inventory-delete' inventory.id %}" class="btn btn-sm btn-danger"><i class="bi bi-x-circle"></i></a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

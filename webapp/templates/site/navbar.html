@@ -2,7 +2,7 @@
 <nav class="vertical-nav">
     <ul class="nav flex-column">
 
-    {% if perms.ticket_sales.add_ticketsale %}
+    {% if perms.ticket_sales.view_ticketsale %}
     <li class="part-nav-item">
         <a href="{% url 'ticket_sales:ticket-sale-list' %}"
         class="nav-link razdel {% if 'ticket-sales' in request.path and not 'terminal' in request.path %}active{% endif %}">
@@ -11,12 +11,12 @@
     </li>
     {% endif %}
     
-    {% if perms.references.add_eventtemplate or perms.references.add_event or perms.references.add_inventory or perms.references.add_service %}
+    {% if perms.references.view_eventtemplate or perms.references.view_event or perms.references.view_inventory or perms.references.view_service %}
     <li class="part-nav-item">
         <a class="nav-link razdel disabled" href="#">Справочники</a>
 
         <ul class="nav flex-column nested-nav">
-            {% if perms.references.add_eventtemplate %}
+            {% if perms.references.view_eventtemplate %}
             <li class="nav-item">
                 <a href="{% url 'references:event_template_list' %}"
                 class="nav-link {% if 'references/event-template' in request.path %}active{% endif %}">
@@ -25,7 +25,7 @@
             </li>
             {% endif %}
 
-            {% if perms.references.add_event %}
+            {% if perms.references.view_event %}
             <li class="nav-item">
                 <a href="{% url 'references:event-list' %}"
                 class="nav-link {% if 'references/event' in request.path and not 'event-template' in request.path %}active{% endif %}">
@@ -34,7 +34,7 @@
             </li>
             {% endif %}
 
-            {% if perms.references.add_inventory %}
+            {% if perms.references.view_inventory %}
             <li class="nav-item">
                 <a href="{% url 'references:inventory-list' %}"
                 class="nav-link {% if 'references/inventory' in request.path %}active{% endif %}">
@@ -43,7 +43,7 @@
             </li>
             {% endif %}
 
-            {% if perms.references.add_service %}
+            {% if perms.references.view_service %}
             <li class="nav-item">
                 <a href="{% url 'references:service-list' %}"
                 class="nav-link {% if 'references/service' in request.path %}active{% endif %}">

@@ -4,14 +4,18 @@
 {% block content %}
     <div class="container">
         <h3>Мероприятия</h3>
-        <a href="{% url 'references:event_template_create' %}" class="btn btn-primary mb-3">Добавить мероприятие</a>
+        {% if perms.references.add_eventtemplate %}
+            <a href="{% url 'references:event_template_create' %}" class="btn btn-primary mb-3">Добавить мероприятие</a>
+        {% endif %}
         <table class="table table-striped">
             <thead>
             <tr>
                 <th>Название</th>
                 <th>Логотип</th>
                 <th>Описание</th>
-                <th></th>
+                {% if perms.references.change_eventtemplate %}
+                    <th></th>
+                {% endif %}
             </tr>
             </thead>
             <tbody>
@@ -30,8 +34,12 @@
                     </td>
                     <td>{{ template.description }}</td>
                     <td>
-                        <a href="{% url 'references:event_template_update' template.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i></a>
-                        <a href="{% url 'references:event_template_delete' template.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i></a>
+                        {% if perms.references.change_eventtemplate %}
+                            <a href="{% url 'references:event_template_update' template.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i></a>
+                        {% endif %}
+                        {% if perms.references.delete_eventtemplate %}
+                            <a href="{% url 'references:event_template_delete' template.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i></a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
