@@ -557,7 +557,7 @@ def services_report(request):
     form = ServiceReportForm(request.GET or None)
 
     if form.is_valid():
-        report_data, services, dates = get_services_report_data(form)
+        report_data, services, dates, total_by_service = get_services_report_data(form)
 
         # Paginate services
         paginator = Paginator(list(services.keys()), 10)
@@ -567,12 +567,19 @@ def services_report(request):
         # Summary calculations (across all dates and services)
         summary = defaultdict(lambda: {'total_amount': 0, 'total_count': 0})
 
+        # Переменные для хранения общих итогов
+        total_summary = {'total_amount': 0, 'total_count': 0}
+
         for service_id in page_obj.object_list:
             if service_id in report_data:
                 date_data = report_data[service_id]
                 for date, data in date_data.items():
                     summary[date]['total_amount'] += data['amount']
                     summary[date]['total_count'] += data['count']
+
+                # Добавляем итоговые значения для всех услуг
+                total_summary['total_amount'] += total_by_service[service_id]['total_amount']
+                total_summary['total_count'] += total_by_service[service_id]['total_count']
 
         # Преобразуем summary в OrderedDict, отсортированный по ключу (дате)
         summary = OrderedDict(sorted(summary.items()))
@@ -582,6 +589,8 @@ def services_report(request):
         dates = []
         services = {}
         summary = {}
+        total_by_service = {}
+        total_summary = {'total_amount': 0, 'total_count': 0}
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
 
     context = {
@@ -591,6 +600,8 @@ def services_report(request):
         'dates': dates,
         'services': services,
         'summary': summary,
+        'total_by_service': total_by_service,  # Передаем итоги по услугам
+        'total_summary': total_summary,  # Передаем общие итоги
     }
 
     return render(request, 'reports/service_report.html', context)

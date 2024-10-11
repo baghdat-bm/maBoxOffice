@@ -202,13 +202,24 @@ def get_services_report_data(form):
 
     # Prepare the report data
     report_data = defaultdict(lambda: defaultdict(lambda: {'amount': 0, 'count': 0}))
+    total_by_service = defaultdict(lambda: {'total_amount': 0, 'total_count': 0})
+
     dates = sorted({entry['ticket_sale__date'] for entry in grouped_data})
     services = {entry['service__id']: entry['service__name'] for entry in grouped_data}
 
     for entry in grouped_data:
-        report_data[entry['service__id']][entry['ticket_sale__date']] = {
-            'amount': entry['total_amount'],
-            'count': entry['total_count']
+        service_id = entry['service__id']
+        date = entry['ticket_sale__date']
+        amount = entry['total_amount']
+        count = entry['total_count']
+
+        report_data[service_id][date] = {
+            'amount': amount,
+            'count': count
         }
 
-    return report_data, services, dates
+        # Считаем итоги по всем датам для каждой услуги
+        total_by_service[service_id]['total_amount'] += amount
+        total_by_service[service_id]['total_count'] += count
+
+    return report_data, services, dates, total_by_service

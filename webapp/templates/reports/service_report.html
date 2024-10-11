@@ -94,12 +94,15 @@
                 {% for date in dates %}
                     <th colspan="2">{{ date|date:"d.m.Y" }}</th>
                 {% endfor %}
+                <th colspan="2">Итого</th> <!-- Добавляем заголовок для итогов -->
             </tr>
             <tr>
                 {% for date in dates %}
                     <th>кол-во</th>
                     <th>сумма</th>
                 {% endfor %}
+                <th>кол-во</th> <!-- Количество итогов -->
+                <th>сумма</th> <!-- Сумма итогов -->
             </tr>
         </thead>
         <tbody>
@@ -117,14 +120,19 @@
                             {% endwith %}
                         {% endwith %}                        
                     {% endfor %}
+                    <!-- Итоговые значения по услуге -->
+                    {% with totals=total_by_service|get_item:service_id %}
+                        <td><strong>{{ totals.total_count }}</strong></td>
+                        <td><strong>{{ totals.total_amount }}</strong></td>
+                    {% endwith %}
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="{{ dates|length|multiply:2|add:"2" }}">Нет данных для отображения.</td>
+                    <td colspan="{{ dates|length|multiply:2|add:"4" }}">Нет данных для отображения.</td>
                 </tr>
             {% endfor %}
         </tbody>
-        <!-- Итоговая строка -->
+        <!-- Итоговая строка для всего отчета -->
         <tfoot>
             <tr>
                 <td colspan="2"><strong>Итого:</strong></td>
@@ -136,6 +144,8 @@
                         <strong>{{ data.total_amount }}</strong>
                     </td>
                 {% endfor %}
+                <td><strong>{{ total_summary.total_count }}</strong></td> <!-- Итоги по всем услугам -->
+                <td><strong>{{ total_summary.total_amount }}</strong></td> <!-- Итоги по всем услугам -->
             </tr>
         </tfoot>
     </table>
