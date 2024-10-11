@@ -68,13 +68,14 @@
             const ip_address = document.getElementById('ip_address').value;
             const username = document.getElementById('username').value;
             const port = document.getElementById('port').value;
+            const use_https = document.getElementById('use_https').checked;
 
             if (!ip_address || !username || !port) {
                 alert('Необходимо заполнить IP-адрес, port и имя пользователя.');
                 return;
             }
 
-            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&app_type=TS`;
+            const url = `/ticket-sales/register-terminal/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&app_type=TS&use_https=${use_https}`;
 
             fetch(url)
                 .then(response => response.json())
@@ -104,6 +105,7 @@
             const username = document.getElementById('username').value;
             const port = document.getElementById('port').value;
             const refreshToken = document.getElementById('refresh_token').value;
+            const use_https = document.getElementById('use_https').checked;
 
             if (!ip_address || !username) {
                 alert('Необходимо заполнить IP-адрес, port и имя пользователя.');
@@ -115,7 +117,7 @@
                 return;
             }
 
-            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&refresh_token=${refreshToken}&app_type=TS`;
+            const url = `/ticket-sales/refresh-terminal-token/?ip_address=${encodeURIComponent(ip_address)}&username=${encodeURIComponent(username)}&port=${encodeURIComponent(port)}&refresh_token=${refreshToken}&app_type=TS&use_https=${use_https}`;
 
             fetch(url)
                 .then(response => response.json())

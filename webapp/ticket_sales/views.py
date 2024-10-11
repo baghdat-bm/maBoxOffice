@@ -752,7 +752,7 @@ def terminal_settings_terminal(request):
 def register_terminal(request):
     ip_address = request.GET.get('ip_address')
     port = request.GET.get('port')
-    use_https = request.POST.get('use_https') == 'on'
+    use_https = request.GET.get('use_https') == 'true'
     username = request.GET.get('username')
     app_type = request.GET.get('app_type')
 
@@ -804,7 +804,7 @@ def register_terminal(request):
 def refresh_terminal_token(request):
     ip_address = request.GET.get('ip_address')
     port = request.GET.get('port')
-    use_https = request.POST.get('use_https') == 'on'
+    use_https = request.POST.get('use_https') == 'true'
     app_type = request.GET.get('app_type')
     username = request.GET.get('username')
     refresh_token = request.GET.get('refresh_token')
