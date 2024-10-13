@@ -1,13 +1,13 @@
 import uuid
-
+from django.utils import timezone
 from django.db.models import Sum
-
-from ticket_sales.helpers import get_num_val
-from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, TicketSale
 from django.db import models
 import requests
 from django.core.cache import cache
 from datetime import datetime
+
+from ticket_sales.helpers import get_num_val
+from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, TicketSale
 
 
 def update_ticket_amount(ticket_sale):
@@ -46,6 +46,16 @@ def get_terminal_settings(app_type='CS'):
                 'expiration_date': first_item.expiration_date
             }
             cache.set(f"terminal_settings_{app_type}", data, 300)
+
+    # Проверяем, если настройки были найдены и не истек ли токен
+    if data and data['expiration_date']:
+        expiration_date = data['expiration_date']
+        if expiration_date <= timezone.now():
+            # Получаем объект настроек терминала для обновления токена
+            terminal_settings = TerminalSettings.objects.filter(app_type=app_type).first()
+            if terminal_settings:
+                update_terminal_token(terminal_settings)
+
     if not data:
         return None
     return data
@@ -94,6 +104,9 @@ def update_terminal_token(terminal_settings):
                     expiration_date=expiration_date,
                 )
             settings.save()
+            terminal_settings['accessToken'] = data['accessToken']
+            terminal_settings['refresh_token'] = data['refreshToken']
+            terminal_settings['expiration_date'] = expiration_date
             return {'status': 200, 'data': data}
 
         elif response.status_code == 500:
