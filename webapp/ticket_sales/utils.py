@@ -61,7 +61,8 @@ def get_terminal_settings(app_type='CS'):
                     'username': first_item.username,
                     'access_token': first_item.access_token,
                     'refresh_token': first_item.refresh_token,
-                    'expiration_date': first_item.expiration_date
+                    'expiration_date': first_item.expiration_date,
+                    'app_type': app_type
                 }
                 update_terminal_token(data)
 
