@@ -52,9 +52,18 @@ def get_terminal_settings(app_type='CS'):
         expiration_date = data['expiration_date']
         if expiration_date <= timezone.now():
             # Получаем объект настроек терминала для обновления токена
-            terminal_settings = TerminalSettings.objects.filter(app_type=app_type).first()
-            if terminal_settings:
-                update_terminal_token(terminal_settings)
+            first_item = TerminalSettings.objects.filter(app_type=app_type).first()
+            if first_item:
+                data = {
+                    'ip_address': first_item.ip_address,
+                    'port': first_item.port,
+                    'use_https': first_item.use_https,
+                    'username': first_item.username,
+                    'access_token': first_item.access_token,
+                    'refresh_token': first_item.refresh_token,
+                    'expiration_date': first_item.expiration_date
+                }
+                update_terminal_token(data)
 
     if not data:
         return None
