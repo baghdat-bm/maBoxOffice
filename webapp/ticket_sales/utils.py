@@ -78,6 +78,8 @@ def update_terminal_token(terminal_settings):
     protocol = 'https' if use_https else 'http'
     url = f"{protocol}://{ip_address}:{port}/v2/revoke?name={username}&refreshToken={refresh_token}"
 
+    print('refreshToken url>>>>>')
+    print(url)
     try:
         response = requests.get(url, timeout=40, verify=False)
 
