@@ -62,12 +62,12 @@ def get_terminal_settings(app_type='CS'):
 
 
 def update_terminal_token(terminal_settings):
-    ip_address = terminal_settings['ip_address']
-    port = terminal_settings['port']
-    use_https = terminal_settings['use_https']
-    username = terminal_settings['username']
-    refresh_token = terminal_settings['refresh_token']
-    app_type = terminal_settings['app_type']
+    ip_address = terminal_settings.ip_address
+    port = terminal_settings.port
+    use_https = terminal_settings.use_https
+    username = terminal_settings.username
+    refresh_token = terminal_settings.refresh_token
+    app_type = terminal_settings.app_type
 
     if not ip_address or not username:
         return {'error': 'Terminal IP address or Username are not provided.', 'status': 400}
@@ -109,9 +109,9 @@ def update_terminal_token(terminal_settings):
                     expiration_date=expiration_date,
                 )
             settings.save()
-            terminal_settings['accessToken'] = data['accessToken']
-            terminal_settings['refresh_token'] = data['refreshToken']
-            terminal_settings['expiration_date'] = expiration_date
+            terminal_settings.access_token = data['accessToken']
+            terminal_settings.refresh_token = data['refreshToken']
+            terminal_settings.expiration_date = expiration_date
             return {'status': 200, 'data': data}
 
         elif response.status_code == 500:
