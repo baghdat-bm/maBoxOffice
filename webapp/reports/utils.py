@@ -169,7 +169,7 @@ def get_ticket_report_data(form):
             F('ticket_sale__id'), Value('-'), F('number'),
             output_field=CharField()
         )
-    ).order_by('-event_date', '-event_time', '-ticket_number')
+    ).order_by('-ticket_sale__id', '-ticket_number', '-event_date', '-event_time')
 
     return tickets
 

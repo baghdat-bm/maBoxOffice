@@ -128,6 +128,9 @@
                 <th>Дата и время брони</th>
                 <th>Номер чек оплаты</th>
                 <th>Номер телефона клиента</th>
+                <th>Дата и время оплаты</th>
+                <th>Статус билета</th>
+                <th>Дата и время активации</th>
                 <th>Скачать билет</th>
             </tr>
             </thead>
@@ -161,6 +164,21 @@
                     {% else %}
                         <td></td>
                     {% endif %}
+                    <td>{{ ticket.payment.payment_date }}</td>
+                    <td>
+                        {% if ticket.last_event_code == '' %}
+                            не активирован
+                        {% else %}
+                            активирован
+                        {% endif %}
+                    </td>
+                    <td>                        
+                        {% if ticket.activated_date %}
+                            {{ ticket.activated_date }}
+                        {% else %}
+                            
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="#" class="btn btn-outline-secondary" 
                            onclick="generatePdfOnJs({{ ticket.id }})">Скачать</a>
