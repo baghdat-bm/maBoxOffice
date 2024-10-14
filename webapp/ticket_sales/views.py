@@ -3,6 +3,8 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 from collections import defaultdict
+
+from django.core.cache import cache
 from django.db.models import Sum, Q, F
 from django.utils import timezone
 import re
@@ -811,7 +813,7 @@ def refresh_terminal_token(request):
 
     terminal_settings = get_terminal_settings(app_type)
     if not terminal_settings:
-        terminal_settings = TerminalSettings(
+        TerminalSettings(
             app_type=app_type,
             ip_address=ip_address,
             port=port,
@@ -820,6 +822,8 @@ def refresh_terminal_token(request):
             access_token='',
             refresh_token=refresh_token
         )
+        cache.delete(f"terminal_settings_{app_type}")
+        terminal_settings = get_terminal_settings(app_type)
 
     result = update_terminal_token(terminal_settings)
     if result['status'] == 200:
