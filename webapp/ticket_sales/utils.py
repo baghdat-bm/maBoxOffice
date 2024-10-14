@@ -69,14 +69,17 @@ def update_terminal_token(terminal_settings):
     refresh_token = terminal_settings['refresh_token']
     app_type = terminal_settings['app_type']
 
-    if not ip_address or not username or not port:
-        return {'error': 'Terminal IP address, Port and Username are not provided.', 'status': 400}
+    if not ip_address or not username:
+        return {'error': 'Terminal IP address or Username are not provided.', 'status': 400}
+
+    if not port or not refresh_token:
+        return {'error': 'Port or refresh token are not provided.', 'status': 400}
 
     protocol = 'https' if use_https else 'http'
     url = f"{protocol}://{ip_address}:{port}/v2/revoke?name={username}&refreshToken={refresh_token}"
 
     try:
-        response = requests.get(url, timeout=10, verify=False)
+        response = requests.get(url, timeout=40, verify=False)
 
         if response.status_code == 200:
             response_data = response.json()
