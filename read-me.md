@@ -32,3 +32,6 @@
 - print.print_footercenter
 - print.print_footerright
 ### Установите значение для всех этих параметров пустые строки
+
+## ModelTracker library:
+https://github.com/mkalioby/ModelTracker/tree/master

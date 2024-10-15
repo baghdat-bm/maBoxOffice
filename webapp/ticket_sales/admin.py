@@ -3,6 +3,7 @@ from import_export.admin import ImportExportActionModelAdmin
 from djangoql.admin import DjangoQLSearchMixin
 from rangefilter.filters import DateRangeFilterBuilder
 
+from records.admin import LoggableAdmin
 from .models import TicketSale, TicketSalesService, TicketSalesPayments, TerminalSettings, \
     TicketSalesTicket, TicketSalesBooking, AppSettings
 
@@ -15,7 +16,7 @@ class TicketSalesServiceInline(admin.StackedInline):
         'discount', 'total_amount', 'paid_amount')
 
 
-class TicketSalesServiceAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+class TicketSalesServiceAdmin(LoggableAdmin):
     model = TicketSalesService
     list_display = ('id', 'event_date', 'event_time', 'tickets_count', 'total_amount', 'paid_amount')
     list_filter = (("ticket_sale__date", DateRangeFilterBuilder()), 'ticket_sale__sale_type', 'event', 'service',)
@@ -29,7 +30,7 @@ class TicketSalesPaymentsInline(admin.StackedInline):
     extra = 0
 
 
-class TicketSalesPaymentsAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+class TicketSalesPaymentsAdmin(LoggableAdmin):
     model = TicketSalesPayments
     list_display = ('id', 'payment_date', 'payment_method', 'amount', 'refund_amount', 'transaction_id', 'process_id',)
     list_filter = (("ticket_sale__date", DateRangeFilterBuilder()), 'ticket_sale__sale_type', 'payment_method')
@@ -47,7 +48,7 @@ class TicketSalesTicketInline(admin.StackedInline):
               'last_event_code', 'activated_date', 'process_id', 'is_refund', 'refund_amount')
 
 
-class TicketSalesTicketAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+class TicketSalesTicketAdmin(LoggableAdmin):
     model = TicketSalesTicket
     list_display = ('id', 'number', 'event_date', 'event_time', 'payment_method', 'amount', 'refund_amount')
     list_filter = (("ticket_sale__date", DateRangeFilterBuilder()), 'ticket_sale__sale_type', 'event', 'service',)
@@ -56,7 +57,7 @@ class TicketSalesTicketAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
         return False
 
 
-class TicketSaleAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+class TicketSaleAdmin(LoggableAdmin):
     model = TicketSale
     list_display = ('id', 'date', 'amount', 'paid_amount', 'refund_amount', 'tickets_count', 'status', 'sale_type')
     list_display_links = ('id', 'date')
@@ -64,7 +65,7 @@ class TicketSaleAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
     list_filter = (("date", DateRangeFilterBuilder()), 'status', 'sale_type')
 
 
-class TerminalSettingsAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin):
+class TerminalSettingsAdmin(LoggableAdmin):
     model = TerminalSettings
     list_display = ('username', 'ip_address', 'port', 'refresh_token', 'expiration_date', 'app_type')
     search_fields = ('username', 'ip_address')
@@ -86,7 +87,7 @@ class TicketSalesBookingAdmin(DjangoQLSearchMixin, ImportExportActionModelAdmin)
     search_fields = ('service__name', 'event__name')
 
 
-class AppSettingsAdmin(admin.ModelAdmin):
+class AppSettingsAdmin(LoggableAdmin):
     model = AppSettings
 
     def has_add_permission(self, request):

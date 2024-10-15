@@ -1,7 +1,7 @@
 from django.urls import path
 
 from ticket_sales.api import TicketCheckView, AvailableDatesView, EventsListView, ServicesListView, \
-    CreateTicketSaleAPIView, PaymentDataView
+    CreateTicketSaleAPIView, PaymentDataView, AppConfigsView
 
 app_name = 'ticket_sales_api'
 
@@ -12,4 +12,5 @@ urlpatterns = [
     path('ticket-check/', TicketCheckView.as_view(), name='ticket-check'),
     path('create-tickets/', CreateTicketSaleAPIView.as_view(), name='create-tickets'),
     path('payment-info/', PaymentDataView.as_view(), name='payment-info'),
+    path('app-configs/', AppConfigsView.as_view(), name='app-configs'),
 ]

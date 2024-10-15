@@ -4,7 +4,7 @@ from django.db.models import Sum, Q
 from collections import defaultdict
 
 from references.models import Event, EventTimes, EventTemplateServices
-from ticket_sales.models import TicketSalesService
+from ticket_sales.models import TicketSalesService, AppSettings
 
 
 # Функция для проверки, включен ли день недели для данного мероприятия
@@ -248,3 +248,11 @@ def get_available_services(event_id, date, sale_types):
             return list(services_data.values())
     return []
 
+
+def get_app_configs():
+    app_configs = AppSettings.objects.first()
+    if app_configs:
+        return {"full_exit_before_min": app_configs.full_exit_before_min,
+                "full_exit_after_min": app_configs.full_exit_after_min}
+    return {"full_exit_before_min": 0,
+                "full_exit_after_min": 0}

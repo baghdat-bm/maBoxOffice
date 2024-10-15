@@ -17,6 +17,7 @@ class Reports(models.Model):
             ("access_ticket_check", "Доступ к методу ticket-check"),
             ("access_create_tickets", "Доступ к методу create-tickets"),
             ("access_payment_info", "Доступ к методу payment-info"),
+            ("access_app_configs", "Доступ к методу app-configs"),
             # права на приложения
             ("access_cs_app", "Доступ к приложению Касса"),
             ("access_ts_app", "Доступ к приложению Кисок"),
@@ -53,3 +54,8 @@ class HasCreateTicketsPermission(BasePermission):
 class HasPaymentInfoPermission(BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('reports.access_payment_info')
+
+
+class HasAppConfigsPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('reports.access_app_configs')

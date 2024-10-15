@@ -98,6 +98,8 @@ class TicketSaleSerializer(serializers.Serializer):
         email = validated_data.get('email')
         phone = validated_data.get('phone')
         tickets_data = validated_data.get('tickets')
+        # Получаем текущего пользователя из контекста
+        user = self.context['request'].user
 
         # Создаем новый заказ
         booking_begin_date = timezone.now()
@@ -141,7 +143,7 @@ class TicketSaleSerializer(serializers.Serializer):
         # Обновляем общую сумму заказа
         ticket_sale.amount = total_amount
         ticket_sale.tickets_count = tickets_count
-        ticket_sale.save()
+        ticket_sale.save(user=user, update_date=True)
 
         # Запуск фоновой задачи через 20 минут
         # check_booking_expiration.apply_async((ticket_sale.id,), countdown=1200)  # 1200 секунд = 20 минут

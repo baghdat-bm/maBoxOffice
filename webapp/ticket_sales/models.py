@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 import uuid
 import enum
 
+from records.models import LoggableModelMixin
 from references.models import Service, Event, Inventory
 from ticket_sales.helpers import get_num_val
 
@@ -49,7 +50,7 @@ class PaymentMethods(enum.Enum):
         return [(key.value[0], key.value[1]) for key in cls]
 
 
-class TicketSale(models.Model):
+class TicketSale(LoggableModelMixin, models.Model):
     date = models.DateField(default=timezone.now, verbose_name="Дата")
     time = models.TimeField(verbose_name="Время", blank=True, null=True)
     amount = models.IntegerField(verbose_name="Сумма итого", blank=True, default=0)
@@ -110,7 +111,7 @@ class TicketSale(models.Model):
         super(TicketSale, self).save(*args, **kwargs)
 
 
-class TicketSalesService(models.Model):
+class TicketSalesService(LoggableModelMixin, models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     event = models.ForeignKey(Event, on_delete=models.PROTECT, verbose_name="Мероприятие")
@@ -132,7 +133,7 @@ class TicketSalesService(models.Model):
         ordering = ['-id']
 
 
-class TicketSalesPayments(models.Model):
+class TicketSalesPayments(LoggableModelMixin, models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     payment_date = models.DateTimeField(verbose_name="Дата оплаты")
     payment_method = models.CharField(
@@ -166,7 +167,7 @@ class TicketSalesPayments(models.Model):
         ordering = ['-id']
 
 
-class TicketSalesTicket(models.Model):
+class TicketSalesTicket(LoggableModelMixin, models.Model):
     ticket_sale = models.ForeignKey(TicketSale, on_delete=models.CASCADE, verbose_name="Заказ")
     service = models.ForeignKey(Service, on_delete=models.PROTECT, verbose_name="Услуга")
     payment = models.ForeignKey(TicketSalesPayments, on_delete=models.PROTECT, verbose_name="Платеж", blank=True,
@@ -220,7 +221,7 @@ class TicketSalesBooking(models.Model):
         ordering = ['-id']
 
 
-class TerminalSettings(models.Model):
+class TerminalSettings(LoggableModelMixin, models.Model):
     ip_address = models.GenericIPAddressField(verbose_name="IP Address")
     port = models.CharField(max_length=7, verbose_name="Port (8080)", default='8080')
     username = models.CharField(max_length=150, verbose_name="Username")
@@ -260,12 +261,18 @@ class TerminalSettings(models.Model):
         return f"Terminal settings for {self.username} to {self.ip_address} for {self.get_app_type_display()}"
 
 
-class AppSettings(models.Model):
+class AppSettings(LoggableModelMixin, models.Model):
     print_immediately = models.BooleanField(verbose_name='В киоске печать сразу отправлять на принтер', default=False)
     minutes_before = models.PositiveSmallIntegerField(verbose_name="Допустимое количество минут до начала сеанса",
                                                       default=10)
     minutes_after = models.PositiveSmallIntegerField(verbose_name="Допустимое количество минут после окончания сеанса",
                                                      default=10)
+    full_exit_before_min = models.PositiveSmallIntegerField(
+        verbose_name="Количество минут для свободного выхода до завершения сеанса",
+        default=10)
+    full_exit_after_min = models.PositiveSmallIntegerField(
+        verbose_name="Количество минут для свободного выхода после завершения сеанса",
+        default=10)
 
     class Meta:
         verbose_name = 'Настройки приложения'

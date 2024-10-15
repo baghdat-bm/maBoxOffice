@@ -57,7 +57,8 @@ def create_ticket_sale_cashier(request):
                                             time=current_date.time())
 
     # Перенаправляем на страницу редактирования
-    return redirect(reverse('ticket_sales:ticket-sale-update', kwargs={'pk': ticket_sale.pk}))
+    return redirect(reverse('ticket_sales:ticket-sale-update',
+                            kwargs={'pk': ticket_sale.pk, 'user': request.user}))
 
 
 class TicketSaleUpdateView(PermissionRequiredMixin, UpdateView):
@@ -72,7 +73,8 @@ class TicketSaleUpdateView(PermissionRequiredMixin, UpdateView):
         current_date = datetime.now()
         form.instance.date = current_date.date()
         form.instance.time = current_date.time()
-        # Далее сохраняем форму
+        # Передаем пользователя в метод save
+        form.instance.save(user=self.request.user)
         return super().form_valid(form)
 
 
@@ -144,7 +146,7 @@ def create_ticket_sale_terminal(request):
             # Шаг 3: Создаем записи TicketSalesService для каждой брони
             for ticket in tickets:
                 booking = TicketSalesBooking.objects.get(id=ticket['id'])
-                TicketSalesService.objects.create(
+                ticket_sales_service = TicketSalesService(
                     ticket_sale=ticket_sale,
                     service_id=booking.service_id,
                     event_id=booking.event_id,
@@ -155,6 +157,9 @@ def create_ticket_sale_terminal(request):
                     tickets_amount=booking.tickets_amount,
                     total_amount=booking.total_amount
                 )
+                # Сохраняем объект с передачей пользователя
+                ticket_sales_service.save(user=request.user)
+
                 tickets_count += booking.tickets_count
 
             current_date = datetime.now()
@@ -162,7 +167,7 @@ def create_ticket_sale_terminal(request):
             ticket_sale.time = current_date.time()
             ticket_sale.amount = total_amount
             ticket_sale.tickets_count = tickets_count
-            ticket_sale.save()
+            ticket_sale.save(user=request.user)
 
             return JsonResponse({'status': 'created', 'ticket_sale_id': ticket_sale.id}, status=201)
 
@@ -215,6 +220,12 @@ class TicketSaleDeleteView(PermissionRequiredMixin, DeleteView):
         # Если заказ не оплачен, выполняем стандартное удаление
         return super().post(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        # Передаем пользователя в метод delete модели
+        self.object.delete(user=request.user)
+        messages.success(request, 'Заказ успешно удален.')
+        return redirect(self.success_url)
+
 
 @permission_required('ticket_sales.delete_ticketsale', raise_exception=True)
 def bulk_delete_ticket_sales(request):
@@ -224,7 +235,7 @@ def bulk_delete_ticket_sales(request):
         ids_count = len(ids)
         if ids_count > 0:
             # Ensure only unpaid orders are deleted
-            TicketSale.objects.filter(id__in=ids, paid_amount=0).delete()
+            TicketSale.objects.filter(id__in=ids, paid_amount=0).delete(user=request.user)
             messages.success(request, f'Удалено {ids_count} заказ(ов)')
         else:
             messages.warning(request, 'Не выбрано ни одного заказа')
@@ -241,7 +252,7 @@ def ticket_sale_create_view(request):
             # Создаем объект, но не сохраняем его в базе данных
             ticket_sale = form.save(commit=False)
             # Сохраняем объект в базе данных
-            ticket_sale.save(update_date=True)
+            ticket_sale.save(update_date=True, user=request.user)
             # Возвращаем JSON с информацией об ID для перенаправления в режим редактирования
             return JsonResponse({'redirect_url': reverse('ticket_sales:ticket-sale-update', args=[ticket_sale.id])})
     else:
@@ -260,7 +271,7 @@ def ticket_sale_update_view(request, pk):
             # Создаем объект, но не сохраняем его в базе данных
             ticket_sale = form.save(commit=False)
             # Сохраняем объект в базе данных
-            ticket_sale.save(update_date=True)
+            ticket_sale.save(update_date=True, user=request.user)
             return JsonResponse({'success': True})  # Возвращаем успешный ответ
     else:
         form = TicketSaleForm(instance=ticket_sale)
@@ -278,8 +289,8 @@ def ticket_sales_service_create(request, ticket_sale_id):
         if form.is_valid():
             service = form.save(commit=False)
             service.ticket_sale = ticket_sale
-            service.save()
-            update_ticket_amount(ticket_sale)
+            service.save(user=request.user)
+            update_ticket_amount(request, ticket_sale)
 
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html', {'ticket_sale': ticket_sale})
     else:
@@ -295,8 +306,8 @@ def ticket_sales_service_update(request, ticket_sale_id, pk):
     if request.method == "POST":
         form = TicketSalesServiceForm(request.POST, instance=service)
         if form.is_valid():
-            form.save()
-            update_ticket_amount(service.ticket_sale)
+            form.save(user=request.user)
+            update_ticket_amount(request, service.ticket_sale)
 
             return render(request, 'ticket_sales/partials/ticket_sales_service_list.html',
                           {'ticket_sale': service.ticket_sale})
@@ -311,8 +322,8 @@ def ticket_sales_service_delete(request, ticket_sale_id, pk):
     service = get_object_or_404(TicketSalesService, id=pk, ticket_sale_id=ticket_sale_id)
     if request.method == "POST":
         ticket_sale = service.ticket_sale
-        service.delete()
-        update_ticket_amount(ticket_sale)
+        service.delete(user=request.user)
+        update_ticket_amount(request, ticket_sale)
 
         return render(request, 'ticket_sales/partials/ticket_sales_service_list.html',
                       {'ticket_sale': service.ticket_sale})
@@ -330,8 +341,8 @@ def ticket_sales_payments_create(request, ticket_sale_id):
         if form.is_valid():
             payment = form.save(commit=False)
             payment.ticket_sale = ticket_sale
-            payment.save()
-            update_ticket_paid_amount(ticket_sale)
+            payment.save(user=request.user)
+            update_ticket_paid_amount(request, ticket_sale)
             return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                           {'ticket_sale': ticket_sale})
     else:
@@ -347,8 +358,8 @@ def ticket_sales_payments_update(request, ticket_sale_id, pk):
     if request.method == "POST":
         form = TicketSalesPaymentsForm(request.POST, instance=payment)
         if form.is_valid():
-            form.save()
-            update_ticket_paid_amount(payment.ticket_sale)
+            form.save(user=request.user)
+            update_ticket_paid_amount(request, payment.ticket_sale)
             return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                           {'ticket_sale': payment.ticket_sale})
     else:
@@ -363,14 +374,14 @@ def ticket_sales_payments_delete(request, ticket_sale_id, pk):
         ticket_sale = payment.ticket_sale
         if payment.payment_method == "QR":
             ticket_sale.paid_qr -= payment.amount
-            ticket_sale.save()
+            ticket_sale.save(user=request.user)
         elif payment.payment_method == "CD":
             ticket_sale.paid_card -= payment.amount
-            ticket_sale.save()
+            ticket_sale.save(user=request.user)
         elif payment.payment_method == "CH":
             ticket_sale.paid_cash -= payment.amount
-            ticket_sale.save()
-        payment.delete()
+            ticket_sale.save(user=request.user)
+        payment.delete(user=request.user)
 
         return render(request, 'ticket_sales/partials/ticket_sales_payments_list.html',
                       {'ticket_sale': ticket_sale})
@@ -388,7 +399,7 @@ def payment_detail_view(request, ticket_sale_id, pk):
 @permission_required('ticket_sales.change_ticketsale', raise_exception=True)
 def payment_process_cashier(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
-    terminal = get_terminal_settings(app_type='CS')
+    terminal = get_terminal_settings(request, app_type='CS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -412,7 +423,7 @@ def payment_process_cashier(request, ticket_sale_id):
 @csrf_exempt
 def payment_process_terminal(request, ticket_sale_id):
     ticket_sale = TicketSale.objects.get(id=ticket_sale_id)
-    terminal = get_terminal_settings(app_type='TS')
+    terminal = get_terminal_settings(request, app_type='TS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -434,7 +445,7 @@ def payment_process_terminal(request, ticket_sale_id):
 
 
 def check_payment_status_cashier(request, process_id, ticket_sale_id):
-    terminal = get_terminal_settings(app_type='CS')
+    terminal = get_terminal_settings(request, app_type='CS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -471,11 +482,11 @@ def check_payment_status_cashier(request, process_id, ticket_sale_id):
 
                 new_payment.transaction_id = response_data['transactionId']
                 new_payment.response_data = response_data
-                new_payment.save()
+                new_payment.save(user=request.user)
 
-                ticket_sale.save()
+                ticket_sale.save(user=request.user)
 
-                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+                create_tickets_on_new_payment(request, ticket_sale, new_payment, new_payment.amount)
 
                 return JsonResponse({'status': 'success'})
             else:
@@ -490,7 +501,7 @@ def check_payment_status_cashier(request, process_id, ticket_sale_id):
 
 @csrf_exempt
 def check_payment_status_terminal(request, process_id, ticket_sale_id):
-    terminal = get_terminal_settings(app_type='TS')
+    terminal = get_terminal_settings(request, app_type='TS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -525,11 +536,11 @@ def check_payment_status_terminal(request, process_id, ticket_sale_id):
 
                 new_payment.transaction_id = response_data['transactionId']
                 new_payment.response_data = response_data
-                new_payment.save()
+                new_payment.save(user=request.user)
 
-                ticket_sale.save()
+                ticket_sale.save(user=request.user)
 
-                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+                create_tickets_on_new_payment(request, ticket_sale, new_payment, new_payment.amount)
                 bookings = TicketSalesBooking.objects.filter(booking_guid=ticket_sale.booking_guid)
                 bookings.delete()
 
@@ -553,16 +564,16 @@ def cash_payment_process(request, ticket_sale_id):
 
         # Обновляем значение поля paid_cash
         ticket_sale.paid_cash += paid_cash
-        ticket_sale.save()
+        ticket_sale.save(user=request.user)
 
         new_payment = TicketSalesPayments()
         new_payment.ticket_sale = ticket_sale
         new_payment.amount = paid_cash
         new_payment.payment_date = datetime.now()
         new_payment.payment_method = "CH"
-        new_payment.save()
+        new_payment.save(user=request.user)
 
-        create_tickets_on_new_payment(ticket_sale, new_payment, paid_cash)
+        create_tickets_on_new_payment(request, ticket_sale, new_payment, paid_cash)
 
         return JsonResponse({'status': 'success'})
 
@@ -585,7 +596,7 @@ def print_ticket_view(request, ticket_sale_id):
 
     if create_tickets:
         ticket_sale = TicketSale.objects.filter(id=ticket_sale_id).first()
-        create_tickets_on_new_payment(ticket_sale, None, 0)
+        create_tickets_on_new_payment(request, ticket_sale, None, 0)
         tickets = TicketSalesTicket.objects.filter(ticket_sale_id=ticket_sale_id, is_refund=False)
 
     data = {
@@ -691,7 +702,7 @@ def terminal_settings_cashier(request):
             settings.refresh_token = refresh_token
             settings.expiration_date = expiration_date
 
-        settings.save()
+        settings.save(user=request.user)
         messages.success(request, "Настройки сохранены.")
 
         return redirect('ticket_sales:terminal-settings-cashier')
@@ -739,7 +750,7 @@ def terminal_settings_terminal(request):
             settings.refresh_token = refresh_token
             settings.expiration_date = expiration_date
 
-        settings.save()
+        settings.save(user=request.user)
         messages.success(request, "Настройки сохранены.")
 
         return redirect('ticket_sales:terminal-settings-terminal')
@@ -792,7 +803,7 @@ def register_terminal(request):
                     refresh_token=data['refreshToken'],
                     expiration_date=expiration_date,
                 )
-            settings.save()
+            settings.save(user=request.user)
             messages.success(request, "Регистрация прошла успешно.")
             return JsonResponse({'status': 'success'})
         elif response.status_code == 500:
@@ -811,21 +822,21 @@ def refresh_terminal_token(request):
     username = request.GET.get('username')
     refresh_token = request.GET.get('refresh_token')
 
-    terminal_settings = get_terminal_settings(app_type)
+    terminal_settings = get_terminal_settings(request, app_type)
     if not terminal_settings:
-        TerminalSettings(
-            app_type=app_type,
-            ip_address=ip_address,
-            port=port,
-            use_https=use_https,
-            username=username,
-            access_token='',
-            refresh_token=refresh_token
-        )
+        # TerminalSettings(
+        #     app_type=app_type,
+        #     ip_address=ip_address,
+        #     port=port,
+        #     use_https=use_https,
+        #     username=username,
+        #     access_token='',
+        #     refresh_token=refresh_token
+        # )
         cache.delete(f"terminal_settings_{app_type}")
-        terminal_settings = get_terminal_settings(app_type)
+        terminal_settings = get_terminal_settings(request, app_type)
 
-    result = update_terminal_token(terminal_settings)
+    result = update_terminal_token(request, terminal_settings)
     if result['status'] == 200:
         messages.success(request, "Токен успешно обновлен.")
         return JsonResponse({'status': 'success'})
@@ -862,7 +873,7 @@ def refund_tickets(request, sale_id):
     if request.method == "POST":
         # Получаем заказ
         ticket_sale = get_object_or_404(TicketSale, pk=sale_id)
-        terminal = get_terminal_settings(ticket_sale.sale_type)
+        terminal = get_terminal_settings(request, ticket_sale.sale_type)
         if not terminal:
             return JsonResponse({'success': False, 'message': 'Не заданы настройки для терминала оплаты'},
                                 status=400)
@@ -964,7 +975,7 @@ def refund_tickets(request, sale_id):
 
                 else:  # Возврат наличной оплаты
                     payment.refund_amount += data['amount']
-                    payment.save()
+                    payment.save(user=request.user)
                     # Помечаем возвратные билеты
                     for ticket in data['tickets']:
                         ticket.refund_amount = ticket.amount
@@ -972,7 +983,7 @@ def refund_tickets(request, sale_id):
                         ticket.save()
                     # Обновляем сумму возврата в заказе
                     ticket_sale.refund_amount += data['amount']
-                    ticket_sale.save(update_date=False)
+                    ticket_sale.save(update_date=False, user=request.user)
 
             if len(errors) > 0:
                 message = str(errors)  # 'Произошла ошибка при выполнении возврата...'
@@ -1001,7 +1012,7 @@ def check_payment_refund_status(request, process_id, ticket_sale_id):
     print('>>> process_id >>>', process_id)
     print('>>> ticket_sale_id >>>', ticket_sale_id)
     ticket_sale = TicketSale.objects.get(id=int(ticket_sale_id))
-    terminal = get_terminal_settings(app_type=ticket_sale.sale_type)
+    terminal = get_terminal_settings(request, app_type=ticket_sale.sale_type)
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
@@ -1018,12 +1029,12 @@ def check_payment_refund_status(request, process_id, ticket_sale_id):
                 refund_payment.refund_amount += refund_amount
                 refund_payment.refund_transaction_id = response_data['transactionId']
                 refund_payment.response_data = response_data
-                refund_payment.save()
+                refund_payment.save(user=request.user)
 
                 ticket_sale.refund_amount += refund_amount
-                ticket_sale.save()
+                ticket_sale.save(user=request.user)
 
-                refund_tickets_on_refund(ticket_sale, refund_payment, refund_amount)
+                refund_tickets_on_refund(request, ticket_sale, refund_payment, refund_amount)
 
                 return JsonResponse({'status': 'success'})
             else:
@@ -1080,11 +1091,11 @@ def refund_payments(request, sale_id):
             for payment in payments:
                 refund_sum += payment.amount - payment.refund_amount
                 payment.refund_amount = payment.amount
-                payment.save()
+                payment.save(user=request.user)
 
             # Обновляем сумму возврата в заказе
             ticket_sale.refund_amount += refund_sum
-            ticket_sale.save()
+            ticket_sale.save(user=request.user)
 
             return JsonResponse({'success': True})
         except json.JSONDecodeError:
@@ -1168,7 +1179,7 @@ def ticket_sales_booking_delete(request, pk):
 def ticket_sales_create_discount_tickets(request, ticket_sale):
     if request.method == 'POST':
         try:
-            tickets_count = create_tickets_on_new_payment(ticket_sale, None, 0)
+            tickets_count = create_tickets_on_new_payment(request, ticket_sale, None, 0)
             return JsonResponse({'tickets_count': tickets_count, 'status': 'Ok'}, status=201)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)

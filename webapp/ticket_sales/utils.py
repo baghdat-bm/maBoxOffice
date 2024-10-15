@@ -10,7 +10,7 @@ from ticket_sales.helpers import get_num_val
 from ticket_sales.models import TicketSalesService, TicketSalesPayments, TerminalSettings, TicketSalesTicket, TicketSale
 
 
-def update_ticket_amount(ticket_sale):
+def update_ticket_amount(request, ticket_sale):
     # Получаем общие суммы для total_amount и tickets_count в одном запросе
     totals = TicketSalesService.objects.filter(
         ticket_sale=ticket_sale).aggregate(
@@ -21,17 +21,17 @@ def update_ticket_amount(ticket_sale):
     # Устанавливаем значения для ticket_sale
     ticket_sale.amount = totals['total_amount'] or 0
     ticket_sale.tickets_count = totals['total_tickets'] or 0
-    ticket_sale.save(update_date=True)
+    ticket_sale.save(update_date=True, user=request.user)
 
 
-def update_ticket_paid_amount(ticket_sale):
+def update_ticket_paid_amount(request, ticket_sale):
     total_amount = TicketSalesPayments.objects.filter(
         ticket_sale=ticket_sale).aggregate(total=models.Sum('amount'))['total'] or 0
     ticket_sale.paid_amount = total_amount
-    ticket_sale.save()
+    ticket_sale.save(user=request.user)
 
 
-def get_terminal_settings(app_type='CS'):
+def get_terminal_settings(request, app_type='CS'):
     data = cache.get(f"terminal_settings_{app_type}")
     if data is None:
         first_item = TerminalSettings.objects.filter(app_type=app_type).first()
@@ -64,14 +64,14 @@ def get_terminal_settings(app_type='CS'):
                     'expiration_date': first_item.expiration_date,
                     'app_type': app_type
                 }
-                update_terminal_token(data)
+                update_terminal_token(request, data)
 
     if not data:
         return None
     return data
 
 
-def update_terminal_token(terminal_settings):
+def update_terminal_token(request, terminal_settings):
     ip_address = terminal_settings['ip_address']
     port = terminal_settings['port']
     use_https = terminal_settings['use_https']
@@ -118,7 +118,7 @@ def update_terminal_token(terminal_settings):
                     refresh_token=data['refreshToken'],
                     expiration_date=expiration_date,
                 )
-            settings.save()
+            settings.save(user=request.user)
             terminal_settings['access_token'] = data['accessToken']
             terminal_settings['refresh_token'] = data['refreshToken']
             terminal_settings['expiration_date'] = expiration_date
@@ -132,7 +132,7 @@ def update_terminal_token(terminal_settings):
         return {'error': f'Connection error: {str(e)}', 'status': 500}
 
 
-def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
+def create_tickets_on_new_payment(request, ticket_sale, new_payment, paid_sum):
     # Variable for ticket numbering
     curr_num = TicketSalesTicket.objects.filter(ticket_sale=ticket_sale).count()
     services = TicketSalesService.objects.filter(ticket_sale=ticket_sale)
@@ -169,14 +169,14 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
             paid_amount = payment_amount + min(paid_sum, payment_sum)
             if service.paid_amount != paid_amount:
                 service.paid_amount = paid_amount
-                service.save()
+                service.save(user=request.user)
 
             # Create additional tickets based on the remaining tickets and amount
             for _ in range(tickets_to_create):
                 curr_num += 1
                 ticket_amount = remaining_amount // tickets_to_create  # Equal distribution of remaining amount
                 try:
-                    new_ticket = TicketSalesTicket.objects.create(
+                    new_ticket = TicketSalesTicket(
                         ticket_sale=ticket_sale,
                         service=service.service,
                         event=service.event,
@@ -188,6 +188,7 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
                         number=curr_num,
                         payment=new_payment
                     )
+                    new_ticket.save(user=request.user)
                     created_tickets.append(new_ticket)
                 except Exception as e:
                     print('>>>>>>> error:', e.__str__())
@@ -196,14 +197,14 @@ def create_tickets_on_new_payment(ticket_sale, new_payment, paid_sum):
         ticket_sale.tickets_count = curr_num
         if paid_sum == 0 and ticket_sale.paid_amount == 0:
             ticket_sale.status = 'IS'
-            ticket_sale.save(update_status=False)
+            ticket_sale.save(update_status=False, user=request.user)
         else:
-            ticket_sale.save()
+            ticket_sale.save(user=request.user)
 
     return curr_num
 
 
-def refund_tickets_on_refund(ticket_sale, refund_payment, refund_amount):
+def refund_tickets_on_refund(request, ticket_sale, refund_payment, refund_amount):
     tickets = TicketSalesTicket.objects.filter(ticket_sale=ticket_sale, payment=refund_payment)
     tickets_count = 0
     refund_amount_remain = refund_amount
@@ -212,7 +213,7 @@ def refund_tickets_on_refund(ticket_sale, refund_payment, refund_amount):
         ticket_refund_amount = min(ticket.amount - ticket.refund_amount, refund_amount)
         ticket.refund_amount += ticket_refund_amount
         ticket.is_refund = True
-        ticket.save()
+        ticket.save(user=request.user)
         ticket_ids.append(ticket.id)
         refund_amount_remain -= ticket_refund_amount
         tickets_count += 1
@@ -220,6 +221,6 @@ def refund_tickets_on_refund(ticket_sale, refund_payment, refund_amount):
             break
 
     ticket_sale.refund_amount += refund_amount - refund_amount_remain
-    ticket_sale.save(update_date=False)
+    ticket_sale.save(update_date=False, user=request.user)
 
     return ticket_ids

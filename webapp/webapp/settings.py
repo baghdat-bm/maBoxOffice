@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "references.apps.ReferencesConfig",
     "ticket_sales.apps.TicketSalesConfig",
     "reports.apps.ReportsConfig",
+    "records.apps.RecordsConfig",
 ]
 
 MIDDLEWARE = [

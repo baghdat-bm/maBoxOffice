@@ -13,11 +13,11 @@ from drf_yasg import openapi
 from datetime import timedelta
 
 from reports.models import HasAvailableEventDatesPermission, HasTicketCheckPermission, HasEventsListPermission, \
-    HasServicesListPermission, HasCreateTicketsPermission, HasPaymentInfoPermission
+    HasServicesListPermission, HasCreateTicketsPermission, HasPaymentInfoPermission, HasAppConfigsPermission
 from .models import TicketSalesTicket, TicketSalesPayments, TicketSale, AppSettings
 from .serializers import TicketCheckSerializer, EventsListSerializer, ServiceListSerializer, TicketSaleSerializer, \
     PaymentDataSerializer
-from .ticket_sale_utils import get_available_events_dates, get_events_data, get_available_services
+from .ticket_sale_utils import get_available_events_dates, get_events_data, get_available_services, get_app_configs
 from .utils import create_tickets_on_new_payment
 
 
@@ -90,7 +90,7 @@ class TicketCheckView(APIView):
         ticket.last_event_code = event_code
         if event_code == "1":
             ticket.activated_date = datetime.datetime.now()
-        ticket.save()
+        ticket.save(user=request.user)
 
         # Возвращаем успешный ответ
         return Response({'result': True}, status=HTTP_200_OK)
@@ -233,15 +233,23 @@ class PaymentDataView(APIView):
             else:
                 new_payment.error_text = {"reason": serializer.validated_data['reason'],
                                           "reasonCode": serializer.validated_data['reasonCode']}
-            new_payment.save()
+            new_payment.save(user=request.user)
 
             if new_payment.amount > 0:
                 ticket_sale.paid_amount += new_payment.amount
                 ticket_sale.paid_card += new_payment.amount
-                ticket_sale.save()
-                create_tickets_on_new_payment(ticket_sale, new_payment, new_payment.amount)
+                ticket_sale.save(user=request.user)
+                create_tickets_on_new_payment(request, ticket_sale, new_payment, new_payment.amount)
 
             return Response({'success': True}, status=status.HTTP_200_OK)
 
         return Response({'error': serializer.errors, 'success': False},
                         status=status.HTTP_400_BAD_REQUEST)
+
+
+class AppConfigsView(APIView):
+    permission_classes = [IsAuthenticated, HasAppConfigsPermission]
+
+    def get(self, request, *args, **kwargs):
+        app_configs = get_app_configs()
+        return Response({"app_configs": app_configs})
