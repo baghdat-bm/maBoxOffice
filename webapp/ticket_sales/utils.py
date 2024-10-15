@@ -97,8 +97,8 @@ def update_terminal_token(terminal_settings):
             response_data = response.json()
             data = response_data['data']
 
-            expiration_date = datetime.strptime(data['expirationDate'], '%b %d, %Y %H:%M:%S')
-
+            # expiration_date = datetime.strptime(data['expirationDate'], '%b %d, %Y %H:%M:%S')
+            expiration_date = datetime.strptime(data['expirationDate'], '%Y-%m-%d %H:%M:%S')
             settings = TerminalSettings.objects.filter(app_type=app_type).first()
             if settings:
                 settings.access_token = data['accessToken']
