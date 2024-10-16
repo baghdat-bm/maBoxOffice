@@ -1488,6 +1488,7 @@
             payModal.style.display = 'none';
 
             const kioskGuid = document.getElementById('kioskGuid').value;
+            const totalAmount = tickets.reduce((sum, ticket) => sum + ticket.total, 0);
 
             // Показ модального окна процесса оплаты
             showPaymentProgress('Начинаем обработку оплаты...');
@@ -1502,7 +1503,7 @@
                 body: JSON.stringify({
                     sale_type: 'TS',
                     tickets: tickets, // Передаем массив забронированных билетов
-                    totalAmount: tickets.reduce((sum, ticket) => sum + ticket.total, 0),
+                    totalAmount: totalAmount,
                     booking_guid: kioskGuid
                 })
             })
@@ -1531,7 +1532,7 @@
                     .then(data => {
                         if (data.status === 'wait') {
                             updatePaymentProgress('Обработка оплаты в терминале оплаты...', 50);
-                            checkPaymentStatus(data.process_id, ticketSaleId, 1);
+                            checkPaymentStatus(data.process_id, ticketSaleId, 1, totalAmount.toString());
                         } else {
                             throw new Error('Ошибка процесса оплаты: ' + data.error || 'неизвестная ошибка');
                         }
@@ -1561,7 +1562,7 @@
 
 
         // Функция проверки статуса оплаты
-        function checkPaymentStatus(processId, ticketSaleId, count) {
+        function checkPaymentStatus(processId, ticketSaleId, count, expectedAmount) {
             
             if (count === 20) {                
                 updatePaymentProgress('Не удалось выполнить оплату', 0);
@@ -1569,22 +1570,22 @@
                 return;
             }
             
-            fetch(`{% url 'ticket_sales:check-payment-status-terminal' process_id='$1' ticket_sale_id='$2' %}`
+            fetch(`{% url 'ticket_sales:check-payment-status-terminal' process_id='$1' ticket_sale_id='$2' expected_amount='$3' %}`
                 .replace('$1', processId)
-                .replace('$2', ticketSaleId))
+                .replace('$2', ticketSaleId)
+                .replace('$3', expectedAmount))
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'wait') {
                         updatePaymentProgress('Платеж обрабатывается...', 70);
-                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1), 1000);
+                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1, expectedAmount), 1000);
                     } else if (data.status === 'success') {
                         updatePaymentProgress('Заказ оплачен! Завершаем...', 100);
                         setTimeout(() => {
                             hidePaymentProgress(); // Закрытие модального окна через 0.5 секунды
                             // Формируем URL для перенаправления
                             const redirectUrlTemplate = "{% url 'ticket_sales:tickets-purchased' sale_id=0 %}";
-                            const redirectUrl = redirectUrlTemplate.replace(0, ticketSaleId);                            
-                            window.location.href = redirectUrl;
+                            window.location.href = redirectUrlTemplate.replace(0, ticketSaleId);                            
                         }, 500);
                     } else {
                        updatePaymentProgress(`Ошибка: ${data.error_text || 'Неизвестная ошибка'}`, 0);

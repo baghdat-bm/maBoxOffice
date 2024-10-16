@@ -411,7 +411,7 @@ def payment_process_cashier(request, ticket_sale_id):
         if response_data:
             if response.status_code == 200 and response_data['status'] == 'wait':
                 process_id = response_data['processId']
-                return JsonResponse({'status': 'wait', 'process_id': process_id})
+                return JsonResponse({'status': 'wait', 'process_id': process_id, 'expected_amount': str(ticket_sale.amount)})
         else:
             return JsonResponse({'status': 'fail'}, status=400)
     except Exception as e:
@@ -444,14 +444,14 @@ def payment_process_terminal(request, ticket_sale_id):
         return JsonResponse({'status': 'fail', 'error': error}, status=500)
 
 
-def check_payment_status_cashier(request, process_id, ticket_sale_id):
+def check_payment_status_cashier(request, process_id, ticket_sale_id, expected_amount):
     terminal = get_terminal_settings(request, app_type='CS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
         protocol = 'https' if terminal['use_https'] else 'http'
-        response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}',
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}&expected_amount={expected_amount}',
                                 headers=headers, verify=False, timeout=100)
         response_data = response.json()
         if response.status_code == 200:
@@ -500,14 +500,14 @@ def check_payment_status_cashier(request, process_id, ticket_sale_id):
 
 
 @csrf_exempt
-def check_payment_status_terminal(request, process_id, ticket_sale_id):
+def check_payment_status_terminal(request, process_id, ticket_sale_id, expected_amount):
     terminal = get_terminal_settings(request, app_type='TS')
     if not terminal:
         return JsonResponse({'status': 'fail', 'message': 'terminal is not set'}, status=400)
     try:
         headers = {'accesstoken': terminal['access_token']}
         protocol = 'https' if terminal['use_https'] else 'http'
-        response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}',
+        response = requests.get(f'{protocol}://{terminal['ip_address']}:{terminal['port']}/status?processId={process_id}&expected_amount={expected_amount}',
                                 headers=headers, verify=False, timeout=1000)
         response_data = response.json()
         if response.status_code == 200:

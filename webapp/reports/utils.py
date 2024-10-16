@@ -43,7 +43,8 @@ def get_filtered_sales_data(request, form_data):
         total_amount=Sum('amount'),
         cashier_paid_card=Sum(
             Case(
-                When(payment__payment_method='CD', ticket_sale__sale_type='CS', then=F('min_payment_amount')),
+                When(Q(payment__payment_method='CD') | Q(payment__payment_method='QR'), ticket_sale__sale_type='CS',
+                     then=F('min_payment_amount')),
                 default=Value(0),
                 output_field=IntegerField()
             )

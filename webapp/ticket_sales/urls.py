@@ -49,9 +49,11 @@ urlpatterns = [
     # Payment process
     path('payment-process/<int:ticket_sale_id>/', payment_process_cashier, name='payment-process'),
     path('payment-process-terminal/<int:ticket_sale_id>/', payment_process_terminal, name='payment-process-terminal'),
-    path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/', check_payment_status_cashier,
+    path('check-payment-status/<str:process_id>/<str:ticket_sale_id>/<str:expected_amount>',
+         check_payment_status_cashier,
          name='check-payment-status'),
-    path('check-payment-status-terminal/<str:process_id>/<str:ticket_sale_id>/', check_payment_status_terminal,
+    path('check-payment-status-terminal/<str:process_id>/<str:ticket_sale_id>/<str:expected_amount>/',
+         check_payment_status_terminal,
          name='check-payment-status-terminal'),
     path('cash-payment-process/<int:ticket_sale_id>/', cash_payment_process, name='cash-payment-process'),
 

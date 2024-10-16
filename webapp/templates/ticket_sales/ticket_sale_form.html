@@ -664,7 +664,7 @@
                     .then(data => {
                         if (data.status === 'wait') {
                             progressText.textContent = 'Проводим оплату...';
-                            checkPaymentStatus(data.process_id, ticketSaleId, 1);
+                            checkPaymentStatus(data.process_id, ticketSaleId, 1, data.expected_amount);
                         } else {
                             progressText.textContent = 'Ошибка соединения';
                             setTimeout(() => progressBar.classList.add('d-none'), 5000);
@@ -677,7 +677,7 @@
             })
         }
 
-        function checkPaymentStatus(processId, ticketSaleId, count) {
+        function checkPaymentStatus(processId, ticketSaleId, count, expectedAmount) {
             const progressBar = document.getElementById('main-progress-bar');
             const progressText = document.getElementById('progress-bar-text');
             if (count === 20) {
@@ -686,13 +686,14 @@
                 return;
             }
             
-            fetch(`{% url 'ticket_sales:check-payment-status' process_id='$1' ticket_sale_id='$2' %}`
+            fetch(`{% url 'ticket_sales:check-payment-status' process_id='$1' ticket_sale_id='$2' expected_amount='$3' %}`
                 .replace('$1', processId)
-                .replace('$2', ticketSaleId))
+                .replace('$2', ticketSaleId)
+                .replace('$3', expectedAmount))
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'wait') {
-                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1), 1000);
+                        setTimeout(() => checkPaymentStatus(processId, ticketSaleId, count+1, expectedAmount), 1000);
                     } else if (data.status === 'success') {
                         progressText.textContent = 'Заказ оплачен';
                         setTimeout(() => {
