@@ -59,7 +59,8 @@ class TicketSalesTicketAdmin(LoggableAdmin):
 
 class TicketSaleAdmin(LoggableAdmin):
     model = TicketSale
-    list_display = ('id', 'date', 'amount', 'paid_amount', 'refund_amount', 'tickets_count', 'status', 'sale_type')
+    list_display = ('id', 'date', 'amount', 'paid_amount', 'paid_cash', 'paid_card', 'paid_qr',
+                    'refund_amount', 'tickets_count', 'status', 'sale_type')
     list_display_links = ('id', 'date')
     inlines = (TicketSalesServiceInline, TicketSalesPaymentsInline, TicketSalesTicketInline)
     list_filter = (("date", DateRangeFilterBuilder()), 'status', 'sale_type')
