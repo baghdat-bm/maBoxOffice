@@ -58,7 +58,7 @@ def create_ticket_sale_cashier(request):
 
     # Перенаправляем на страницу редактирования
     return redirect(reverse('ticket_sales:ticket-sale-update',
-                            kwargs={'pk': ticket_sale.pk, 'user': request.user}))
+                            kwargs={'pk': ticket_sale.pk}))
 
 
 class TicketSaleUpdateView(PermissionRequiredMixin, UpdateView):
