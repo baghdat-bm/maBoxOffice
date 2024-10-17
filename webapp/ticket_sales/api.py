@@ -185,7 +185,7 @@ class CreateTicketSaleAPIView(APIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        serializer = TicketSaleSerializer(data=request.data)
+        serializer = TicketSaleSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             result = serializer.save()
             return Response(result, status=status.HTTP_201_CREATED)
