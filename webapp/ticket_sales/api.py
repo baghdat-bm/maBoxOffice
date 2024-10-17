@@ -65,7 +65,7 @@ class TicketCheckView(APIView):
             return Response({'result': False, 'error_code': '2', 'message': 'Билет не активен по времени мероприятия'},
                             status=HTTP_400_BAD_REQUEST)
 
-        if ticket.payment.amount == 0 and ticket.service.cost > 0:
+        if (not ticket.payment or ticket.payment.amount == 0) and ticket.service.cost > 0:
             return Response({'result': False, 'error_code': '5', 'message': 'Билет не оплачен'},
                             status=HTTP_400_BAD_REQUEST)
 

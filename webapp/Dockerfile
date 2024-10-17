@@ -24,3 +24,5 @@ RUN pip install -r requirements.txt
 
 # Copy project
 COPY . /code/
+RUN chmod a+rw logs/
+RUN chmod a+rw logs/*
