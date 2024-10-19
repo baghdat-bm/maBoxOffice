@@ -30,7 +30,8 @@ SECRET_KEY = 'django-insecure-#a)#57_6*1tze3mul2x031r28rbkge__)q#z=&&kf4prv+u2j7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["kassa.muzaidyny.kz", "muzaidyny.kz", "localhost", "127.0.0.1", "ma-kassa.com", '37.151.91.84']
+ALLOWED_HOSTS = ["kassa.muzaidyny.kz", "muzaidyny.kz", "localhost", "127.0.0.1", 
+                 "ma-kassa.com", '37.151.91.84']
 
 
 # Application definition
@@ -251,12 +252,13 @@ SWAGGER_SETTINGS = {
 }
 
 CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost',
-                        'https://kassa.muzaidyny.kz', 'https://muzaidyny.kz', 'https://37.151.91.84:4432/']
+                        'https://kassa.muzaidyny.kz', 'https://muzaidyny.kz', 
+                        'https://37.151.91.84:4432']
 
 CORS_ALLOWED_ORIGINS = [
     'https://muzaidyny.kz',
     'https://kassa.muzaidyny.kz',
-    'https://37.151.91.84:4432/',
+    'https://37.151.91.84:4432',
 ]
 
 CORS_ALLOW_METHODS = [
