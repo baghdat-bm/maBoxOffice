@@ -133,13 +133,31 @@ def get_sessions_report_data(form):
         total_card_sales_sm=Count('id', filter=Q(payment_method='CD') & Q(sale_type='SM')),
         total_kaspi_sales=Count('id', filter=Q(sale_type='KP')),
         total_refunds=Count('id', filter=Q(is_refund=True))
+    )
+
+    # Второй этап агрегации по event, sale_date, event_time, event_name
+    final_aggregation = tickets_grouped.values(
+        'event',
+        'sale_date',
+        'event_time',
+        'event_name'
+    ).annotate(
+        event_quantity=Sum('event_quantity'),
+        total_tickets_sold=Sum('total_tickets_sold'),
+        total_card_sales_cs=Sum('total_card_sales_cs'),
+        total_cash_sales_cs=Sum('total_cash_sales_cs'),
+        total_kiosk_sales=Sum('total_kiosk_sales'),
+        total_qr_sales_sm=Sum('total_qr_sales_sm'),
+        total_card_sales_sm=Sum('total_card_sales_sm'),
+        total_kaspi_sales=Sum('total_kaspi_sales'),
+        total_refunds=Sum('total_refunds')
     ).order_by('-sale_date', '-event_time')
 
     # Calculate total_tickets_left separately
-    for ticket in tickets_grouped:
+    for ticket in final_aggregation:
         ticket['total_tickets_left'] = ticket['event_quantity'] - ticket['total_tickets_sold']
 
-    return tickets_grouped
+    return final_aggregation
 
 
 def get_ticket_report_data(form):
