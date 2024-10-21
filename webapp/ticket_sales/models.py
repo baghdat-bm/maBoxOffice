@@ -95,7 +95,7 @@ class TicketSale(LoggableModelMixin, models.Model):
 
         # Обновляем статус заказа в зависимости от суммы оплаты и возврата
         update_status = kwargs.pop('update_status', True)
-        if update_status and self.status != 'CN':  # если заказ не отменен
+        if update_status: #  and self.status != 'CN' # если заказ не отменен
             if self.paid_amount == 0:
                 self.status = SaleStatusEnum.NP.value[0]
             elif self.paid_amount >= self.amount:
