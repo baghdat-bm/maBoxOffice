@@ -115,16 +115,16 @@ def delete_bookings(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-@permission_required('ticket_sales.add_ticketsale', raise_exception=True)
+# @permission_required('ticket_sales.add_ticketsale', raise_exception=True)
 @csrf_exempt
 def create_ticket_sale_terminal(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         try:
-            tickets = data.get('tickets', [])
+            ticket_bookings = data.get('tickets', [])
             total_amount = data.get('totalAmount', 0)
             booking_guid = data.get('booking_guid')
-            if len(tickets) == 0:
+            if len(ticket_bookings) == 0:
                 return JsonResponse({'error': 'No tickets data'}, status=400)
 
             # Шаг 2: Создаем заказ
@@ -141,11 +141,14 @@ def create_ticket_sale_terminal(request):
                     amount=total_amount,
                     booking_guid=booking_guid
                 )
+            else:
+                # Удаляем все услуги в заказе
+                TicketSalesService.objects.filter(ticket_sale=ticket_sale).delete()
 
             tickets_count = 0
             # Шаг 3: Создаем записи TicketSalesService для каждой брони
-            for ticket in tickets:
-                booking = TicketSalesBooking.objects.get(id=ticket['id'])
+            for booking in ticket_bookings:
+                booking = TicketSalesBooking.objects.get(id=booking['id'])
                 ticket_sales_service = TicketSalesService(
                     ticket_sale=ticket_sale,
                     service_id=booking.service_id,
