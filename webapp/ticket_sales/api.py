@@ -46,7 +46,7 @@ class TicketCheckView(APIView):
 
         try:
             # 1. Поиск билета по ticket_guid
-            ticket = TicketSalesTicket.objects.get(ticket_guid=ticket_guid)
+            ticket = TicketSalesTicket.objects.get(ticket_guid=ticket_guid, service__on_calculation=True)
         except TicketSalesTicket.DoesNotExist:
             return Response({'result': False, 'error_code': '1', 'message': 'Билет не найден'},
                             status=HTTP_404_NOT_FOUND)
