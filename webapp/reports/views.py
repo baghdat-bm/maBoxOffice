@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
-from datetime import date
+import datetime
 # from weasyprint import HTML
 import openpyxl
 from openpyxl.styles import Font, Border, Side
@@ -436,15 +436,33 @@ def export_tickets_report_to_excel(request):
 
         # Write data rows
         for row_num, ticket in enumerate(tickets, start=2):
-            ws.cell(row=row_num, column=1, value=row_num-1)  # №
+            ws.cell(row=row_num, column=1, value=row_num - 1)  # №
             ws.cell(row=row_num, column=2, value=ticket.ticket_number)
             ws.cell(row=row_num, column=3, value=ticket.ticket_sale.id)
-            ws.cell(row=row_num, column=4, value=f"{ticket.event_date} {ticket.event_time}")
+
+            # Убедитесь, что дата и время не содержат временную зону
+            event_date = ticket.event_date
+            event_time = ticket.event_time
+
+            # Убираем временную зону у event_date, если она присутствует
+            if isinstance(event_date, datetime.datetime) and event_date.tzinfo is not None:
+                event_date = event_date.replace(tzinfo=None)
+
+            # Для event_time не требуется обработка временной зоны
+            event_date_time = f"{event_date} {event_time}"
+            ws.cell(row=row_num, column=4, value=event_date_time)
+
             ws.cell(row=row_num, column=5, value=ticket.amount)
             ws.cell(row=row_num, column=6, value=ticket.service.name)
             ws.cell(row=row_num, column=7, value=ticket.service.inventory.name if ticket.service.inventory else '')
             ws.cell(row=row_num, column=8, value=ticket.ticket_sale.get_sale_type_display())
-            ws.cell(row=row_num, column=9, value=ticket.ticket_sale.booking_begin_date)
+
+            # Убираем временную зону у booking_begin_date, если она присутствует
+            booking_begin_date = ticket.ticket_sale.booking_begin_date
+            if isinstance(booking_begin_date, datetime.datetime) and booking_begin_date.tzinfo is not None:
+                booking_begin_date = booking_begin_date.replace(tzinfo=None)
+            ws.cell(row=row_num, column=9, value=booking_begin_date)
+
             ws.cell(row=row_num, column=10, value=ticket.payment_id)
             ws.cell(row=row_num, column=11, value=ticket.ticket_sale.phone)
 
@@ -615,7 +633,7 @@ def services_report_excel_export(request):
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
         return redirect('reports:services_report')  # Замените на ваш URL-адрес
 
-    report_data, services, dates = get_services_report_data(form)
+    report_data, services, dates, _ = get_services_report_data(form)
 
     # Создаем Excel файл
     workbook = openpyxl.Workbook()
