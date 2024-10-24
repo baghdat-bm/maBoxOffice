@@ -18,7 +18,9 @@ def get_filtered_sales_data(request, form_data):
     events = request.GET.getlist('events')
 
     # Находим записи TicketSale в заданном интервале дат
-    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    # ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(
+        Q(status="CN") | Q(status="NP"))
 
     if sale_types and 'all' not in sale_types:
         ticket_sales = ticket_sales.filter(sale_type__in=sale_types)
@@ -96,7 +98,9 @@ def get_sessions_report_data(form):
     end_date = form.cleaned_data.get('end_date', date.today())
 
     # Находим записи TicketSale в заданном интервале дат
-    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    # ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(
+        Q(status="CN") | Q(status="NP"))
 
     # Retrieve tickets based on date range
     tickets = (TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
@@ -148,7 +152,9 @@ def get_ticket_report_data(form):
     event_templates = form.cleaned_data.get('event_templates')
 
     # Filter TicketSales based on date range
-    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    # ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(
+        Q(status="CN") | Q(status="NP"))
 
     # Retrieve tickets related to ticket sales
     tickets = TicketSalesTicket.objects.filter(ticket_sale__in=ticket_sales)
@@ -178,7 +184,9 @@ def get_services_report_data(form):
     end_date = form.cleaned_data.get('end_date')
 
     # Filter ticket sales
-    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    # ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(status="CN")
+    ticket_sales = TicketSale.objects.filter(date__range=(start_date, end_date)).exclude(
+        Q(status="CN") | Q(status="NP"))
 
     # Filter TicketSalesService based on ticket_sales
     services_data = TicketSalesService.objects.filter(ticket_sale__in=ticket_sales)
