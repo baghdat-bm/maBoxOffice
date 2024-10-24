@@ -633,7 +633,7 @@ def services_report_excel_export(request):
         messages.error(request, 'Пожалуйста исправьте ошибки в фильтрах')
         return redirect('reports:services_report')  # Замените на ваш URL-адрес
 
-    report_data, services, dates, _ = get_services_report_data(form)
+    report_data, services, dates, total_by_service = get_services_report_data(form)
 
     # Создаем Excel файл
     workbook = openpyxl.Workbook()
@@ -650,6 +650,10 @@ def services_report_excel_export(request):
     for date in dates:
         date_headers.extend([date, None])  # Пара "дата, пустая ячейка"
         metric_headers.extend(["Количество", "Сумма"])  # Заголовки "количество, сумма"
+
+    # Добавляем заголовки для итогов по услуге
+    date_headers.extend(['Итого количество', 'Итого сумма'])
+    metric_headers.extend(['', ''])
 
     # Добавляем заголовки в два ряда
     sheet.append(date_headers)
@@ -687,9 +691,19 @@ def services_report_excel_export(request):
             amount = report_data[service_id][date]['amount']
             row.extend([count, amount])
 
+        # Добавляем итоговые данные по услуге за все даты (раздельно для количества и суммы)
+        total_count = total_by_service[service_id]['total_count']
+        total_amount = total_by_service[service_id]['total_amount']
+        row.extend([total_count, total_amount])
+
+        # Добавляем строку в лист
         sheet.append(row)
 
-    # Добавляем итоговую строку
+        # Применяем жирный шрифт для итогов по услуге (последние две колонки)
+        for col_num in range(len(row) - 2, len(row)):
+            sheet.cell(row=row_number, column=col_num + 1).font = bold_font
+
+    # Добавляем итоговую строку по всем услугам
     summary = defaultdict(lambda: {'total_amount': 0, 'total_count': 0})
     for service_id, date_data in report_data.items():
         for date, data in date_data.items():
@@ -701,12 +715,21 @@ def services_report_excel_export(request):
 
     # Итоговая строка
     total_row = ['', 'Итого']
+    total_count_sum = 0
+    total_amount_sum = 0
     for date in dates:
         total_row.append(summary[date]['total_count'])
         total_row.append(summary[date]['total_amount'])
+        total_count_sum += summary[date]['total_count']
+        total_amount_sum += summary[date]['total_amount']
+
+    # Добавляем общие итоги в последних двух колонках
+    total_row.extend([total_count_sum, total_amount_sum])
+
+    # Добавляем итоговую строку в таблицу
     sheet.append(total_row)
 
-    # Применяем стиль к итоговой строке
+    # Применяем стиль к итоговой строке (жирный шрифт)
     for cell in sheet[sheet.max_row]:  # Последняя строка - итоги
         cell.font = bold_font
 
