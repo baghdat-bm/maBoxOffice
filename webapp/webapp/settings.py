@@ -253,7 +253,7 @@ SWAGGER_SETTINGS = {
 
 CSRF_TRUSTED_ORIGINS = ['https://ma-kassa.com', 'http://ma-kassa.com', 'http://localhost',
                         'https://kassa.muzaidyny.kz', 'https://muzaidyny.kz', 
-                        'https://37.151.91.84:4432']
+                        'https://37.151.91.84:4432', 'https://kassa.muzaidyny.kz:4432']
 
 CORS_ALLOWED_ORIGINS = [
     'https://muzaidyny.kz',
